@@ -1,0 +1,22 @@
+{
+  "name": "gateway",
+  "scripts": {
+    "build": "pnpm server:build && pnpm client:build",
+    "server:build": "node scripts/esbuild.server.mjs",
+    "client:build": "node scripts/esbuild.client.mjs",
+    "start": "node dist/server.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "esbuild": "^0.24.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "packageManager": "pnpm@9.12.1+sha1.7084e7df42ee1d221994c2c2599277a2a937f050"
+}
