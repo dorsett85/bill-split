@@ -1,11 +1,18 @@
 import * as esbuild from 'esbuild';
-import path from 'path';
 
-await esbuild.build({
-  entryPoints: [path.resolve(import.meta.dirname, '../src/server.tsx')],
+const watchMode = process.argv.some((arg) => arg === '--watch');
+
+const ctx = await esbuild.context({
   bundle: true,
-  minify: true,
-  outfile: 'dist/server.js',
+  entryPoints: ['src/server/server.tsx'],
+  minify: process.env.NODE_ENV === 'production',
+  outdir: 'dist',
   platform: 'node',
   sourcemap: true,
+  target: 'node20',
 });
+
+await ctx.watch();
+if (!watchMode) {
+  await ctx.dispose();
+}

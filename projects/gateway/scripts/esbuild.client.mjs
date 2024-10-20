@@ -1,10 +1,21 @@
 import * as esbuild from 'esbuild';
-import path from 'path';
+import { getClientEntryPoints } from './scriptUtils.mjs';
 
-await esbuild.build({
-  entryPoints: [path.resolve(import.meta.dirname, '../src/client/index.tsx')],
+const watchMode = process.argv.some((arg) => arg === '--watch');
+
+const baseEntryPath = 'src/client/pages/';
+
+const ctx = await esbuild.context({
+  entryPoints: await getClientEntryPoints(baseEntryPath, 'hydrate.tsx'),
+  entryNames: '[dir]/index-[hash]',
+  outbase: baseEntryPath,
+  outdir: 'dist/static',
   bundle: true,
-  minify: true,
+  minify: process.env.NODE_ENV === 'production',
   sourcemap: true,
-  outfile: 'dist/main.js',
 });
+
+await ctx.watch();
+if (!watchMode) {
+  await ctx.dispose();
+}

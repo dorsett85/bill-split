@@ -1,7 +1,7 @@
-import styles from './App.module.css';
+import styles from './Bill.module.css';
 import { useState } from 'react';
 
-export const App = () => {
+export const Bill = () => {
   const [count, setCount] = useState(0);
 
   return (
