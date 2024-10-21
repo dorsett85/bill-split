@@ -46,7 +46,7 @@ const app = http.createServer(async (req, res) => {
     );
 
     res.setHeader('Content-Type', 'text/html');
-    res.end('<!doctype html>\n' + html);
+    res.end('<!DOCTYPE html>\n' + html);
     return;
   } else if (req.url === '/bill') {
     const html = ReactDomServer.renderToString(
@@ -62,7 +62,7 @@ const app = http.createServer(async (req, res) => {
     );
 
     res.setHeader('Content-Type', 'text/html');
-    res.end('<!doctype html>\n' + html);
+    res.end('<!DOCTYPE html>\n' + html);
     return;
   }
 
