@@ -52,7 +52,7 @@ jobs:
           command: '#e.g. ./deploy.sh'
 
 workflows:
-  build-and-test:
+  gateway:
     when: << pipeline.parameters.gateway_is_changed >>
     jobs:
       - test-gateway
