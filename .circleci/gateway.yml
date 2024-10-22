@@ -1,0 +1,61 @@
+# This config was automatically generated from your source code
+# Stacks detected: deps:node:projects/gateway
+version: 2.1
+
+parameters:
+  gateway_is_changed:
+    type: boolean
+    default: false
+
+orbs:
+  node: circleci/node@6.3.0
+
+jobs:
+  test-gateway:
+    executor:
+      name: node/default
+      tag: 20.18.0
+    working_directory: ~/project/projects/gateway
+    steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: hello
+          command: echo "hello"
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+      - run:
+          name: Install dependencies
+          command: pnpm install
+      - save_cache:
+          key: v1-dependencies-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: Type checking
+          command: pnpm tsc
+      - run:
+          name: Lint
+          command: pnpm eslint
+      - run:
+          name: Run tests
+          command: pnpm test
+  deploy:
+    # This is an example deploy job, not actually used by the workflow
+    docker:
+      - image: cimg/base:stable
+    steps:
+      # Replace this with steps to deploy to users
+      - run:
+          name: deploy
+          command: '#e.g. ./deploy.sh'
+
+workflows:
+  build-and-test:
+    when: << pipeline.parameters.gateway_is_changed >>
+    jobs:
+      - test-gateway
+    # - deploy:
+    #     requires:
+    #       - test-node
