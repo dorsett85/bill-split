@@ -1,0 +1,14 @@
+services:
+  gateway:
+    build:
+      context: projects/gateway
+      target: dev
+    develop:
+      watch:
+        - action: sync
+          path: ./projects/gateway
+          target: /app
+          ignore:
+            - node_modules/
+    ports:
+      - "8080:8080"
