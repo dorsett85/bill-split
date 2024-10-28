@@ -4,7 +4,10 @@ import {
   ScriptHTMLAttributes,
 } from 'react';
 
-export interface PageProps {
+/**
+ * These fields will be passed to link and script tags respectively
+ */
+export interface StaticAssetAttributes {
   /** Passed to a list of link elements */
   links: DetailedHTMLProps<
     LinkHTMLAttributes<HTMLLinkElement>,

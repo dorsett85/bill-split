@@ -1,10 +1,10 @@
 import ReactDomClient from 'react-dom/client';
-import { Home } from './Home.tsx';
+import { HomePage } from './page.tsx';
+import { WindowWithStaticAssets } from '../types/WindowWithStaticAssets.ts';
 
-const root = document.getElementById('root');
+declare let window: WindowWithStaticAssets;
 
-if (!root) {
-  throw new Error('Unable to find root element');
-}
-
-ReactDomClient.hydrateRoot(root, <Home />);
+ReactDomClient.hydrateRoot(
+  document,
+  <HomePage staticAssets={window.staticAssets} />,
+);

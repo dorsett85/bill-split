@@ -8,6 +8,8 @@ const baseEntryPath = 'src/client/pages/';
 const ctx = await esbuild.context({
   entryPoints: await getClientEntryPoints(baseEntryPath, 'hydrate.tsx'),
   entryNames: '[dir]/index-[hash]',
+  format: 'esm',
+  splitting: true,
   outbase: baseEntryPath,
   outdir: 'dist/static',
   bundle: true,

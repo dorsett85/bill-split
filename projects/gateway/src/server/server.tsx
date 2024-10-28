@@ -1,69 +1,45 @@
 import http from 'http';
-import path from 'path';
-import ReactDomServer from 'react-dom/server';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import { HomePage } from '../client/pages/page.tsx';
 import { BillPage } from '../client/pages/bill/page.tsx';
+import {
+  writeToHtml,
+  writeToJson,
+  writeToText,
+} from './services/responseHelpers.ts';
 
 const staticFileService = new LocalStaticFileService({
   staticDir: `${__dirname}/static`,
 });
-void staticFileService.populateHashFileNameCache();
+void staticFileService.populateHashFilenameCache();
 
 const app = http.createServer(async (req, res) => {
+  if (!req.url) {
+    res.statusCode = 400;
+    return res.end('You need to specify a url in your request');
+  }
+
   // Handle static asset requests
   if (req.url && staticFileService.hasAsset(req.url)) {
     const content = await staticFileService.getContent(req.url);
-    const ext = path.extname(req.url).replace('.', '');
 
-    res.setHeader('Content-type', `text/${ext}`);
-    res.setHeader('Cache-Control', `max-age=${365 * 24 * 60 * 60}`);
-    res.end(content);
-    return;
+    return writeToText(content, req.url, res);
   }
 
   // Handle REST api requests
-  if (req.url?.startsWith('/api')) {
+  if (req.url.startsWith('/api')) {
     const json = { data: 'REST api coming soon' };
 
-    res.setHeader('Content-type', 'application/json');
-    res.end(JSON.stringify(json));
-    return;
+    return writeToJson(json, res);
   }
 
   // Handle SSR requests
+  const staticAssets = staticFileService.getPageAssetFilenames(req.url);
+
   if (req.url === '/') {
-    const html = ReactDomServer.renderToString(
-      <HomePage
-        links={[
-          {
-            rel: 'stylesheet',
-            href: staticFileService.getHashFileName('index.css'),
-          },
-        ]}
-        scripts={[{ src: staticFileService.getHashFileName('index.js') }]}
-      />,
-    );
-
-    res.setHeader('Content-Type', 'text/html');
-    res.end('<!DOCTYPE html>\n' + html);
-    return;
+    return writeToHtml(<HomePage staticAssets={staticAssets} />, res);
   } else if (req.url === '/bill') {
-    const html = ReactDomServer.renderToString(
-      <BillPage
-        links={[
-          {
-            rel: 'stylesheet',
-            href: staticFileService.getHashFileName('bill/index.css'),
-          },
-        ]}
-        scripts={[{ src: staticFileService.getHashFileName('bill/index.js') }]}
-      />,
-    );
-
-    res.setHeader('Content-Type', 'text/html');
-    res.end('<!DOCTYPE html>\n' + html);
-    return;
+    return writeToHtml(<BillPage staticAssets={staticAssets} />, res);
   }
 
   // Fall through case

@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
-import { StaticFileService } from './staticFileService.ts';
+import path from 'path';
+import { StaticFileService } from './StaticFileService.ts';
 
 interface StaticFileServiceConstructorArgs {
   /**
@@ -11,13 +12,14 @@ interface StaticFileServiceConstructorArgs {
 export class LocalStaticFileService implements StaticFileService {
   private readonly staticDir: StaticFileServiceConstructorArgs['staticDir'];
   /**
-   * Map with a filename key and hashed filename value
+   * Map with a page url as key (e.g., `/` is the homepage) and an array of
+   * static assets for that page.
    */
-  private readonly hashedFileNameMap: Record<string, string> = {};
+  private readonly assetsByPage: Record<string, string[]> = {};
   /**
-   * Set of available hashed file paths for our static assets
+   * Set of available file paths for our static assets
    */
-  private readonly hashedStaticPathSet = new Set<string>();
+  private readonly staticPathSet = new Set<string>();
   /**
    * Map with a hashed filename key and file content value
    */
@@ -34,22 +36,26 @@ export class LocalStaticFileService implements StaticFileService {
    *
    * @param dirPath directories to search within the static directory
    */
-  async populateHashFileNameCache(dirPath = '') {
+  async populateHashFilenameCache(dirPath = '') {
     const fullPath = `${this.staticDir}/${dirPath}`;
-    for (const path of await fs.readdir(fullPath)) {
-      const cachePath = (dirPath && `${dirPath}/`) + path;
+    for (const filePath of await fs.readdir(fullPath)) {
+      const cachePath = (dirPath && `${dirPath}/`) + filePath;
+      const ext = path.extname(cachePath);
 
-      if (cachePath.endsWith('.js') || cachePath.endsWith('.css')) {
-        // Remove the public prefix and the hyphen and hash
-        const unHashedFile = cachePath.replace(/-\w+(\.[a-zA-Z]+)$/, '$1');
+      if (['.js', '.css', '.map'].includes(ext)) {
+        const pageKey = dirPath.startsWith('/') ? dirPath : '/' + dirPath;
+        this.assetsByPage[pageKey] ??= [];
+        this.assetsByPage[pageKey].push(cachePath);
 
-        this.hashedFileNameMap[unHashedFile] = cachePath;
         // Add a / to the prefix because the request url will have it
-        this.hashedStaticPathSet.add('/' + cachePath);
+        this.staticPathSet.add('/' + cachePath);
         continue;
       }
+
+      // At this point the cachePath is either a directory or not something we
+      // want to cache.
       try {
-        await this.populateHashFileNameCache(cachePath);
+        await this.populateHashFilenameCache(cachePath);
       } catch (e) {
         // no-op, not a dir
       }
@@ -57,14 +63,14 @@ export class LocalStaticFileService implements StaticFileService {
   }
 
   /**
-   * Get the hashed filename from an unhashed filename
+   * Get all static asset filenames for a give page
    */
-  public getHashFileName(path: string): string {
-    return this.hashedFileNameMap[path];
+  public getPageAssetFilenames(path: string): string[] {
+    return this.assetsByPage[path] ?? [];
   }
 
   public hasAsset(path: string): boolean {
-    return this.hashedStaticPathSet.has(path);
+    return this.staticPathSet.has(path);
   }
 
   public async getContent(path: string): Promise<Buffer> {
