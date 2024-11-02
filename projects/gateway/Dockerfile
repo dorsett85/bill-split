@@ -1,7 +1,7 @@
 FROM node:20.18.0-slim AS base
 WORKDIR /app
 RUN corepack enable
-RUN corepack use pnpm@9.12.2+sha1.3012e6dd27e70ec4e185be062e8a124523dccfc4
+RUN corepack use pnpm@9.12.3+sha1.4fb96925d434c491285182acf29803bb9aa2e6e5
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.pnpm to speed up subsequent builds.
