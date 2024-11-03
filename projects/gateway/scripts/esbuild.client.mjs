@@ -6,15 +6,15 @@ const watchMode = process.argv.some((arg) => arg === '--watch');
 const baseEntryPath = 'src/client/pages/';
 
 const ctx = await esbuild.context({
+  bundle: true,
   entryPoints: await getClientEntryPoints(baseEntryPath, 'hydrate.tsx'),
   entryNames: '[dir]/index-[hash]',
   format: 'esm',
-  splitting: true,
+  minify: process.env.NODE_ENV === 'production',
   outbase: baseEntryPath,
   outdir: 'dist/static',
-  bundle: true,
-  minify: process.env.NODE_ENV === 'production',
   sourcemap: true,
+  splitting: true,
 });
 
 await ctx.watch();

@@ -8,6 +8,15 @@ import path from 'path';
  */
 const ONE_YEAR_IN_MILLIS = 365 * 24 * 60 * 60;
 
+const mimeTypeMapping: Record<string, string> = {
+  '.css': 'text/css',
+  '.jpg': 'image/jpeg',
+  '.js': 'text/javascript',
+  '.map': 'application/json',
+  '.png': 'image/png',
+  '.webmanifest': 'application/manifest+json',
+};
+
 /**
  * Takes any Buffer and serializes it as a text response. Use the url arg to
  * determine the mimetype
@@ -17,14 +26,10 @@ export const writeToText = (
   url: string,
   res: ServerResponse,
 ): ServerResponse => {
-  // This should have a more sophisticated mapping
-  const mimeType = path
-    .extname(url)
-    .replace('.', '')
-    .replace('js', 'javascript');
+  const mimeType = mimeTypeMapping[path.extname(url)];
 
   return res
-    .setHeader('Content-type', `text/${mimeType}`)
+    .setHeader('Content-type', mimeType ?? 'text/plain')
     .setHeader('Cache-Control', `max-age=${ONE_YEAR_IN_MILLIS}`)
     .end(content);
 };

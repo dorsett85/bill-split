@@ -1,6 +1,6 @@
-import { Html } from '../Html/Html.tsx';
 import React, { ReactElement } from 'react';
 import { StaticAssetAttributes } from '../../types/staticAssetAttributes.ts';
+import { Theme } from '@radix-ui/themes';
 
 export interface BasePageProps extends StaticAssetAttributes {
   title: string;
@@ -25,29 +25,47 @@ export const BasePage: React.FC<BasePageProps> = ({
     .join(';');
 
   return (
-    <Html
-      head={
-        <>
-          <meta charSet="UTF-8" />
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0"
-          />
-          <title>{title}</title>
-          <script dangerouslySetInnerHTML={{ __html: bootstrapServerProps }} />
-          {links.map((linkProps) => (
-            <link key={linkProps.href} {...linkProps} />
-          ))}
-        </>
-      }
-      body={
-        <div id="root">
+    <html lang="en">
+      <head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{title}</title>
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/apple-touch-icon.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="/favicon-32x32.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="/favicon-16x16.png"
+        />
+        <link rel="manifest" href="/site.webmanifest" />
+        {/* Used for @radix-ui/theme component library */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@3.1.4/styles.css"
+        />
+        <script dangerouslySetInnerHTML={{ __html: bootstrapServerProps }} />
+        {links.map((linkProps) => (
+          <link key={linkProps.href} {...linkProps} />
+        ))}
+      </head>
+      <body>
+        <Theme accentColor="blue" appearance="dark">
           {body}
           {scripts.map((scriptProps) => (
             <script key={scriptProps.src} {...scriptProps}></script>
           ))}
-        </div>
-      }
-    />
+        </Theme>
+      </body>
+    </html>
   );
 };

@@ -1,5 +1,4 @@
 import fs from 'fs/promises';
-import path from 'path';
 import { StaticFileService } from './StaticFileService.ts';
 
 interface StaticFileServiceConstructorArgs {
@@ -40,9 +39,12 @@ export class LocalStaticFileService implements StaticFileService {
     const fullPath = `${this.staticDir}/${dirPath}`;
     for (const filePath of await fs.readdir(fullPath)) {
       const cachePath = (dirPath && `${dirPath}/`) + filePath;
-      const ext = path.extname(cachePath);
 
-      if (['.js', '.css', '.map'].includes(ext)) {
+      const isDirectory = (
+        await fs.lstat(fullPath + '/' + filePath)
+      ).isDirectory();
+
+      if (!isDirectory) {
         const pageKey = dirPath.startsWith('/') ? dirPath : '/' + dirPath;
         this.assetsByPage[pageKey] ??= [];
         this.assetsByPage[pageKey].push(cachePath);

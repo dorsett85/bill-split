@@ -1,11 +1,31 @@
 import concurrently from 'concurrently';
+import fs from 'fs/promises';
+
+const OUT_DIR = 'dist';
+const STATIC_OUT_DIR = OUT_DIR + '/static';
+
+// Clear the old dist folder before starting the app. We also make a new scratch
+// build server file in case the node server tries to start before the build is
+// done.
+try {
+  await fs.access(OUT_DIR);
+  await fs.rm(OUT_DIR, { recursive: true });
+} catch (e) {
+  // directory doesn't exist, no-op
+}
+await fs.mkdir(OUT_DIR);
+await fs.mkdir(STATIC_OUT_DIR);
+await fs.writeFile(OUT_DIR + '/server.js', '');
+
+// Set up a static file watcher to move statics assets to the static output
+// folder.
+await fs.cp('src/client/assets/images', STATIC_OUT_DIR, {
+  recursive: true,
+});
 
 // Start app in full watch mode.
 concurrently(
   [
-    // make a new scratch build server file in case the node
-    // server tries to start before the build is done
-    'rm -rf dist && mkdir dist && touch dist/server.js',
     'pnpm type-check --watch',
     'pnpm server:build --watch',
     'pnpm client:build --watch',
