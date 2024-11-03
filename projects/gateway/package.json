@@ -3,8 +3,7 @@
   "scripts": {
     "type-check": "tsc",
     "lint": "eslint",
-    "server:build": "node scripts/esbuild.server.mjs",
-    "client:build": "node scripts/esbuild.client.mjs",
+    "build": "node scripts/esbuild.mjs",
     "start": "node scripts/startApp.mjs",
     "test": "vitest --config test/vitest.config.mts"
   },

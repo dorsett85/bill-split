@@ -17,9 +17,8 @@ await fs.mkdir(OUT_DIR);
 await fs.mkdir(STATIC_OUT_DIR);
 await fs.writeFile(OUT_DIR + '/server.js', '');
 
-// Set up a static file watcher to move statics assets to the static output
-// folder.
-await fs.cp('src/client/assets/images', STATIC_OUT_DIR, {
+// Move public assets to the static output folder
+await fs.cp('public', STATIC_OUT_DIR, {
   recursive: true,
 });
 
@@ -27,8 +26,7 @@ await fs.cp('src/client/assets/images', STATIC_OUT_DIR, {
 concurrently(
   [
     'pnpm type-check --watch',
-    'pnpm server:build --watch',
-    'pnpm client:build --watch',
+    'pnpm build --watch',
     'node --enable-source-maps --watch dist/server.js',
   ],
   {
