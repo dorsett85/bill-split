@@ -11,7 +11,7 @@ import {
 const staticFileService = new LocalStaticFileService({
   staticDir: `${__dirname}/static`,
 });
-void staticFileService.populateHashFilenameCache();
+void staticFileService.populateFilenameCache();
 
 const app = http.createServer(async (req, res) => {
   if (!req.url) {
@@ -20,7 +20,7 @@ const app = http.createServer(async (req, res) => {
   }
 
   // Handle static asset requests
-  if (req.url && staticFileService.hasAsset(req.url)) {
+  if (staticFileService.hasAsset(req.url)) {
     const content = await staticFileService.getContent(req.url);
 
     return writeToText(content, req.url, res);
