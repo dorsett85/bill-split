@@ -6,13 +6,12 @@ This application is responsible for the user interface and public api.
 
 1. Start the app with `pnpm start`
    1. This will build and run the server, then watch for changes
-   2. The images in src/client/assets/images will also get moved to the static
-      base directory where they can be referenced in the React code. For example:
+   2. The contents of the public/ directory will also get moved to the static
+      base directory where they can be referenced in the React code. For
+      example:
       ```html
       <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
       ```
-      This would be the path for `img` tags and other references to images. This
-      could expand to fonts/videos/etc.
 
 ### Adding Pages
 
