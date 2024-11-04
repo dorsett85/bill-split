@@ -58,7 +58,7 @@ export const BasePage: React.FC<BasePageProps> = ({
           <link key={linkProps.href} {...linkProps} />
         ))}
       </head>
-      <body>
+      <body style={{ margin: 0 }}>
         <Theme accentColor="blue" appearance="dark">
           {body}
           {scripts.map((scriptProps) => (

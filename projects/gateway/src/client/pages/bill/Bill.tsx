@@ -1,5 +1,5 @@
 import { useReducer } from 'react';
-import { Button } from '@radix-ui/themes';
+import { Button, Heading } from '@radix-ui/themes';
 import { wineGlassesSrc } from '../../utils/imagesSrc.ts';
 
 export const Bill = () => {
@@ -7,12 +7,12 @@ export const Bill = () => {
 
   return (
     <div>
-      <h1>Hello World!</h1>
+      <Heading size="4">Hello World!</Heading>
       <div>
         <img src={wineGlassesSrc} alt="" />
       </div>
       <Button onClick={setCount}>Increase Count</Button>
-      <h2>Count: {count}</h2>
+      <Heading as="h2">Count: {count}</Heading>
     </div>
   );
 };
