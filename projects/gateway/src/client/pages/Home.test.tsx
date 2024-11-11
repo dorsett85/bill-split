@@ -5,6 +5,8 @@ import { Home } from './Home.tsx';
 describe('test Home', () => {
   it('renders', () => {
     render(<Home />);
-    expect(screen.getByRole('heading', { name: 'Hello World!' })).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: 'Welcome to Bill Split!' }),
+    ).toBeVisible();
   });
 });

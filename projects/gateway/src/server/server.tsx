@@ -1,52 +1,23 @@
 import http from 'http';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
-import { HomePage } from '../client/pages/page.tsx';
-import { BillPage } from '../client/pages/bill/page.tsx';
-import {
-  writeToHtml,
-  writeToJson,
-  writeToText,
-} from './services/responseHelpers.ts';
+import { RequestService } from './services/RequestService.tsx';
 
-const staticFileService = new LocalStaticFileService({
-  staticDir: `${__dirname}/static`,
-});
-void staticFileService.populateFilenameCache();
+const startServer = async () => {
+  // Initialize static file service
+  const staticFileService = new LocalStaticFileService({
+    staticDir: `${__dirname}/static`,
+  });
+  await staticFileService.populateFilenameCache();
 
-const app = http.createServer(async (req, res) => {
-  if (!req.url) {
-    res.statusCode = 400;
-    return res.end('You need to specify a url in your request');
-  }
+  // Initialize request service
+  const requestService = new RequestService(staticFileService);
+  requestService.createRoutes();
 
-  // Handle static asset requests
-  if (staticFileService.hasAsset(req.url)) {
-    const content = await staticFileService.getContent(req.url);
+  const app = http.createServer(requestService.handleRequest);
 
-    return writeToText(content, req.url, res);
-  }
+  app.listen(8080, () => {
+    console.log('Server running on http://localhost:8080');
+  });
+};
 
-  // Handle REST api requests
-  if (req.url.startsWith('/api')) {
-    const json = { data: 'REST api coming soon' };
-
-    return writeToJson(json, res);
-  }
-
-  // Handle SSR requests
-  const staticAssets = staticFileService.getPageAssetFilenames(req.url);
-
-  if (req.url === '/') {
-    return writeToHtml(<HomePage staticAssets={staticAssets} />, res);
-  } else if (req.url === '/bill') {
-    return writeToHtml(<BillPage staticAssets={staticAssets} />, res);
-  }
-
-  // Fall through case
-  res.statusCode = 400;
-  res.end('We are unable to process your request');
-});
-
-app.listen(8080, () => {
-  console.log('Server running on http://localhost:8080');
-});
+void startServer();

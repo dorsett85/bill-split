@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import { StaticFileService } from './StaticFileService.ts';
+import { StaticFileService } from '../types/staticFileService.ts';
 
 interface StaticFileServiceConstructorArgs {
   /**
@@ -16,9 +16,9 @@ export class LocalStaticFileService implements StaticFileService {
    */
   private readonly assetsByPage: Record<string, string[]> = {};
   /**
-   * Set of available file paths for our static assets
+   * All file paths for our static assets
    */
-  private readonly staticPathSet = new Set<string>();
+  private readonly staticPaths: string[] = [];
 
   public constructor({ staticDir }: StaticFileServiceConstructorArgs) {
     this.staticDir = staticDir;
@@ -47,7 +47,7 @@ export class LocalStaticFileService implements StaticFileService {
         this.assetsByPage[dirPath] ??= [];
         this.assetsByPage[dirPath].push(cachePath);
 
-        this.staticPathSet.add(cachePath);
+        this.staticPaths.push(cachePath);
         continue;
       }
 
@@ -68,12 +68,15 @@ export class LocalStaticFileService implements StaticFileService {
     return this.assetsByPage[path] ?? [];
   }
 
-  public hasAsset(path: string): boolean {
-    return this.staticPathSet.has(path);
-  }
-
   public async getContent(path: string): Promise<Buffer> {
     return await fs.readFile(this.appendStaticDir(path));
+  }
+
+  /**
+   * Expose the list of static paths as a copy
+   */
+  public getStaticPaths(): string[] {
+    return [...this.staticPaths];
   }
 
   /**

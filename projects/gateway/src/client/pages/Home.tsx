@@ -20,8 +20,21 @@ export const Home = () => {
     fileInputRef.current.click();
   };
 
-  const handleOnFileInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleOnFileInputChange = async (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
     setFilename(event.target.files?.[0].name);
+
+    // Validate here if needed
+
+    // Automatically submit the form when the user uploads a file
+    try {
+      const res = await fetch('/api');
+      const data = await res.json();
+      console.log('data from server:', data);
+    } catch (err) {
+      // TODO add error handler
+    }
   };
 
   return (
@@ -42,6 +55,7 @@ export const Home = () => {
               type="button"
               size="4"
               onClick={() => handleOnFileClick(false)}
+              disabled={!!filename}
             >
               <FileIcon />
               Upload File
@@ -52,25 +66,27 @@ export const Home = () => {
               type="button"
               size="4"
               onClick={() => handleOnFileClick(true)}
+              disabled={!!filename}
             >
               <CameraIcon />
               Scan Photo
             </Button>
           </Box>
         </Flex>
-        {filename && (
-          <Text as="p" align="center">
-            <Strong>{filename}</Strong>
-          </Text>
-        )}
         <input
           type="file"
+          name="receipt"
           ref={fileInputRef}
           onChange={handleOnFileInputChange}
           hidden
           accept="image/*"
         />
       </form>
+      {filename && (
+        <Text as="p" align="center" mb="4">
+          <Strong>{filename}</Strong>
+        </Text>
+      )}
     </Box>
   );
 };
