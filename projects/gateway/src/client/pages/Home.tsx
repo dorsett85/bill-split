@@ -4,6 +4,7 @@ import { ChangeEvent, useRef, useState } from 'react';
 
 export const Home = () => {
   const [filename, setFilename] = useState<string>();
+  const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleOnFileClick = async (capture: boolean) => {
@@ -23,13 +24,18 @@ export const Home = () => {
   const handleOnFileInputChange = async (
     event: ChangeEvent<HTMLInputElement>,
   ) => {
+    if (!formRef.current) return;
+
     setFilename(event.target.files?.[0].name);
 
     // Validate here if needed
 
     // Automatically submit the form when the user uploads a file
     try {
-      const res = await fetch('/api');
+      const res = await fetch('/bill', {
+        method: 'POST',
+        body: new FormData(formRef.current),
+      });
       const data = await res.json();
       console.log('data from server:', data);
     } catch (err) {
@@ -48,7 +54,7 @@ export const Home = () => {
       <Heading align="center" as="h2" mb="6">
         Assign the items among your party and we&#39;ll do the math 🙌
       </Heading>
-      <form>
+      <form ref={formRef}>
         <Flex gap="4" mb="4">
           <Box asChild flexGrow="1">
             <Button

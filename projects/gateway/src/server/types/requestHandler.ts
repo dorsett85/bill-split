@@ -1,10 +1,11 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
 import { StaticFileService } from './staticFileService.ts';
+import { FileStorageService } from './fileStorageService.ts';
 
 /**
- * Any request information we need to fulfill a request
+ * We'll make love easy and assume we know the url is a string
  */
-export interface ServerRequest extends Pick<IncomingMessage, 'method'> {
+export interface ServerRequest extends Omit<IncomingMessage, 'url'> {
   /**
    * Url of the request
    */
@@ -15,6 +16,7 @@ export interface ServerRequest extends Pick<IncomingMessage, 'method'> {
  * Added context for each request (e.g., different services, user, etc)
  */
 export interface RequestContext {
+  fileStorageService: FileStorageService;
   staticFileService: StaticFileService;
 }
 

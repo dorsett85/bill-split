@@ -4,7 +4,7 @@ import { LocalStaticFileService } from './LocalStaticFileService.ts';
 describe('test LocalStaticFileService', () => {
   it('creates a new instance without paths', () => {
     const staticFileService = new LocalStaticFileService({
-      staticDir: 'static',
+      staticPath: 'static',
     });
     expect(staticFileService.getStaticPaths().length).toBe(0);
   });

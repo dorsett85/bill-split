@@ -1,15 +1,15 @@
 import fs from 'fs/promises';
 import { StaticFileService } from '../types/staticFileService.ts';
 
-interface StaticFileServiceConstructorArgs {
+interface StaticFileServiceConstructorInput {
   /**
    * Absolute path where static assets are located
    */
-  staticDir: string;
+  staticPath: string;
 }
 
 export class LocalStaticFileService implements StaticFileService {
-  private readonly staticDir: StaticFileServiceConstructorArgs['staticDir'];
+  private readonly staticPath: string;
   /**
    * Map with a page url as key (e.g., `/` is the homepage) and an array of
    * static assets for that page.
@@ -20,8 +20,8 @@ export class LocalStaticFileService implements StaticFileService {
    */
   private readonly staticPaths: string[] = [];
 
-  public constructor({ staticDir }: StaticFileServiceConstructorArgs) {
-    this.staticDir = staticDir;
+  public constructor({ staticPath }: StaticFileServiceConstructorInput) {
+    this.staticPath = staticPath;
   }
 
   /**
@@ -34,7 +34,7 @@ export class LocalStaticFileService implements StaticFileService {
    *                defaults to the initial base static directory.
    */
   async populateFilenameCache(dirPath = '/') {
-    const fullPath = `${this.staticDir}${dirPath}`;
+    const fullPath = `${this.staticPath}${dirPath}`;
     for (const filePath of await fs.readdir(fullPath)) {
       // Make sure there's a `/` between the directory path and the filepath
       const cachePath = `${dirPath}${dirPath === '/' ? '' : '/'}${filePath}`;
@@ -83,6 +83,6 @@ export class LocalStaticFileService implements StaticFileService {
    * Helper function to append a path onto the absolute static dir
    */
   private appendStaticDir(path: string): string {
-    return `${this.staticDir}/${path}`;
+    return `${this.staticPath}/${path}`;
   }
 }

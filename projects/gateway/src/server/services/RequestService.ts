@@ -7,12 +7,23 @@ import {
 } from '../types/requestHandler.ts';
 import { createStaticRoutes } from '../routes/static.ts';
 import { routes } from '../routes/routes.tsx';
+import { FileStorageService } from '../types/fileStorageService.ts';
+
+interface RequestServiceConstructorInput {
+  fileStorageService: FileStorageService;
+  staticFileService: StaticFileService;
+}
 
 export class RequestService {
   private readonly routeHandlers: Record<string, RequestHandler> = {};
+  private readonly fileStorageService: FileStorageService;
   private readonly staticFileService: StaticFileService;
 
-  public constructor(staticFileService: StaticFileService) {
+  public constructor({
+    fileStorageService,
+    staticFileService,
+  }: RequestServiceConstructorInput) {
+    this.fileStorageService = fileStorageService;
     this.staticFileService = staticFileService;
   }
 
@@ -48,14 +59,11 @@ export class RequestService {
       return res.end('We were unable to find the resource you requested');
     }
 
-    // TODO make a function to create server request
-    const serverRequest: ServerRequest = {
-      method: req.method,
-      url: req.url,
-    };
+    const serverRequest: ServerRequest = Object.assign(req, { url: req.url });
 
     // TODO make a function to create context
     const context: RequestContext = {
+      fileStorageService: this.fileStorageService,
       staticFileService: this.staticFileService,
     };
 

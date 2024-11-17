@@ -1,16 +1,25 @@
 import http from 'http';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
-import { RequestService } from './services/RequestService.tsx';
+import { RequestService } from './services/RequestService.ts';
+import { LocalFileStorageService } from './services/LocalFileStorageService.ts';
 
 const startServer = async () => {
   // Initialize static file service
   const staticFileService = new LocalStaticFileService({
-    staticDir: `${__dirname}/static`,
+    staticPath: `${__dirname}/static`,
   });
   await staticFileService.populateFilenameCache();
 
+  // Initialize file storage service
+  const fileStorageService = new LocalFileStorageService({
+    storagePath: `${__dirname}/uploads`,
+  });
+
   // Initialize request service
-  const requestService = new RequestService(staticFileService);
+  const requestService = new RequestService({
+    fileStorageService,
+    staticFileService,
+  });
   requestService.createRoutes();
 
   const app = http.createServer(requestService.handleRequest);
