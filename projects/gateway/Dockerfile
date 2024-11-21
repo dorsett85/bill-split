@@ -20,5 +20,6 @@ FROM base AS dev
 # Expose the port that the application listens on
 EXPOSE 8080
 
-# Run the application
-CMD pnpm start
+# Run the application. We're using docker compose for env vars so unset the
+# .env file.
+CMD node scripts/startApp.mjs

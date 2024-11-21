@@ -1,3 +1,19 @@
+x-db-host: &db-host postgres
+x-db-name: &db-name bill_split
+x-db-user: &db-user ${USER}
+x-db-password: &db-password password
+x-db-port: &db-port 5432
+
+x-db-env: &db-env
+  depends_on:
+    - postgres
+  environment:
+    DB_HOST: *db-host
+    DB_NAME: *db-name
+    DB_USER: *db-user
+    DB_PASSWORD: *db-password
+    DB_PORT: *db-port
+
 services:
   postgres:
     image: postgres:17
@@ -16,21 +32,13 @@ services:
     build:
       context: projects/db
       target: dev
-    depends_on:
-      - postgres
-    environment:
-      DB_HOST: postgres
-      DB_NAME: bill_split
-      DB_USER: ${USER}
-      DB_PASSWORD: password
-      DB_PORT: 5432
+    <<: *db-env
 
   gateway:
     build:
       context: projects/gateway
       target: dev
-    depends_on:
-      - postgres
+    <<: *db-env
     develop:
       watch:
         - action: sync
