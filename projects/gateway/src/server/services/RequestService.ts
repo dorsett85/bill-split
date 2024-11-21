@@ -8,6 +8,9 @@ import {
 import { createStaticRoutes } from '../routes/static.ts';
 import { routes } from '../routes/routes.tsx';
 import { FileStorageService } from '../types/fileStorageService.ts';
+import { BillService } from './BillService.ts';
+import { BillModel } from '../../models/BillModel.ts';
+import { getDb } from './getDb.ts';
 
 interface RequestServiceConstructorInput {
   fileStorageService: FileStorageService;
@@ -63,7 +66,10 @@ export class RequestService {
 
     // TODO make a function to create context
     const context: RequestContext = {
-      fileStorageService: this.fileStorageService,
+      billService: new BillService(
+        new BillModel(getDb()),
+        this.fileStorageService,
+      ),
       staticFileService: this.staticFileService,
     };
 

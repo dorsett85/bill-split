@@ -2,7 +2,7 @@ import { RequestHandler } from '../types/requestHandler.ts';
 import { writeToHtml, writeToJson } from '../services/responseHelpers.ts';
 import { HomePage } from '../../client/pages/page.tsx';
 import { BillPage } from '../../client/pages/bill/page.tsx';
-import { FileStorageOutput } from '../types/fileStorageService.ts';
+import { Bill } from '../../models/BillModel.ts';
 
 /**
  * All non-static routes for our app
@@ -12,12 +12,12 @@ export const routes: Record<string, RequestHandler> = {
     const staticAssets = staticFileService.getPageAssetFilenames(req.url);
     return writeToHtml(<HomePage staticAssets={staticAssets} />, res);
   },
-  '/bill': async (req, res, { fileStorageService, staticFileService }) => {
+  '/bill': async (req, res, { billService, staticFileService }) => {
     // Post a new bill with a receipt file upload
     if (req.method === 'POST') {
-      let storedFiles: FileStorageOutput[];
+      let bill: Bill;
       try {
-        storedFiles = await fileStorageService.store(req);
+        bill = await billService.create(req);
       } catch (err) {
         console.error(err);
         res.statusCode = 400;
@@ -26,7 +26,7 @@ export const routes: Record<string, RequestHandler> = {
           res,
         );
       }
-      return writeToJson({ storedFiles }, res);
+      return writeToJson({ bill }, res);
     }
 
     const staticAssets = staticFileService.getPageAssetFilenames(req.url);
