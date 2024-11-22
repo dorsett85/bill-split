@@ -11,6 +11,7 @@ import { FileStorageService } from '../types/fileStorageService.ts';
 import { BillService } from './BillService.ts';
 import { BillModel } from '../../models/BillModel.ts';
 import { getDb } from './getDb.ts';
+import { resolveRoute } from './resolveRoute.ts';
 
 interface RequestServiceConstructorInput {
   fileStorageService: FileStorageService;
@@ -54,7 +55,8 @@ export class RequestService {
       return res.end('You need to specify a url in your request');
     }
 
-    const response = this.routeHandlers[req.url];
+    const route = resolveRoute(req.url, Object.keys(this.routeHandlers));
+    const response = this.routeHandlers[route];
 
     if (!response) {
       // Fall through case

@@ -11,6 +11,11 @@ export class BillService {
     this.fileStorageService = fileStorageService;
   }
 
+  public async read(id: string): Promise<Bill> {
+    const { rows } = await this.billModel.read(id);
+    return rows[0];
+  }
+
   /**
    * This method is a little unusual. Normally we wouldn't use the request
    * object at this layer, but it's required for our file storage service. So
@@ -19,7 +24,7 @@ export class BillService {
    */
   public async create(req: ServerRequest): Promise<Bill> {
     const storedFiles = await this.fileStorageService.store(req);
-    const result = await this.billModel.save({
+    const result = await this.billModel.create({
       image_path: storedFiles[0].path,
     });
     return result.rows[0];

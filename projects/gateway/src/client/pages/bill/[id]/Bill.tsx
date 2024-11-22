@@ -1,0 +1,24 @@
+import React from 'react';
+import { Heading, Text } from '@radix-ui/themes';
+
+interface BillProps {
+  bill: {
+    image_path?: string;
+  };
+}
+
+export const Bill: React.FC<BillProps> = ({ bill }) => {
+  return (
+    <div>
+      <Heading size="9" align="center" mb="8">
+        Here is your bill, let&#39;s take a look!
+      </Heading>
+      <Heading as="h2" align="center" mb="2">
+        Receipt image location:
+      </Heading>
+      <Text as="p" align="center">
+        {bill.image_path}
+      </Text>
+    </div>
+  );
+};

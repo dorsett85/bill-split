@@ -36,8 +36,11 @@ export const Home = () => {
         method: 'POST',
         body: new FormData(formRef.current),
       });
-      const data = await res.json();
-      console.log('data from server:', data);
+      const { data } = await res.json();
+
+      // Redirect to the specific bill page
+      // TODO Should we flash a success message before redirecting?
+      window.location.assign(`/bill/${data.id}`);
     } catch (err) {
       // TODO add error handler
     }

@@ -3,6 +3,18 @@ import ReactDomServer from 'react-dom/server';
 import { ServerResponse } from 'node:http';
 import path from 'path';
 
+interface JsonDataResponse {
+  data: Record<never, never>;
+}
+
+interface JsonErrorResponse {
+  error: {
+    message: string;
+  };
+}
+
+type JsonResponse = JsonDataResponse | JsonErrorResponse;
+
 /**
  * One year in milliseconds
  */
@@ -35,17 +47,15 @@ export const writeToText = (
 };
 
 /**
- * Takes any object and serializes it as a json response
- * @param data
- * @param res
+ * Takes an object and serializes it as a json response
  */
 export const writeToJson = (
-  data: Record<never, never>,
+  response: JsonResponse,
   res: ServerResponse,
 ): ServerResponse => {
   return res
     .setHeader('Content-type', 'application/json')
-    .end(JSON.stringify(data));
+    .end(JSON.stringify(response));
 };
 
 /**

@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, QueryResult } from 'pg';
 import { BaseModel } from '../server/types/baseModel.ts';
 
 export interface Bill {
@@ -11,7 +11,7 @@ export interface Bill {
   tax?: number;
 }
 
-export type BillSave = Omit<Bill, 'id'>;
+export type BillCreate = Omit<Bill, 'id'>;
 
 export class BillModel implements BaseModel<Bill> {
   private db: Pool;
@@ -20,7 +20,7 @@ export class BillModel implements BaseModel<Bill> {
     this.db = pool;
   }
 
-  public save(bill: BillSave) {
+  public create(bill: BillCreate) {
     return this.db.query(
       `
       INSERT INTO bill (business_name, business_location, gratuity, image_path, name, tax)
@@ -35,6 +35,24 @@ export class BillModel implements BaseModel<Bill> {
         bill.name,
         bill.tax,
       ],
+    );
+  }
+
+  public read(id: string): Promise<QueryResult<Bill>> {
+    return this.db.query(
+      `
+      SELECT
+          id,
+          business_name,
+          business_location,
+          gratuity,
+          image_path,
+          name,
+          tax
+      FROM bill
+      WHERE id = $1
+    `,
+      [id],
     );
   }
 }
