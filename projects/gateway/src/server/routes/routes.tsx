@@ -3,13 +3,12 @@ import { writeToHtml, writeToJson } from '../services/responseHelpers.ts';
 import { HomePage } from '../../client/pages/page.tsx';
 import { BillPage } from '../../client/pages/bill/[id]/page.tsx';
 import { resolveRouteSegments } from '../services/resolveRouteSegments.ts';
+import { staticRouteHandler } from './static.ts';
 
 /**
  * All non-static routes for our app
  */
 export const routes: Record<string, RequestHandler> = {
-  // TODO add static dynamic routes. We no longer need to create them
-  //  dynamically because we have the resolveRoute function.
   '/': async (req, res, { staticFileService }) => {
     const staticAssets = staticFileService.getPageAssetFilenames(req.url);
     return writeToHtml(<HomePage staticAssets={staticAssets} />, res);
@@ -43,4 +42,7 @@ export const routes: Record<string, RequestHandler> = {
       res,
     );
   },
+  // TODO we should prefix these with static to make it more obvious
+  '/[name]': staticRouteHandler,
+  '/bill/[id]/[name]': staticRouteHandler,
 };

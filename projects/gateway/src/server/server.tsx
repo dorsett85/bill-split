@@ -20,7 +20,6 @@ const startServer = async () => {
     fileStorageService,
     staticFileService,
   });
-  requestService.createRoutes();
 
   const app = http.createServer(requestService.handleRequest);
 

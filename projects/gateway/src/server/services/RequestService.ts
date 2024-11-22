@@ -1,17 +1,12 @@
 import { StaticFileService } from '../types/staticFileService.ts';
 import { IncomingMessage, ServerResponse } from 'node:http';
-import {
-  RequestContext,
-  RequestHandler,
-  ServerRequest,
-} from '../types/requestHandler.ts';
-import { createStaticRoutes } from '../routes/static.ts';
-import { routes } from '../routes/routes.tsx';
+import { RequestContext, ServerRequest } from '../types/requestHandler.ts';
 import { FileStorageService } from '../types/fileStorageService.ts';
 import { BillService } from './BillService.ts';
 import { BillModel } from '../../models/BillModel.ts';
 import { getDb } from './getDb.ts';
 import { resolveRoute } from './resolveRoute.ts';
+import { routes } from '../routes/routes.tsx';
 
 interface RequestServiceConstructorInput {
   fileStorageService: FileStorageService;
@@ -19,7 +14,6 @@ interface RequestServiceConstructorInput {
 }
 
 export class RequestService {
-  private readonly routeHandlers: Record<string, RequestHandler> = {};
   private readonly fileStorageService: FileStorageService;
   private readonly staticFileService: StaticFileService;
 
@@ -29,18 +23,6 @@ export class RequestService {
   }: RequestServiceConstructorInput) {
     this.fileStorageService = fileStorageService;
     this.staticFileService = staticFileService;
-  }
-
-  /**
-   * Define each route path (key) and its corresponding handler (value) for the
-   * entire server. We could probably just use a static object (e.g., routes),
-   * but we need to dynamically create the static asset paths
-   */
-  public createRoutes(): void {
-    const staticRoutes = createStaticRoutes(
-      this.staticFileService.getStaticPaths(),
-    );
-    Object.assign(this.routeHandlers, staticRoutes, routes);
   }
 
   /**
@@ -55,10 +37,10 @@ export class RequestService {
       return res.end('You need to specify a url in your request');
     }
 
-    const route = resolveRoute(req.url, Object.keys(this.routeHandlers));
-    const response = this.routeHandlers[route];
+    const route = resolveRoute(req.url, Object.keys(routes));
+    const requestHandler = routes[route];
 
-    if (!response) {
+    if (!requestHandler) {
       // Fall through case
       res.statusCode = 404;
       return res.end('We were unable to find the resource you requested');
@@ -76,7 +58,7 @@ export class RequestService {
     };
 
     try {
-      return response(serverRequest, res, context);
+      return requestHandler(serverRequest, res, context);
     } catch (e) {
       console.log(e);
       res.statusCode = 500;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heading, Text } from '@radix-ui/themes';
+import { Box, Heading, Text } from '@radix-ui/themes';
 
 interface BillProps {
   bill: {
@@ -9,7 +9,7 @@ interface BillProps {
 
 export const Bill: React.FC<BillProps> = ({ bill }) => {
   return (
-    <div>
+    <Box pt="8" mt="8" ml="4" mr="4">
       <Heading size="9" align="center" mb="8">
         Here is your bill, let&#39;s take a look!
       </Heading>
@@ -19,6 +19,6 @@ export const Bill: React.FC<BillProps> = ({ bill }) => {
       <Text as="p" align="center">
         {bill.image_path}
       </Text>
-    </div>
+    </Box>
   );
 };
