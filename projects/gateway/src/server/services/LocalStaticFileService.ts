@@ -1,14 +1,20 @@
 import fs from 'fs/promises';
 import { StaticFileService } from '../types/staticFileService.ts';
+import path from 'path';
 
 interface StaticFileServiceConstructorInput {
   /**
-   * Absolute path where static assets are located
+   * Absolute path to the server hosting our static assets
+   */
+  hostPath: string;
+  /**
+   * relative path where static assets are located
    */
   staticPath: string;
 }
 
 export class LocalStaticFileService implements StaticFileService {
+  private readonly hostPath: string;
   private readonly staticPath: string;
   /**
    * Map with a page url as key (e.g., `/` is the homepage) and an array of
@@ -18,9 +24,13 @@ export class LocalStaticFileService implements StaticFileService {
   /**
    * All file paths for our static assets
    */
-  private readonly staticPaths: string[] = [];
+  private readonly staticPaths: Set<string> = new Set();
 
-  public constructor({ staticPath }: StaticFileServiceConstructorInput) {
+  public constructor({
+    hostPath,
+    staticPath,
+  }: StaticFileServiceConstructorInput) {
+    this.hostPath = hostPath;
     this.staticPath = staticPath;
   }
 
@@ -30,35 +40,36 @@ export class LocalStaticFileService implements StaticFileService {
    * looking it up during the request, and 2) have a way of easily looking up
    * that a request is for a static asset.
    *
-   * @param dirPath directories to search within the static directory. This
-   *                defaults to the initial base static directory.
+   * @param pagePath directories to search within the static directory that are
+   *                 based on our app page paths
    */
-  async populateFilenameCache(dirPath = '/') {
-    const fullPath = `${this.staticPath}${dirPath}`;
+  async populateFilenameCache(pagePath = '/') {
+    const fullPath = path.join(this.hostPath, this.staticPath, pagePath);
     for (const filePath of await fs.readdir(fullPath)) {
-      // Make sure there's a `/` between the directory path and the filepath
-      const cachePath = `${dirPath}${dirPath === '/' ? '' : '/'}${filePath}`;
+      const nextPagePath = path.join(pagePath, filePath);
 
       const isDirectory = (
-        await fs.lstat(fullPath + '/' + filePath)
+        await fs.lstat(path.join(fullPath, filePath))
       ).isDirectory();
 
       if (!isDirectory) {
-        this.assetsByPage[dirPath] ??= [];
-        this.assetsByPage[dirPath].push(cachePath);
+        const cachePath = path.join('/', this.staticPath, nextPagePath);
+        this.assetsByPage[pagePath] ??= [];
+        this.assetsByPage[pagePath].push(cachePath);
 
-        this.staticPaths.push(cachePath);
+        this.staticPaths.add(cachePath);
         continue;
       }
 
       // At this point the cachePath is either a directory or not something we
       // want to cache.
       try {
-        await this.populateFilenameCache(cachePath);
+        await this.populateFilenameCache(nextPagePath);
       } catch (e) {
         // no-op, not a dir
       }
     }
+    // console.log(this.staticPaths);
   }
 
   /**
@@ -68,21 +79,14 @@ export class LocalStaticFileService implements StaticFileService {
     return this.assetsByPage[path] ?? [];
   }
 
-  public async getContent(path: string): Promise<Buffer> {
-    return await fs.readFile(this.appendStaticDir(path));
+  public async getContent(relativePath: string): Promise<Buffer> {
+    return await fs.readFile(path.join(this.hostPath, relativePath));
   }
 
   /**
-   * Expose the list of static paths as a copy
+   * Expose static paths as a copy
    */
-  public getStaticPaths(): string[] {
-    return [...this.staticPaths];
-  }
-
-  /**
-   * Helper function to append a path onto the absolute static dir
-   */
-  private appendStaticDir(path: string): string {
-    return `${this.staticPath}/${path}`;
+  public getStaticPaths(): Set<string> {
+    return new Set(this.staticPaths);
   }
 }

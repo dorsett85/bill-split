@@ -6,7 +6,8 @@ import { LocalFileStorageService } from './services/LocalFileStorageService.ts';
 const startServer = async () => {
   // Initialize static file service
   const staticFileService = new LocalStaticFileService({
-    staticPath: `${__dirname}/static`,
+    hostPath: __dirname,
+    staticPath: 'static',
   });
   await staticFileService.populateFilenameCache();
 

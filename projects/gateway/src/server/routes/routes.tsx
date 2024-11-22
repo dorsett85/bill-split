@@ -6,7 +6,7 @@ import { resolveRouteSegments } from '../services/resolveRouteSegments.ts';
 import { staticRouteHandler } from './static.ts';
 
 /**
- * All non-static routes for our app
+ * All routes for our app
  */
 export const routes: Record<string, RequestHandler> = {
   '/': async (req, res, { staticFileService }) => {
@@ -42,7 +42,7 @@ export const routes: Record<string, RequestHandler> = {
       res,
     );
   },
-  // TODO we should prefix these with static to make it more obvious
-  '/[name]': staticRouteHandler,
-  '/bill/[id]/[name]': staticRouteHandler,
+  // Static route handlers
+  '/static/[name]': staticRouteHandler,
+  '/static/bill/[id]/[name]': staticRouteHandler,
 };

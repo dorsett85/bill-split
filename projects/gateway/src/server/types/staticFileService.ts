@@ -8,7 +8,7 @@ export interface StaticFileService {
    */
   getPageAssetFilenames(path: string): string[];
   /**
-   * Get a list of paths for all of our static assets
+   * Get relative paths for all of our static assets
    */
-  getStaticPaths(): string[];
+  getStaticPaths(): Set<string>;
 }
