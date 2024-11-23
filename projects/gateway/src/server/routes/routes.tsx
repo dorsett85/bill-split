@@ -42,7 +42,6 @@ export const routes: Record<string, RequestHandler> = {
       res,
     );
   },
-  // Static route handlers
-  '/static/[name]': staticRouteHandler,
-  '/static/bill/[id]/[name]': staticRouteHandler,
+  // Static route handlers (local development only)
+  '/static/**': staticRouteHandler,
 };

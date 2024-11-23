@@ -6,32 +6,40 @@
  * const route = resolveRoute('/bill/12345')
  * console.log(route) // '/bill/[id]'
  */
-export const resolveRoute = (path: string, routes: string[]): string => {
-  // Split the URL into segments
-  const urlSegments = path.split('/');
+export const resolveRoute = (url: string, routes: string[]): string | null => {
+  const urlSegments = url.split('/');
 
-  // Iterate through the routes and find a match
   for (const route of routes) {
     const routeSegments = route.split('/');
 
-    // If the route has a dynamic segment (e.g., [id]), check if the URL segment matches the pattern
-    if (routeSegments.length === urlSegments.length) {
-      let isMatch = true;
-      for (let i = 0; i < routeSegments.length; i++) {
-        if (
-          routeSegments[i] !== urlSegments[i] &&
-          !routeSegments[i].startsWith('[')
-        ) {
-          isMatch = false;
-          break;
-        }
-      }
-      if (isMatch) {
+    let i = 0;
+    let j = 0;
+
+    while (i < urlSegments.length && j < routeSegments.length) {
+      const urlSegment = urlSegments[i];
+      const routeSegment = routeSegments[j];
+
+      if (routeSegment === '**') {
+        // Match remaining URL segments
         return route;
+      } else if (routeSegment.startsWith('[') && routeSegment.endsWith(']')) {
+        // Dynamic segment
+        if (i < urlSegments.length) {
+          i++;
+        }
+        j++;
+      } else if (urlSegment !== routeSegment) {
+        break;
+      } else {
+        i++;
+        j++;
       }
+    }
+
+    if (i === urlSegments.length && j === routeSegments.length) {
+      return route;
     }
   }
 
-  // No matching route found
-  return '';
+  return null;
 };

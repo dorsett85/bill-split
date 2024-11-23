@@ -38,7 +38,7 @@ export class RequestService {
     }
 
     const route = resolveRoute(req.url, Object.keys(routes));
-    const requestHandler = routes[route];
+    const requestHandler = route && routes[route];
 
     if (!requestHandler) {
       // Fall through case

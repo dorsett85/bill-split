@@ -6,26 +6,44 @@ import { routes } from '../routes/routes.tsx';
 const routeKeys = Object.keys(routes);
 
 describe('resolveRoute', () => {
-  it('finds base route', () => {
-    const route = resolveRoute('/', routeKeys);
-    expect(route).toBe('/');
+  it('matches wildcard route', () => {
+    const url = '/static/something/something';
+    const expectedRoute = '/static/**';
+
+    const actualRoute = resolveRoute(url, routeKeys);
+    expect(actualRoute).toBe(expectedRoute);
   });
 
-  it('finds non-dynamic route', () => {
-    const route = resolveRoute('/bill', routeKeys);
-    expect(route).toBe('/bill');
+  it('matches dynamic segment route', () => {
+    const url = '/bill/1234';
+    const expectedRoute = '/bill/[id]';
+
+    const actualRoute = resolveRoute(url, routeKeys);
+    expect(actualRoute).toBe(expectedRoute);
   });
 
-  it('finds dynamic route', () => {
-    const route = resolveRoute('/bill/12345', routeKeys);
-    expect(route).toBe('/bill/[id]');
+  it('matches dynamic nested segment route', () => {
+    const url = '/bill/1234/name';
+    const expectedRoute = '/bill/[id]/name';
+    const withNestedRoute = routeKeys.concat(expectedRoute);
+
+    const actualRoute = resolveRoute(url, withNestedRoute);
+    expect(actualRoute).toBe(expectedRoute);
   });
 
-  it.each(['/aill/12345', '/till/12345', '/not/a/route'])(
-    'finds no route for path: %s',
-    (path) => {
-      const route = resolveRoute(path, routeKeys);
-      expect(route).toBe('');
-    },
-  );
+  it('matches exact route', () => {
+    const url = '/bill';
+    const expectedRoute = '/bill';
+
+    const actualRoute = resolveRoute(url, routeKeys);
+    expect(actualRoute).toBe(expectedRoute);
+  });
+
+  it('returns null for unmatched URL', () => {
+    const url = '/nonexistent';
+    const expectedRoute = null;
+
+    const actualRoute = resolveRoute(url, routeKeys);
+    expect(actualRoute).toBe(expectedRoute);
+  });
 });
