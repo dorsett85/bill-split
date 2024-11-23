@@ -7,6 +7,7 @@ export interface Bill {
   business_location?: string;
   gratuity?: number;
   image_path?: string;
+  image_status: 'parsing' | 'ready';
   name?: string;
   tax?: number;
 }

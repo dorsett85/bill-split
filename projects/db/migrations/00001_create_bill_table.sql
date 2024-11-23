@@ -2,10 +2,11 @@ CREATE TABLE IF NOT EXISTS bill (
     id SERIAL PRIMARY KEY,
     business_name VARCHAR,
     business_location VARCHAR,
-    gratuity numeric,
-    image_path varchar,
-    name varchar,
-    tax numeric
+    gratuity NUMERIC,
+    image_path VARCHAR,
+    image_status VARCHAR CHECK (image_status IN ('parsing', 'ready')),
+    name VARCHAR,
+    tax NUMERIC
 );
 
 COMMENT ON COLUMN bill.business_name IS 'Name of the business';
@@ -13,4 +14,5 @@ COMMENT ON COLUMN bill.business_location IS 'Location of the business, may split
 COMMENT ON COLUMN bill.gratuity IS 'Gratuity expressed as a percent';
 COMMENT ON COLUMN bill.image_path IS 'Storage path of the receipt';
 COMMENT ON COLUMN bill.name IS 'Name of the bill';
+COMMENT ON COLUMN bill.image_status IS 'State of extracting and parsing image text data';
 COMMENT ON COLUMN bill.tax IS 'Tax expressed as a percent';

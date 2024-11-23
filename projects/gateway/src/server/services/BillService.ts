@@ -26,6 +26,7 @@ export class BillService {
     const storedFiles = await this.fileStorageService.store(req);
     const result = await this.billModel.create({
       image_path: storedFiles[0].path,
+      image_status: 'parsing',
     });
     return result.rows[0];
   }

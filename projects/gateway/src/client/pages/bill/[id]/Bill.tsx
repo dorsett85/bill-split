@@ -4,6 +4,7 @@ import { Box, Heading, Text } from '@radix-ui/themes';
 interface BillProps {
   bill: {
     image_path?: string;
+    image_status: 'parsing' | 'ready';
   };
 }
 

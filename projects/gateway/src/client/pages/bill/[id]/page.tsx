@@ -7,6 +7,7 @@ import { makeStaticAssetAttributes } from '../../../utils/makeStaticAssetAttribu
 interface BillPageProps extends PageProps {
   bill: {
     image_path?: string;
+    image_status: 'parsing' | 'ready';
   };
 }
 
