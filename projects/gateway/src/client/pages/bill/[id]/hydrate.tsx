@@ -5,6 +5,7 @@ import { BillPage } from './page.tsx';
 declare let window: WindowWithStaticAssets & {
   bill: {
     image_path?: string;
+    image_status: 'parsing' | 'ready';
   };
 };
 
