@@ -8,7 +8,7 @@ const kafka = new Kafka({
 
 const admin = kafka.admin();
 
-const migrate = async () => {
+const init = async () => {
   await admin.connect();
 
   // It might make sense to order these migration operations at some point,
@@ -23,6 +23,6 @@ const migrate = async () => {
   await admin.disconnect();
 };
 
-migrate().then(() => {
+init().then(() => {
   process.exit(0);
 });

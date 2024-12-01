@@ -19,4 +19,4 @@ COPY . .
 FROM base AS dev
 
 # Run the application
-CMD pnpm migrate
+CMD pnpm initialize

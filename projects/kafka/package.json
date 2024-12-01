@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "migrate": "tsc migrate.ts && node migrate.js && rm migrate.js"
+    "initialize": "tsc init.ts && node init.js && rm init.js"
   },
   "keywords": [],
   "author": "",
