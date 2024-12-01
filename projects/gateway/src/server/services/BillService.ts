@@ -1,14 +1,27 @@
 import { Bill, BillModel } from '../models/BillModel.ts';
 import { FileStorageService } from '../types/fileStorageService.ts';
 import { ServerRequest } from '../types/requestHandler.ts';
+import { KafkaService } from './KafkaService.ts';
+
+interface BillCycleConstructor {
+  billModel: BillModel;
+  fileStorageService: FileStorageService;
+  kafkaService: KafkaService;
+}
 
 export class BillService {
   private billModel: BillModel;
   private fileStorageService: FileStorageService;
+  private kafkaService: KafkaService;
 
-  constructor(billMode: BillModel, fileStorageService: FileStorageService) {
-    this.billModel = billMode;
+  constructor({
+    billModel,
+    fileStorageService,
+    kafkaService,
+  }: BillCycleConstructor) {
+    this.billModel = billModel;
     this.fileStorageService = fileStorageService;
+    this.kafkaService = kafkaService;
   }
 
   public async read(id: string): Promise<Bill> {
@@ -28,6 +41,11 @@ export class BillService {
       image_path: storedFiles[0].path,
       image_status: 'parsing',
     });
+
+    await this.kafkaService.publish('bills', {
+      image_path: storedFiles[0].path,
+    });
+
     return result.rows[0];
   }
 }

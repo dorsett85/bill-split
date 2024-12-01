@@ -4,19 +4,17 @@ x-db-user: &db-user ${USER}
 x-db-password: &db-password password
 x-db-port: &db-port 5432
 
+x-kafka-host: &kafka-host kafka
+x-kafka-port: &kafka-port 9092
+
 x-db-env: &db-env
-  depends_on:
-    - postgres
-  environment:
-    DB_HOST: *db-host
-    DB_NAME: *db-name
-    DB_USER: *db-user
-    DB_PASSWORD: *db-password
-    DB_PORT: *db-port
+  DB_HOST: *db-host
+  DB_NAME: *db-name
+  DB_USER: *db-user
+  DB_PASSWORD: *db-password
+  DB_PORT: *db-port
 
 services:
-  # This will run some init sql scripts on initial build. In order to run the
-  # init scripts again you will need to delete the volumes.
   postgres:
     image: postgres:17
     environment:
@@ -28,23 +26,40 @@ services:
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./projects/db/migrations:/docker-entrypoint-initdb.d
+
+  # This will run all sql migration scripts. In order to run the init scripts
+  # again you may need to delete the postgres volumes.
+  db-migrations:
+    build:
+      context: projects/db
+      target: dev
+    depends_on:
+      - postgres
+    environment:
+      <<: *db-env
+    init: true
 
   kafka:
     image: apache/kafka:3.9.0
     ports:
       - "9092:9092"
+
+  kafka-init:
+    build:
+      context: projects/kafka
+      target: dev
+    depends_on:
+      - kafka
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_LISTENER_SECURITY_PROTOCOL: PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_RAFT_ENABLED: true
+      KAFKA_HOST: *kafka-host
+      KAFKA_PORT: *kafka-port
 
   gateway:
     build:
       context: projects/gateway
       target: dev
-    <<: *db-env
+    depends_on:
+      - postgres
     develop:
       watch:
         - action: sync
@@ -52,6 +67,10 @@ services:
           target: /app
           ignore:
             - node_modules/
+    environment:
+      <<: *db-env
+      KAFKA_HOST: *kafka-host
+      KAFKA_PORT: *kafka-port
     ports:
       - "8080:8080"
 

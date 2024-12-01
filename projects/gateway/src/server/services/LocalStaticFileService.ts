@@ -69,7 +69,6 @@ export class LocalStaticFileService implements StaticFileService {
         // no-op, not a dir
       }
     }
-    // console.log(this.staticPaths);
   }
 
   /**

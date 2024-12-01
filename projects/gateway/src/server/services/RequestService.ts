@@ -7,6 +7,7 @@ import { BillModel } from '../models/BillModel.ts';
 import { getDb } from './getDb.ts';
 import { resolveRoute } from './resolveRoute.ts';
 import { routes } from '../routes/routes.tsx';
+import { KafkaService } from './KafkaService.ts';
 
 interface RequestServiceConstructorInput {
   fileStorageService: FileStorageService;
@@ -50,10 +51,11 @@ export class RequestService {
 
     // TODO make a function to create context
     const context: RequestContext = {
-      billService: new BillService(
-        new BillModel(getDb()),
-        this.fileStorageService,
-      ),
+      billService: new BillService({
+        billModel: new BillModel(getDb()),
+        fileStorageService: this.fileStorageService,
+        kafkaService: new KafkaService(),
+      }),
       staticFileService: this.staticFileService,
     };
 
