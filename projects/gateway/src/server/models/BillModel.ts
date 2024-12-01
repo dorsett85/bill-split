@@ -1,5 +1,5 @@
 import { Pool, QueryResult } from 'pg';
-import { BaseModel } from '../server/types/baseModel.ts';
+import { BaseModel } from '../types/baseModel.ts';
 
 export interface Bill {
   id: number;

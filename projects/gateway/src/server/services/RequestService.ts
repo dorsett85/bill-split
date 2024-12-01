@@ -3,7 +3,7 @@ import { IncomingMessage, ServerResponse } from 'node:http';
 import { RequestContext, ServerRequest } from '../types/requestHandler.ts';
 import { FileStorageService } from '../types/fileStorageService.ts';
 import { BillService } from './BillService.ts';
-import { BillModel } from '../../models/BillModel.ts';
+import { BillModel } from '../models/BillModel.ts';
 import { getDb } from './getDb.ts';
 import { resolveRoute } from './resolveRoute.ts';
 import { routes } from '../routes/routes.tsx';

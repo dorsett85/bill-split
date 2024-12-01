@@ -1,4 +1,4 @@
-import { Bill, BillModel } from '../../models/BillModel.ts';
+import { Bill, BillModel } from '../models/BillModel.ts';
 import { FileStorageService } from '../types/fileStorageService.ts';
 import { ServerRequest } from '../types/requestHandler.ts';
 
