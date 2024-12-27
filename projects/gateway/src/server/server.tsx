@@ -2,6 +2,7 @@ import http from 'http';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import { RequestService } from './services/RequestService.ts';
 import { LocalFileStorageService } from './services/LocalFileStorageService.ts';
+import { startDevelopmentConsumer } from './services/KafkaService.ts';
 
 const startServer = async () => {
   // Initialize static file service
@@ -21,6 +22,11 @@ const startServer = async () => {
     fileStorageService,
     staticFileService,
   });
+
+  // Initialize a kafka consumer only when developing
+  if (process.env.NODE_ENV !== 'production') {
+    void startDevelopmentConsumer();
+  }
 
   const app = http.createServer(requestService.handleRequest);
 

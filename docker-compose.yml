@@ -4,9 +4,6 @@ x-db-user: &db-user ${USER}
 x-db-password: &db-password password
 x-db-port: &db-port 5432
 
-x-kafka-host: &kafka-host kafka
-x-kafka-port: &kafka-port 9092
-
 x-db-env: &db-env
   DB_HOST: *db-host
   DB_NAME: *db-name
@@ -14,8 +11,14 @@ x-db-env: &db-env
   DB_PASSWORD: *db-password
   DB_PORT: *db-port
 
+x-kafka-host: &kafka-host kafka
+x-kafka-port: &kafka-port 9092
+
+x-bill-processor-url: &bill-processor-url http://bill-processor:8080/2015-03-31/functions/function/invocations
+
 services:
   postgres:
+    container_name: postgres
     image: postgres:17
     environment:
       POSTGRES_DB: bill_split
@@ -40,8 +43,8 @@ services:
     init: true
 
   kafka:
-    image: apache/kafka:3.9.0
     container_name: kafka
+    image: apache/kafka:3.9.0
     ports:
       - "29092:29092"
     environment:
@@ -53,6 +56,7 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_PROCESS_ROLES: 'controller,broker'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   kafka-init:
     build:
@@ -68,7 +72,9 @@ services:
     build:
       context: projects/gateway
       target: dev
+    container_name: gateway
     depends_on:
+      - kafka
       - postgres
     develop:
       watch:
@@ -77,12 +83,34 @@ services:
           target: /app
           ignore:
             - node_modules/
+        - action: rebuild
+          path: package.json
     environment:
       <<: *db-env
       KAFKA_HOST: *kafka-host
       KAFKA_PORT: *kafka-port
+      BILL_PROCESSOR_URL: *bill-processor-url
     ports:
       - "8080:8080"
+
+  bill-processor:
+    build:
+      context: projects/bill-processor
+    container_name: bill-processor
+    depends_on:
+      - postgres
+      - gateway
+    develop:
+      watch:
+        - action: sync
+          path: ./projects/bill-processor
+          target: /usr/app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+    ports:
+      - "9000:8080"
 
 volumes:
   postgres_data:
