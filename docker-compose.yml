@@ -75,7 +75,6 @@ services:
     container_name: gateway
     depends_on:
       - kafka
-      - postgres
     develop:
       watch:
         - action: sync
@@ -97,9 +96,6 @@ services:
     build:
       context: projects/bill-processor
     container_name: bill-processor
-    depends_on:
-      - postgres
-      - gateway
     develop:
       watch:
         - action: sync
