@@ -14,7 +14,7 @@ RUN --mount=type=bind,source=package.json,target=package.json \
     pnpm install
 
 # Copy the rest of the source files into the image
-COPY package.json index.ts  ./
+COPY . .
 
 RUN pnpm run build
 
