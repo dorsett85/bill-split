@@ -1,7 +1,7 @@
 import http from 'http';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import { RequestService } from './services/RequestService.ts';
-import { LocalFileStorageService } from './services/LocalFileStorageService.ts';
+import { S3FileStorageService } from './services/S3FileStorageService.ts';
 import { startDevelopmentConsumer } from './services/KafkaService.ts';
 
 const startServer = async () => {
@@ -13,8 +13,11 @@ const startServer = async () => {
   await staticFileService.populateFilenameCache();
 
   // Initialize file storage service
-  const fileStorageService = new LocalFileStorageService({
-    storagePath: `${__dirname}/uploads`,
+  const fileStorageService = new S3FileStorageService({
+    bucketName: process.env.AWS_S3_BILL_SPLIT_BUCKET ?? '',
+    accessKeyId: process.env.AWS_S3_BILL_SPLIT_ACCESS_KEY ?? '',
+    secretAccessKey: process.env.AWS_S3_BILL_SPLIT_SECRET_ACCESS_KEY ?? '',
+    region: process.env.AWS_REGION ?? '',
   });
 
   // Initialize request service

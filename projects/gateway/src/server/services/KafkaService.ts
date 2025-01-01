@@ -40,26 +40,63 @@ export class KafkaService {
  * We'll only use this consumer for development purposes, otherwise our aws
  * lambda will be the direct consumer.
  */
-const developmentConsumer = kafka.consumer({
-  groupId: 'bill-processor',
-});
-
 export const startDevelopmentConsumer = async () => {
+  const topic: Topics = 'bills';
+  const developmentConsumer = kafka.consumer({
+    groupId: 'bill-processor',
+  });
+
   await developmentConsumer.connect();
-  await developmentConsumer.subscribe({ topic: 'bills' });
+  await developmentConsumer.subscribe({ topic, fromBeginning: false });
   await developmentConsumer.run({
     async eachMessage({ message }) {
-      const messageData = JSON.parse(message.value?.toString() ?? '');
-      console.log('parsed message:', messageData);
+      const event: SelfManagedKafkaEvent = {
+        eventSource: 'SelfManagedKafka',
+        bootstrapServers: '',
+        records: {
+          [topic]: [
+            {
+              topic,
+              partition: 1,
+              offset: +message.offset,
+              timestamp: +message.timestamp,
+              timestampType: 'CREATE_TIME',
+              key: message.key?.toString() ?? '',
+              value: message.value?.toString() ?? '',
+              headers: [],
+            },
+          ],
+        },
+      };
 
-      const res = await fetch(process.env.BILL_PROCESSOR_URL ?? '', {
+      void fetch(process.env.BILL_PROCESSOR_URL ?? '', {
         method: 'POST',
-        body: JSON.stringify({
-          records: [messageData],
-        }),
+        body: JSON.stringify(event),
       });
-      const data = await res.json();
-      console.log('response data:', data);
     },
   });
 };
+
+interface SelfManagedKafkaRecordHeader {
+  [headerKey: string]: number[];
+}
+
+interface SelfManagedKafkaRecord {
+  topic: string;
+  partition: number;
+  offset: number;
+  timestamp: number;
+  timestampType: 'CREATE_TIME' | 'LOG_APPEND_TIME';
+  key: string;
+  value: string;
+  headers: SelfManagedKafkaRecordHeader[];
+}
+
+// https://docs.aws.amazon.com/lambda/latest/dg/with-kafka.html
+interface SelfManagedKafkaEvent {
+  eventSource: 'SelfManagedKafka';
+  bootstrapServers: string;
+  records: {
+    [topic: string]: SelfManagedKafkaRecord[];
+  };
+}
