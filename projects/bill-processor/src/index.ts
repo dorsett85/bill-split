@@ -5,11 +5,11 @@ import { TextractClient } from '@aws-sdk/client-textract';
 
 const billProcessingService: BillProcessingService =
   new RemoteBillProcessingService({
-    bucketName: process.env.AWS_BILL_SPLIT_S3_BUCKET ?? '',
+    bucketName: process.env.AWS_BILL_IMAGE_S3_BUCKET ?? '',
     textractClient: new TextractClient({
       credentials: {
-        accessKeyId: process.env.AWS_BILL_SPLIT_ACCESS_KEY ?? '',
-        secretAccessKey: process.env.AWS_BILL_SPLIT_SECRET_ACCESS_KEY ?? '',
+        accessKeyId: process.env.AWS_ACCESS_KEY ?? '',
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
       },
       region: process.env.AWS_REGION ?? '',
     }),
