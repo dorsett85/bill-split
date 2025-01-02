@@ -10,6 +10,10 @@ export const Home = () => {
   const handleOnFileClick = async (capture: boolean) => {
     if (!fileInputRef.current) return;
 
+    // Reset the input ref value in case the user returns without reloading
+    // (e.g., clicks the back button and tries to upload again)
+    fileInputRef.current.value = '';
+
     // If the user clicks the scan button we'll add the capture attribute,
     // otherwise remove it.
     if (capture) {
