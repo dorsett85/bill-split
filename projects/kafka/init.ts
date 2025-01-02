@@ -16,7 +16,7 @@ const init = async () => {
   await admin.createTopics({
     topics: [
       {
-        topic: "bills",
+        topic: process.env.KAFKA_BILL_PROCESSING_TOPIC,
       },
     ],
   });

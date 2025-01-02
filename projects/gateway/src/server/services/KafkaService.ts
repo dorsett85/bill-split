@@ -1,7 +1,5 @@
 import { Kafka, Partitioners, Producer, RecordMetadata } from 'kafkajs';
 
-type Topics = 'bills';
-
 const kafka = new Kafka({
   clientId: 'gateway',
   brokers: [`${process.env.KAFKA_HOST}:${process.env.KAFKA_PORT}`],
@@ -22,7 +20,7 @@ export class KafkaService {
    * Post messages to Kafka
    */
   public async publish(
-    topic: Topics,
+    topic: string,
     value: Record<string, unknown>,
   ): Promise<RecordMetadata[]> {
     await this.producer.connect();
@@ -41,7 +39,7 @@ export class KafkaService {
  * lambda will be the direct consumer.
  */
 export const startDevelopmentConsumer = async () => {
-  const topic: Topics = 'bills';
+  const topic = process.env.KAFKA_BILL_PROCESSING_TOPIC ?? '';
   const developmentConsumer = kafka.consumer({
     groupId: 'bill-processor',
   });

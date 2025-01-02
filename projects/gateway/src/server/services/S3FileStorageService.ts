@@ -10,29 +10,16 @@ import { Upload } from '@aws-sdk/lib-storage';
 
 interface S3FileServiceConstructorInput {
   bucketName: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-  region: string;
+  s3Client: S3Client;
 }
 
 export class S3FileStorageService implements FileStorageService {
   private readonly bucketName: string;
   private readonly s3Client: S3Client;
 
-  constructor({
-    bucketName,
-    accessKeyId,
-    secretAccessKey,
-    region,
-  }: S3FileServiceConstructorInput) {
+  constructor({ bucketName, s3Client }: S3FileServiceConstructorInput) {
     this.bucketName = bucketName;
-    this.s3Client = new S3Client({
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-      region,
-    });
+    this.s3Client = s3Client;
   }
 
   async store(req: ServerRequest): Promise<FileStorageOutput[]> {

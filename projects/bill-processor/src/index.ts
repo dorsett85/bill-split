@@ -1,26 +1,31 @@
-import { SelfManagedKafkaHandler, SelfManagedKafkaRecord } from 'aws-lambda';
+import { SelfManagedKafkaHandler } from 'aws-lambda';
 import { RemoteBillProcessingService } from './services/RemoteBillProcessingService.ts';
 import { BillProcessingService } from './types/billProcessingService.ts';
+import { TextractClient } from '@aws-sdk/client-textract';
 
 const billProcessingService: BillProcessingService =
-  new RemoteBillProcessingService();
+  new RemoteBillProcessingService({
+    bucketName: process.env.AWS_BILL_SPLIT_S3_BUCKET ?? '',
+    textractClient: new TextractClient({
+      credentials: {
+        accessKeyId: process.env.AWS_BILL_SPLIT_ACCESS_KEY ?? '',
+        secretAccessKey: process.env.AWS_BILL_SPLIT_SECRET_ACCESS_KEY ?? '',
+      },
+      region: process.env.AWS_REGION ?? '',
+    }),
+  });
 
 /**
  * Our AWS Lambda function responsible for processing an uploaded bill receipt
  */
 export const handler: SelfManagedKafkaHandler = async (event) => {
-  await handleKafkaRecords(event.records['bill'], billProcessingService);
-};
-
-export const handleKafkaRecords = async (
-  records: SelfManagedKafkaRecord[],
-  billProcessingService: BillProcessingService,
-): Promise<void> => {
-  console.log('HANDLING RECORDS:');
-
-  const promises = records.map(async (record) => {
+  // Collect a list of processing promises from the event payload. The
+  // processing is IO intensive so handling them asynchronously if we have more
+  // than one is crucial.
+  const topic = process.env.KAFKA_BILL_PROCESSING_TOPIC ?? '';
+  const promises = event.records[topic].map(async (record) => {
     const payload = JSON.parse(record.value);
-    console.log('processing event with payload:', payload);
+
     void billProcessingService.process(payload);
   });
   const results = await Promise.allSettled(promises);

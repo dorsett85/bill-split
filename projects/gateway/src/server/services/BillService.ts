@@ -42,9 +42,12 @@ export class BillService {
       image_status: 'parsing',
     });
 
-    await this.kafkaService.publish('bills', {
-      image_path: storedFiles[0].path,
-    });
+    await this.kafkaService.publish(
+      process.env.KAFKA_BILL_PROCESSING_TOPIC ?? '',
+      {
+        imageName: storedFiles[0].path,
+      },
+    );
 
     return result.rows[0];
   }

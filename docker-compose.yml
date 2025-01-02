@@ -11,8 +11,15 @@ x-db-env: &db-env
   DB_PASSWORD: *db-password
   DB_PORT: *db-port
 
+x-aws-env: &aws-env
+  AWS_REGION: us-west-1
+  AWS_BILL_IMAGE_S3_BUCKET: bill-split-images
+  AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+
 x-kafka-host: &kafka-host kafka
 x-kafka-port: &kafka-port 9092
+x-kafka-bill-processing-topic: &kafka-bill-processing-topic bills-to-process
 
 x-bill-processor-url: &bill-processor-url http://bill-processor:8080/2015-03-31/functions/function/invocations
 
@@ -67,6 +74,7 @@ services:
     environment:
       KAFKA_HOST: *kafka-host
       KAFKA_PORT: *kafka-port
+      KAFKA_BILL_PROCESSING_TOPIC: *kafka-bill-processing-topic
 
   gateway:
     build:
@@ -74,7 +82,7 @@ services:
       target: dev
     container_name: gateway
     depends_on:
-      - kafka
+      - kafka-init
     develop:
       watch:
         - action: sync
@@ -85,9 +93,10 @@ services:
         - action: rebuild
           path: package.json
     environment:
-      <<: *db-env
+      <<: [*db-env, *aws-env]
       KAFKA_HOST: *kafka-host
       KAFKA_PORT: *kafka-port
+      KAFKA_BILL_PROCESSING_TOPIC: *kafka-bill-processing-topic
       BILL_PROCESSOR_URL: *bill-processor-url
     ports:
       - "8080:8080"
@@ -105,6 +114,9 @@ services:
             - node_modules/
         - action: rebuild
           path: package.json
+    environment:
+      <<: *aws-env
+      KAFKA_BILL_PROCESSING_TOPIC: *kafka-bill-processing-topic
     ports:
       - "9000:8080"
 
