@@ -10,6 +10,7 @@ workflows:
     jobs:
       - path-filtering/filter:
           base-revision: main
-          config-path: .circleci/gateway.yml
+          config-path: .circleci/continue_config.yml
           mapping: |
-            projects/gateway/.* gateway_is_changed true
+            projects/bill-processor/.* bill-processor_is_changed true
+            projects/gateway/.* gateway_is_changed true      
