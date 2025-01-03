@@ -39,10 +39,13 @@ export class RemoteBillProcessingService implements BillProcessingService {
       },
     });
 
-    // const result = await this.textractClient.send(command);
-    const result = exampleData;
+    const result =
+      process.env.NODE_ENV === 'production'
+        ? await this.textractClient.send(command)
+        : exampleData;
 
     // TODO Save result to db
+    console.log(result);
   }
 }
 
