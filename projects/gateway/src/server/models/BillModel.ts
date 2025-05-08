@@ -24,8 +24,8 @@ export class BillModel implements BaseModel<Bill> {
   public create(bill: BillCreate) {
     return this.db.query(
       `
-      INSERT INTO bill (business_name, business_location, gratuity, image_path, name, tax)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO bill (business_name, business_location, gratuity, image_path, image_status, name, tax)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id
     `,
       [
@@ -33,6 +33,7 @@ export class BillModel implements BaseModel<Bill> {
         bill.business_location,
         bill.gratuity,
         bill.image_path,
+        bill.image_status,
         bill.name,
         bill.tax,
       ],

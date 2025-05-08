@@ -5,7 +5,10 @@ import {
 import { ServerRequest } from '../types/requestHandler.ts';
 import formidable, { VolatileFile } from 'formidable';
 import { PassThrough } from 'node:stream';
-import { S3Client } from '@aws-sdk/client-s3';
+import {
+  CompleteMultipartUploadCommandOutput,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 
 interface S3FileServiceConstructorInput {
@@ -23,6 +26,9 @@ export class S3FileStorageService implements FileStorageService {
   }
 
   async store(req: ServerRequest): Promise<FileStorageOutput[]> {
+    const newUploadPromises: Promise<CompleteMultipartUploadCommandOutput>[] =
+      [];
+
     const form = formidable({
       keepExtensions: true,
       fileWriteStreamHandler: (file) => {
@@ -31,29 +37,31 @@ export class S3FileStorageService implements FileStorageService {
           return pass;
         }
 
-        new Upload({
-          client: this.s3Client,
-          params: {
-            Bucket: this.bucketName,
-            Key: file.newFilename,
-            Body: pass,
-          },
-        }).done();
+        newUploadPromises.push(
+          new Upload({
+            client: this.s3Client,
+            params: {
+              Bucket: this.bucketName,
+              Key: file.newFilename,
+              Body: pass,
+            },
+          }).done(),
+        );
 
         return pass;
       },
     });
 
     // parse a file upload
-    const files = (await form.parse(req))[1];
+    await form.parse(req);
 
-    return Object.values(files)
-      .flat()
-      .filter((file) => file !== undefined)
-      .map((file) => {
-        return {
-          path: file.newFilename,
-        };
+    const storageOutput: FileStorageOutput[] = [];
+    for await (const uploadData of newUploadPromises) {
+      storageOutput.push({
+        path: uploadData.Location ?? '',
       });
+    }
+
+    return storageOutput;
   }
 }
