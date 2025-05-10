@@ -6,11 +6,16 @@ Easily upload a bill/receipt and split it between friends and family
 
 TODO
 
-1. Add containerized db
-2. Add containerized message queue (for queueing image processing)
-3. Add aws lambdas for extracting text
-4. Integrate with aws textract
-5. Add api endpoints
-6. Add UI pages
-   7. Home/upload
-   8. Bill page
+1. Add api endpoints
+   1. Endpoint for manual item creation
+   2. Create bill participant
+   3. Assign items to bill participant
+2. Add UI pages
+   1. Individual bill page
+      1. Show bill information
+      2. Create bill participant
+      3. Assign items to bill participant
+      4. Auto split bill
+      5. Tax input
+      6. Tip input
+      7. Manual override
