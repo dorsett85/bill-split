@@ -1,5 +1,5 @@
 {
- "compilerOptions": {
+  "compilerOptions": {
     "target": "es2022",
     "lib": ["ES2022"],
     "module": "es2022",
@@ -17,5 +17,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
-  },
+  }
 }
