@@ -1,5 +1,5 @@
-import { Box, Button, Flex, Heading, Strong, Text } from '@radix-ui/themes';
 import { CameraIcon, FileIcon } from '@radix-ui/react-icons';
+import { Box, Button, Flex, Heading, Strong, Text } from '@radix-ui/themes';
 import { ChangeEvent, useRef, useState } from 'react';
 
 export const Home = () => {
@@ -45,7 +45,7 @@ export const Home = () => {
       // Redirect to the specific bill page
       // TODO Should we flash a success message before redirecting?
       window.location.assign(`/bill/${data.id}`);
-    } catch (err) {
+    } catch (_err) {
       // TODO add error handler
     }
   };

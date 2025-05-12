@@ -1,15 +1,15 @@
-import {
-  FileStorageOutput,
-  FileStorageService,
-} from '../types/fileStorageService.ts';
-import { ServerRequest } from '../types/requestHandler.ts';
-import formidable, { VolatileFile } from 'formidable';
 import { PassThrough } from 'node:stream';
 import {
   CompleteMultipartUploadCommandOutput,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import formidable, { VolatileFile } from 'formidable';
+import {
+  FileStorageOutput,
+  FileStorageService,
+} from '../types/fileStorageService.ts';
+import { ServerRequest } from '../types/requestHandler.ts';
 
 interface S3FileServiceConstructorInput {
   bucketName: string;

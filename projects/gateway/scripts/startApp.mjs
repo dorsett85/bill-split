@@ -10,7 +10,7 @@ const STATIC_OUT_DIR = OUT_DIR + '/static';
 try {
   await fs.access(OUT_DIR);
   await fs.rm(OUT_DIR, { recursive: true });
-} catch (e) {
+} catch (_e) {
   // directory doesn't exist, no-op
 }
 await fs.mkdir(OUT_DIR);

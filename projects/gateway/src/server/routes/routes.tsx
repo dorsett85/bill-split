@@ -1,8 +1,8 @@
-import { RequestHandler } from '../types/requestHandler.ts';
-import { writeToHtml, writeToJson } from '../services/responseHelpers.ts';
-import { HomePage } from '../../client/pages/page.tsx';
 import { BillPage } from '../../client/pages/bill/[id]/page.tsx';
+import { HomePage } from '../../client/pages/page.tsx';
 import { resolveRouteSegments } from '../services/resolveRouteSegments.ts';
+import { writeToHtml, writeToJson } from '../services/responseHelpers.ts';
+import { RequestHandler } from '../types/requestHandler.ts';
 import { staticRouteHandler } from './static.ts';
 
 /**

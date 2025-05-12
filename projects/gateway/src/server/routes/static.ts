@@ -1,5 +1,5 @@
-import { RequestHandler } from '../types/requestHandler.ts';
 import { writeToText } from '../services/responseHelpers.ts';
+import { RequestHandler } from '../types/requestHandler.ts';
 
 /**
  * Handler for all static file requests

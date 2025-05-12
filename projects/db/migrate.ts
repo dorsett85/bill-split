@@ -1,7 +1,7 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 // Run this file to run new migrations
-import { Pool, QueryResult } from "pg";
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
+import { Pool, QueryResult } from 'pg';
 
 const pool = new Pool({
   database: process.env.DB_NAME,
@@ -11,7 +11,7 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD,
 });
 
-const MIGRATION_DIR = path.resolve("./migrations");
+const MIGRATION_DIR = path.resolve('./migrations');
 
 /**
  * This will read in the sql text file and run the query
@@ -35,7 +35,7 @@ const runMigrations = async () => {
 
     // Make sure the initialize script gets run, otherwise we won't have the
     // migration tracking table.
-    if (basename === "00000_init") {
+    if (basename === '00000_init') {
       await runScript(file);
       continue;
     }

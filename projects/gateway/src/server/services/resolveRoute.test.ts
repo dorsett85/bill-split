@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { resolveRoute } from './resolveRoute.ts';
 import { routes } from '../routes/routes.tsx';
+import { resolveRoute } from './resolveRoute.ts';
 
 // TODO test this against test data and not our route keys
 const routeKeys = Object.keys(routes);

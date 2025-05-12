@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
-import { StaticFileService } from './staticFileService.ts';
 import { BillService } from '../services/BillService.ts';
+import { StaticFileService } from './staticFileService.ts';
 
 /**
  * We'll make love easy and assume we know the url is a string

@@ -1,6 +1,6 @@
 import ReactDomClient from 'react-dom/client';
-import { HomePage } from './page.tsx';
 import { WindowWithStaticAssets } from '../types/WindowWithStaticAssets.ts';
+import { HomePage } from './page.tsx';
 
 declare let window: WindowWithStaticAssets;
 

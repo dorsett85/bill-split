@@ -1,10 +1,10 @@
-import { BillProcessingService } from '../types/billProcessingService';
 import {
   AnalyzeExpenseCommand,
   AnalyzeExpenseCommandOutput,
   TextractClient,
 } from '@aws-sdk/client-textract';
 import { type BillProcessingEventValue } from '../types/billProcessingEventValue.ts';
+import { BillProcessingService } from '../types/billProcessingService';
 
 interface RemoteBillProcessingConstructorInput {
   bucketName: string;
@@ -39,17 +39,14 @@ export class RemoteBillProcessingService implements BillProcessingService {
       },
     });
 
-    const result =
-      process.env.NODE_ENV === 'production'
-        ? await this.textractClient.send(command)
-        : exampleData;
+    const result = await this.textractClient.send(command);
 
     // TODO Save result to db
     console.log(result);
   }
 }
 
-const exampleData: AnalyzeExpenseCommandOutput = {
+export const exampleData: AnalyzeExpenseCommandOutput = {
   $metadata: {
     httpStatusCode: 200,
     requestId: '3643daa7-ecb4-4440-831f-99614b029045',

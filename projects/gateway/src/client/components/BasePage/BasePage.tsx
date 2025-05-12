@@ -1,6 +1,6 @@
+import { Theme } from '@radix-ui/themes';
 import React, { ReactElement } from 'react';
 import { StaticAssetAttributes } from '../../types/staticAssetAttributes.ts';
-import { Theme } from '@radix-ui/themes';
 
 export interface BasePageProps extends StaticAssetAttributes {
   title: string;

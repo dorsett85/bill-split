@@ -1,6 +1,6 @@
+import path from 'path';
 import fs from 'fs/promises';
 import { StaticFileService } from '../types/staticFileService.ts';
-import path from 'path';
 
 interface StaticFileServiceConstructorInput {
   /**
@@ -65,7 +65,7 @@ export class LocalStaticFileService implements StaticFileService {
       // want to cache.
       try {
         await this.populateFilenameCache(nextPagePath);
-      } catch (e) {
+      } catch (_e) {
         // no-op, not a dir
       }
     }

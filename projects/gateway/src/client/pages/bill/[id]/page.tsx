@@ -1,8 +1,8 @@
-import { BasePage } from '../../../components/BasePage/BasePage.tsx';
 import React from 'react';
-import { Bill } from './Bill.tsx';
+import { BasePage } from '../../../components/BasePage/BasePage.tsx';
 import { PageProps } from '../../../types/pageProps.ts';
 import { makeStaticAssetAttributes } from '../../../utils/makeStaticAssetAttributes.ts';
+import { Bill } from './Bill.tsx';
 
 interface BillPageProps extends PageProps {
   bill: {

@@ -19,7 +19,7 @@ export const getClientEntryPoints = async (baseEntryPath, target) => {
       }
       try {
         await findIndexFiles(newPath);
-      } catch (e) {
+      } catch (_e) {
         // no-op, not a dir
       }
     }

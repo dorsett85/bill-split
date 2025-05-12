@@ -1,18 +1,36 @@
+import {
+  TextractClient,
+  TextractClientResolvedConfig,
+} from '@aws-sdk/client-textract';
 import { SelfManagedKafkaHandler } from 'aws-lambda';
-import { RemoteBillProcessingService } from './services/RemoteBillProcessingService.ts';
+import {
+  RemoteBillProcessingService,
+  exampleData,
+} from './services/RemoteBillProcessingService.ts';
 import { BillProcessingService } from './types/billProcessingService.ts';
-import { TextractClient } from '@aws-sdk/client-textract';
+
+// Only make an actual textract client in production. It costs 25 cents per
+// request!
+const textractClient: TextractClient =
+  process.env.NODE_ENV === 'production'
+    ? new TextractClient({
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY ?? '',
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
+        },
+      })
+    : // This object is a stub for development
+      {
+        send: async () => exampleData,
+        config: {} as TextractClientResolvedConfig,
+        destroy: () => undefined,
+        middlewareStack: {} as TextractClient['middlewareStack'],
+      };
 
 const billProcessingService: BillProcessingService =
   new RemoteBillProcessingService({
     bucketName: process.env.AWS_BILL_IMAGE_S3_BUCKET ?? '',
-    textractClient: new TextractClient({
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY ?? '',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
-      },
-      region: process.env.AWS_REGION ?? '',
-    }),
+    textractClient,
   });
 
 /**

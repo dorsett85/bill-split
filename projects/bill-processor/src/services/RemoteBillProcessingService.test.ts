@@ -1,14 +1,20 @@
-import { describe, expect, it, vi } from 'vitest';
-import { RemoteBillProcessingService } from './RemoteBillProcessingService.ts';
 import {
   AnalyzeExpenseCommandOutput,
   TextractClient,
+  TextractClientResolvedConfig,
 } from '@aws-sdk/client-textract';
+import { describe, expect, it, vi } from 'vitest';
+import { RemoteBillProcessingService } from './RemoteBillProcessingService.ts';
 
 describe('Test RemoteBillProcessingService', () => {
   it('processes image', async () => {
     // Arrange
-    const textractClient = new TextractClient({ region: 'us-west-1' });
+    const textractClient: TextractClient = {
+      send: vi.fn(),
+      config: {} as TextractClientResolvedConfig,
+      destroy: vi.fn(),
+      middlewareStack: {} as TextractClient['middlewareStack'],
+    };
     const result: AnalyzeExpenseCommandOutput = {
       $metadata: {},
     };

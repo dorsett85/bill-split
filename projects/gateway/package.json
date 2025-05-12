@@ -2,7 +2,6 @@
   "name": "gateway",
   "scripts": {
     "type-check": "tsc",
-    "lint": "eslint",
     "build": "node scripts/esbuild.mjs",
     "start": "node --env-file=.env scripts/startApp.mjs",
     "test": "vitest --config test/vitest.config.mts"
@@ -19,7 +18,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.26.0",
+    "@biomejs/biome": "1.9.4",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -31,14 +30,9 @@
     "@vitejs/plugin-react": "^4.4.1",
     "concurrently": "^9.1.2",
     "esbuild": "^0.24.2",
-    "eslint": "^9.26.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-react": "^7.37.5",
     "globals": "^15.15.0",
     "jsdom": "^25.0.1",
-    "prettier": "^3.5.3",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.32.0",
     "vitest": "^2.1.9"
   },
   "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39"

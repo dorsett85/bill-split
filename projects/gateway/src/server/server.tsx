@@ -1,9 +1,9 @@
 import http from 'http';
+import { S3Client } from '@aws-sdk/client-s3';
+import { startDevelopmentConsumer } from './services/KafkaService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import { RequestService } from './services/RequestService.ts';
 import { S3FileStorageService } from './services/S3FileStorageService.ts';
-import { startDevelopmentConsumer } from './services/KafkaService.ts';
-import { S3Client } from '@aws-sdk/client-s3';
 
 const startServer = async () => {
   // Initialize static file service

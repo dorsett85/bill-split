@@ -1,5 +1,5 @@
-import React from 'react';
 import { Box, Heading, Text } from '@radix-ui/themes';
+import React from 'react';
 
 interface BillProps {
   bill: {

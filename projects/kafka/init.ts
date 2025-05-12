@@ -1,8 +1,8 @@
 // Run this file to initialize kafka
-import { Kafka } from "kafkajs";
+import { Kafka } from 'kafkajs';
 
 const kafka = new Kafka({
-  clientId: "admin",
+  clientId: 'admin',
   brokers: [`${process.env.KAFKA_HOST}:${process.env.KAFKA_PORT}`],
 });
 

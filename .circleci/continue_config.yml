@@ -15,7 +15,7 @@ jobs:
   test-bill-processor:
     executor:
       name: node/default
-      tag: 20.18.0
+      tag: 22.15.0
     working_directory: ~/project/projects/bill-processor
     steps:
       - checkout:
@@ -34,12 +34,15 @@ jobs:
           name: Type checking
           command: pnpm tsc
       - run:
+          name: Linting
+          command: pnpm biome ci
+      - run:
           name: Run tests
           command: pnpm test
   test-gateway:
     executor:
       name: node/default
-      tag: 20.18.0
+      tag: 22.15.0
     working_directory: ~/project/projects/gateway
     steps:
       - checkout:
@@ -58,8 +61,8 @@ jobs:
           name: Type checking
           command: pnpm tsc
       - run:
-          name: Lint
-          command: pnpm eslint
+          name: Linting
+          command: pnpm biome ci
       - run:
           name: Run tests
           command: pnpm test

@@ -1,7 +1,7 @@
-import React from 'react';
-import ReactDomServer from 'react-dom/server';
 import { ServerResponse } from 'node:http';
 import path from 'path';
+import React from 'react';
+import ReactDomServer from 'react-dom/server';
 
 interface JsonDataResponse {
   data: Record<never, never>;
