@@ -9,20 +9,20 @@ import { RemoteBillProcessingService } from './RemoteBillProcessingService.ts';
 describe('Test RemoteBillProcessingService', () => {
   it('processes image', async () => {
     // Arrange
+    const result: AnalyzeExpenseCommandOutput = {
+      $metadata: {},
+    };
+
     const textractClient: TextractClient = {
-      send: vi.fn(),
+      send: vi.fn().mockResolvedValue(result),
       config: {} as TextractClientResolvedConfig,
       destroy: vi.fn(),
       middlewareStack: {} as TextractClient['middlewareStack'],
-    };
-    const result: AnalyzeExpenseCommandOutput = {
-      $metadata: {},
     };
 
     // Ignoring this be the textract send method's return value is based on its
     // input, which is not reachable here.
     // @ts-ignore
-    const sendSpy = vi.spyOn(textractClient, 'send').mockResolvedValue(result);
     const bucketName = 'SOME_BUCKET';
     const imageName = 'IMAGE_PATH';
 
@@ -35,8 +35,8 @@ describe('Test RemoteBillProcessingService', () => {
     void remoteBillProcessService.process({ imageName });
 
     // Assert
-    expect(sendSpy).toHaveBeenCalledOnce();
-    expect(sendSpy).toHaveBeenCalledWith(
+    expect(textractClient.send).toHaveBeenCalledOnce();
+    expect(textractClient.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
           Document: expect.objectContaining({
