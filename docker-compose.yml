@@ -1,6 +1,6 @@
 x-db-host: &db-host postgres
 x-db-name: &db-name bill_split
-x-db-user: &db-user ${USER}
+x-db-user: &db-user clayton
 x-db-password: &db-password password
 x-db-port: &db-port 5432
 
@@ -28,9 +28,9 @@ services:
     container_name: postgres
     image: postgres:17
     environment:
-      POSTGRES_DB: bill_split
-      POSTGRES_USER: ${USER}
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: *db-name
+      POSTGRES_USER: *db-user
+      POSTGRES_PASSWORD: *db-password
     ports:
       - "5432:5432"
     restart: always
