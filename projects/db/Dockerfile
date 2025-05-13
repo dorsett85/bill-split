@@ -1,4 +1,4 @@
-FROM node:24.15.0-slim AS base
+FROM node:22.15.0-slim AS base
 WORKDIR /app
 RUN corepack enable
 RUN corepack use pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39
