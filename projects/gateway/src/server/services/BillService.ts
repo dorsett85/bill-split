@@ -1,3 +1,4 @@
+import path from 'path';
 import { Bill, BillModel } from '../models/BillModel.ts';
 import { FileStorageService } from '../types/fileStorageService.ts';
 import { ServerRequest } from '../types/requestHandler.ts';
@@ -45,7 +46,8 @@ export class BillService {
     await this.kafkaService.publish(
       process.env.KAFKA_BILL_PROCESSING_TOPIC ?? '',
       {
-        imageName: storedFiles[0].path,
+        billId: result.rows[0].id,
+        imageName: path.basename(storedFiles[0].path),
       },
     );
 

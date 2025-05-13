@@ -3,10 +3,8 @@ import {
   TextractClientResolvedConfig,
 } from '@aws-sdk/client-textract';
 import { SelfManagedKafkaHandler } from 'aws-lambda';
-import {
-  RemoteBillProcessingService,
-  exampleData,
-} from './services/RemoteBillProcessingService.ts';
+import { RemoteBillProcessingService } from './services/RemoteBillProcessingService.ts';
+import { stubbedAnalyzeOutput } from './services/RemoteBillProcessingService.utils.ts';
 import { BillProcessingService } from './types/billProcessingService.ts';
 
 // Only make an actual textract client in production. It costs 25 cents per
@@ -21,7 +19,7 @@ const textractClient: TextractClient =
       })
     : // This object is a stub for development
       {
-        send: async () => exampleData,
+        send: async () => stubbedAnalyzeOutput,
         config: {} as TextractClientResolvedConfig,
         destroy: () => undefined,
         middlewareStack: {} as TextractClient['middlewareStack'],
