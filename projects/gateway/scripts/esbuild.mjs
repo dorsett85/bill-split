@@ -31,12 +31,12 @@ const serverCtx = await esbuild.context({
   outdir: 'dist',
   platform: 'node',
   sourcemap: true,
-  target: 'node20',
+  target: 'node22',
 });
 
-clientCtx.watch();
-serverCtx.watch();
+void clientCtx.watch();
+void serverCtx.watch();
 if (!watchMode) {
-  clientCtx.dispose();
-  serverCtx.dispose();
+  void clientCtx.dispose();
+  void serverCtx.dispose();
 }
