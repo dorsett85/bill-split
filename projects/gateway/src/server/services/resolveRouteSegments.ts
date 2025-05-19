@@ -5,7 +5,7 @@
  * This function assumes that the dynamic route is already in a valid format.
  *
  * @example
- * const { id, name } = resolveRouteSegments('/bill/1/lunch', '/bill/[id]/[name]');
+ * const { id, name } = resolveRouteSegments('/bill/1/lunch', '/bill/:id/:name');
  * console.log(id, name) // "1, lunch"
  */
 export const resolveRouteSegments = (
@@ -18,10 +18,8 @@ export const resolveRouteSegments = (
   const routeSegments = route.split('/');
   for (let i = 0; i < pathSegments.length; i++) {
     // Check if the route segment is dynamic
-    if (routeSegments[i]?.[0] === '[') {
-      const routeSegmentKey = routeSegments[i]
-        .replace('[', '')
-        .replace(']', '');
+    if (routeSegments[i]?.[0] === ':') {
+      const routeSegmentKey = routeSegments[i].replace(':', '');
       segments[routeSegmentKey] = pathSegments[i];
     }
   }

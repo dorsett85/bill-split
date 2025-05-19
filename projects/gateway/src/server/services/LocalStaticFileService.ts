@@ -74,18 +74,35 @@ export class LocalStaticFileService implements StaticFileService {
   /**
    * Get all static asset filenames for a give page
    */
-  public getPageAssetFilenames(path: string): string[] {
-    return this.assetsByPage[path] ?? [];
-  }
-
-  public async getContent(relativePath: string): Promise<Buffer> {
-    return await fs.readFile(path.join(this.hostPath, relativePath));
+  public getPageAssetFilenames(pattern: string): string[] {
+    return this.assetsByPage[this.toFileSystemPattern(pattern)] ?? [];
   }
 
   /**
-   * Expose static paths as a copy
+   * Get the actual file asset
    */
-  public getStaticPaths(): Set<string> {
-    return new Set(this.staticPaths);
+  public async getAsset(file: string): Promise<Buffer> {
+    return await fs.readFile(path.join(this.hostPath, file));
+  }
+
+  /**
+   * Check if the request has a static asset
+   */
+  public has(url: string): boolean {
+    return this.staticPaths.has(url);
+  }
+
+  /**
+   * We use dynamic url patterns with a `:`, like `/bill/:id`, but our file
+   * system uses `[]`, like `/bill/[id]`, so we'll replace the `:` prefix and
+   * wrap the segment in `[]`.
+   */
+  private toFileSystemPattern(pattern: string): string {
+    return pattern
+      .split('/')
+      .map((segment) => {
+        return segment[0] === ':' ? `[${segment.slice(1)}]` : segment;
+      })
+      .join('/');
   }
 }

@@ -1,10 +1,10 @@
 /**
- * Given an url path, try to match it against our route keys which support
- * dynamic paths
+ * Given a url path, try to match it against our route keys which support
+ * dynamic paths.
  *
  * @example
  * const route = resolveRoute('/bill/12345')
- * console.log(route) // '/bill/[id]'
+ * console.log(route) // '/bill/:id'
  */
 export const resolveRoute = (url: string, routes: string[]): string | null => {
   const urlSegments = url.split('/');
@@ -22,7 +22,7 @@ export const resolveRoute = (url: string, routes: string[]): string | null => {
       if (routeSegment === '**') {
         // Match remaining URL segments
         return route;
-      } else if (routeSegment.startsWith('[') && routeSegment.endsWith(']')) {
+      } else if (routeSegment.startsWith(':')) {
         // Dynamic segment
         if (i < urlSegments.length) {
           i++;

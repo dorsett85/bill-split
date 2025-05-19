@@ -1,14 +1,14 @@
 export interface StaticFileService {
   /**
-   * Get content of a static asset
+   * Get a static asset
    */
-  getContent(path: string): Promise<Buffer>;
+  getAsset(path: string): Promise<Buffer>;
   /**
    * Get all static asset filenames for a give page
    */
   getPageAssetFilenames(path: string): string[];
   /**
-   * Get relative paths for all of our static assets
+   * Check if the request has a static asset
    */
-  getStaticPaths(): Set<string>;
+  has(url: string): boolean;
 }

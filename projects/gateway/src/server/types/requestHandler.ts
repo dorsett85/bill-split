@@ -3,13 +3,17 @@ import { BillService } from '../services/BillService.ts';
 import { StaticFileService } from './staticFileService.ts';
 
 /**
- * We'll make love easy and assume we know the url is a string
+ * We'll make this easy and assume we know the url is a string
  */
 export interface ServerRequest extends Omit<IncomingMessage, 'url'> {
   /**
    * Url of the request
    */
   url: string;
+  /**
+   * A url pattern for dynamic matching with the request url (e.g., /book/:id)
+   */
+  urlPattern: string;
 }
 
 /**

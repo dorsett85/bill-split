@@ -16,7 +16,7 @@ describe('resolveRoute', () => {
 
   it('matches dynamic segment route', () => {
     const url = '/bill/1234';
-    const expectedRoute = '/bill/[id]';
+    const expectedRoute = '/bill/:id';
 
     const actualRoute = resolveRoute(url, routeKeys);
     expect(actualRoute).toBe(expectedRoute);
@@ -24,7 +24,7 @@ describe('resolveRoute', () => {
 
   it('matches dynamic nested segment route', () => {
     const url = '/bill/1234/name';
-    const expectedRoute = '/bill/[id]/name';
+    const expectedRoute = '/bill/:id/name';
     const withNestedRoute = routeKeys.concat(expectedRoute);
 
     const actualRoute = resolveRoute(url, withNestedRoute);

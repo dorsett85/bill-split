@@ -9,10 +9,10 @@ export const staticRouteHandler: RequestHandler = async (
   res,
   { staticFileService },
 ) => {
-  if (!staticFileService.getStaticPaths().has(req.url)) {
+  if (!staticFileService.has(req.url)) {
     res.statusCode = 404;
     return res.end();
   }
-  const content = await staticFileService.getContent(req.url);
+  const content = await staticFileService.getAsset(req.url);
   return writeToText(content, req.url, res);
 };

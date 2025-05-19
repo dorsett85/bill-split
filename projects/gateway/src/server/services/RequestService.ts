@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from 'node:http';
+import { IncomingMessage, ServerResponse } from 'http';
 import { BillModel } from '../models/BillModel.ts';
 import { routes } from '../routes/routes.tsx';
 import { FileStorageService } from '../types/fileStorageService.ts';
@@ -47,9 +47,11 @@ export class RequestService {
       return res.end('We were unable to find the resource you requested');
     }
 
-    const serverRequest: ServerRequest = Object.assign(req, { url: req.url });
+    const serverRequest: ServerRequest = Object.assign(req, {
+      url: req.url,
+      urlPattern: route,
+    });
 
-    // TODO make a function to create context
     const context: RequestContext = {
       billService: new BillService({
         billModel: new BillModel(getDb()),

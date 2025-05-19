@@ -31,12 +31,14 @@ export const routes: Record<string, RequestHandler> = {
     res.statusCode = 404;
     return writeToHtml(<>We could not find the page you requested</>, res);
   },
-  '/bill/[id]': async (req, res, { billService, staticFileService }) => {
-    const { id } = resolveRouteSegments(req.url, '/bill/[id]');
+  '/bill/:id': async (req, res, { billService, staticFileService }) => {
+    const { id } = resolveRouteSegments(req.url, req.urlPattern);
 
     const bill = await billService.read(id);
 
-    const staticAssets = staticFileService.getPageAssetFilenames('/bill/[id]');
+    const staticAssets = staticFileService.getPageAssetFilenames(
+      req.urlPattern,
+    );
     return writeToHtml(
       <BillPage staticAssets={staticAssets} bill={bill} />,
       res,
