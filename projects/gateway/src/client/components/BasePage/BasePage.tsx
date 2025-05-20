@@ -1,6 +1,7 @@
 import { Theme } from '@radix-ui/themes';
 import React, { ReactElement } from 'react';
 import { StaticAssetAttributes } from '../../types/staticAssetAttributes.ts';
+import { rootId } from '../../utils/hydrateRootElement.tsx';
 
 export interface BasePageProps extends StaticAssetAttributes {
   title: string;
@@ -51,7 +52,7 @@ export const BasePage: React.FC<BasePageProps> = ({
         {/* Used for @radix-ui/theme component library */}
         <link
           rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@3.1.4/styles.css"
+          href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@3.2.1/styles.css"
         />
         <script dangerouslySetInnerHTML={{ __html: bootstrapServerProps }} />
         {links.map((linkProps) => (
@@ -60,11 +61,11 @@ export const BasePage: React.FC<BasePageProps> = ({
       </head>
       <body style={{ margin: 0 }}>
         <Theme accentColor="blue" appearance="dark">
-          {body}
-          {scripts.map((scriptProps) => (
-            <script key={scriptProps.src} {...scriptProps}></script>
-          ))}
+          <div id={rootId}>{body}</div>
         </Theme>
+        {scripts.map((scriptProps) => (
+          <script key={scriptProps.src} {...scriptProps}></script>
+        ))}
       </body>
     </html>
   );

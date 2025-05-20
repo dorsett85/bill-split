@@ -20,7 +20,7 @@ export const BillPage: React.FC<BillPageProps> = ({ staticAssets, bill }) => {
       title="Bill Split: here's the bill you requested"
       body={<Bill bill={bill} />}
       scripts={scripts}
-      serverProps={{ staticAssets, bill }}
+      serverProps={{ bill }}
     />
   );
 };

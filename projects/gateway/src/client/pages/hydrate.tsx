@@ -1,10 +1,4 @@
-import ReactDomClient from 'react-dom/client';
-import { WindowWithStaticAssets } from '../types/WindowWithStaticAssets.ts';
-import { HomePage } from './page.tsx';
+import { hydrateRootElement } from '../utils/hydrateRootElement.tsx';
+import { Home } from './Home.tsx';
 
-declare let window: WindowWithStaticAssets;
-
-ReactDomClient.hydrateRoot(
-  document,
-  <HomePage staticAssets={window.staticAssets} />,
-);
+hydrateRootElement(<Home />);

@@ -13,7 +13,6 @@ export const HomePage: React.FC<PageProps> = ({ staticAssets }) => {
       title="Bill Split: split the bill with friends and family"
       body={<Home />}
       scripts={scripts}
-      serverProps={{ staticAssets }}
     />
   );
 };
