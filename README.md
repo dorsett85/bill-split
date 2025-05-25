@@ -19,4 +19,3 @@ TODO
       5. Tax input
       6. Tip input
       7. Manual override
-8. Switch to Mantine

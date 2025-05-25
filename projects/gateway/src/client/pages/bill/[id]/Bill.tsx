@@ -1,4 +1,4 @@
-import { Box, Heading, Text } from '@radix-ui/themes';
+import { Container, Text, Title } from '@mantine/core';
 import React from 'react';
 
 interface BillProps {
@@ -10,16 +10,16 @@ interface BillProps {
 
 export const Bill: React.FC<BillProps> = ({ bill }) => {
   return (
-    <Box pt="8" mt="8" ml="4" mr="4">
-      <Heading size="9" align="center" mb="8">
+    <Container mt={32}>
+      <Title size={56} order={1} ta="center" mb="xl">
         Here is your bill, let&#39;s take a look!
-      </Heading>
-      <Heading as="h2" align="center" mb="2">
+      </Title>
+      <Title order={2} ta="center" mb="lg">
         Receipt image location:
-      </Heading>
-      <Text as="p" align="center">
+      </Title>
+      <Text size="xl" ta="center">
         {bill.image_path}
       </Text>
-    </Box>
+    </Container>
   );
 };

@@ -1,5 +1,6 @@
-import { Theme } from '@radix-ui/themes';
+import { ColorSchemeScript, MantineProvider, createTheme } from '@mantine/core';
 import React, { ReactElement } from 'react';
+import packageJson from '../../../../package.json';
 import { StaticAssetAttributes } from '../../types/staticAssetAttributes.ts';
 import { rootId } from '../../utils/hydrateRootElement.tsx';
 
@@ -12,6 +13,14 @@ export interface BasePageProps extends StaticAssetAttributes {
    */
   serverProps?: Record<string, unknown>;
 }
+
+const theme = createTheme({});
+
+// Get the raw version of mantine for the cdn link
+const mantineVersion = packageJson.dependencies['@mantine/core'].replace(
+  /^\D+/,
+  '',
+);
 
 export const BasePage: React.FC<BasePageProps> = ({
   body,
@@ -49,20 +58,23 @@ export const BasePage: React.FC<BasePageProps> = ({
           href="/static/favicon-16x16.png"
         />
         <link rel="manifest" href="/static/site.webmanifest" />
-        {/* Used for @radix-ui/theme component library */}
         <link
           rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@3.2.1/styles.css"
+          href={`https://unpkg.com/@mantine/core@${mantineVersion}/styles.css`}
         />
         <script dangerouslySetInnerHTML={{ __html: bootstrapServerProps }} />
         {links.map((linkProps) => (
           <link key={linkProps.href} {...linkProps} />
         ))}
+        <ColorSchemeScript defaultColorScheme="auto" />
       </head>
       <body style={{ margin: 0 }}>
-        <Theme accentColor="blue" appearance="dark">
-          <div id={rootId}>{body}</div>
-        </Theme>
+        <div id={rootId}>
+          <MantineProvider defaultColorScheme="auto" theme={theme}>
+            {body}
+          </MantineProvider>
+        </div>
+
         {scripts.map((scriptProps) => (
           <script key={scriptProps.src} {...scriptProps}></script>
         ))}

@@ -1,6 +1,6 @@
-import { CameraIcon, FileIcon } from '@radix-ui/react-icons';
-import { Box, Button, Flex, Heading, Strong, Text } from '@radix-ui/themes';
+import { Button, Container, Flex, Text, Title } from '@mantine/core';
 import { ChangeEvent, useRef, useState } from 'react';
+import { IconCamera, IconFile } from '../components/Images';
 
 export const Home = () => {
   const [filename, setFilename] = useState<string>();
@@ -51,40 +51,36 @@ export const Home = () => {
   };
 
   return (
-    <Box pt="8" mt="8" ml="4" mr="4">
-      <Heading size="9" align="center" mb="8">
+    <Container mt={32}>
+      <Title size={56} order={1} ta="center" mb="xl">
         Welcome to Bill Split!
-      </Heading>
-      <Heading align="center" as="h2" mb="6">
+      </Title>
+      <Title order={2} ta="center" mb="lg">
         Quickly split the bill by uploading or scanning your receipt 🧾
-      </Heading>
-      <Heading align="center" as="h2" mb="6">
+      </Title>
+      <Title order={2} ta="center" mb="xl">
         Assign the items among your party and we&#39;ll do the math 🙌
-      </Heading>
+      </Title>
       <form ref={formRef}>
-        <Flex gap="4" mb="4">
-          <Box asChild flexGrow="1">
-            <Button
-              type="button"
-              size="4"
-              onClick={() => handleOnFileClick(false)}
-              disabled={!!filename}
-            >
-              <FileIcon />
-              Upload File
-            </Button>
-          </Box>
-          <Box asChild flexGrow="1">
-            <Button
-              type="button"
-              size="4"
-              onClick={() => handleOnFileClick(true)}
-              disabled={!!filename}
-            >
-              <CameraIcon />
-              Scan Photo
-            </Button>
-          </Box>
+        <Flex gap="md">
+          <Button
+            size="lg"
+            onClick={() => handleOnFileClick(false)}
+            disabled={!!filename}
+            fullWidth
+            leftSection={<IconFile />}
+          >
+            Upload File
+          </Button>
+          <Button
+            size="lg"
+            onClick={() => handleOnFileClick(true)}
+            disabled={!!filename}
+            fullWidth
+            leftSection={<IconCamera />}
+          >
+            Scan Photo
+          </Button>
         </Flex>
         <input
           type="file"
@@ -96,10 +92,10 @@ export const Home = () => {
         />
       </form>
       {filename && (
-        <Text as="p" align="center" mb="4">
-          <Strong>{filename}</Strong>
+        <Text size="xl" display="block" component="strong" ta="center" mt="lg">
+          {filename}
         </Text>
       )}
-    </Box>
+    </Container>
   );
 };
