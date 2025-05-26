@@ -20,11 +20,9 @@ describe('Test RemoteBillProcessingService', () => {
       middlewareStack: {} as TextractClient['middlewareStack'],
     };
 
-    // Ignoring this be the textract send method's return value is based on its
-    // input, which is not reachable here.
-    // @ts-ignore
     const bucketName = 'SOME_BUCKET';
     const imageName = 'IMAGE_PATH';
+    const billId = 12435;
 
     const remoteBillProcessService = new RemoteBillProcessingService({
       bucketName,
@@ -32,7 +30,7 @@ describe('Test RemoteBillProcessingService', () => {
     });
 
     // Act
-    void remoteBillProcessService.process({ imageName });
+    void remoteBillProcessService.process({ billId, imageName });
 
     // Assert
     expect(textractClient.send).toHaveBeenCalledOnce();

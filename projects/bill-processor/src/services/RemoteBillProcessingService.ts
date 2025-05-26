@@ -4,6 +4,8 @@ import {
 } from '@aws-sdk/client-textract';
 import { type BillProcessingEventValue } from '../types/billProcessingEventValue.ts';
 import { BillProcessingService } from '../types/billProcessingService';
+import { ProcessedBill } from '../types/processedBill.ts';
+import { transformTextractToProcessedBill } from './RemoteBillProcessingService.utils.ts';
 
 interface RemoteBillProcessingConstructorInput {
   bucketName: string;
@@ -28,7 +30,7 @@ export class RemoteBillProcessingService implements BillProcessingService {
    *   1. Expense analysis via textract
    *   2. Storing results in the db
    */
-  async process({ imageName }: BillProcessingEventValue) {
+  async process({ billId, imageName }: BillProcessingEventValue) {
     const command = new AnalyzeExpenseCommand({
       Document: {
         S3Object: {
@@ -38,9 +40,14 @@ export class RemoteBillProcessingService implements BillProcessingService {
       },
     });
 
-    const result = await this.textractClient.send(command);
+    const processedBill: ProcessedBill = {
+      id: billId,
+      ...transformTextractToProcessedBill(
+        await this.textractClient.send(command),
+      ),
+    };
 
     // TODO Save result to db
-    console.log(result);
+    console.log(processedBill);
   }
 }
