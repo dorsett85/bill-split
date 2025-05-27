@@ -1,4 +1,4 @@
-import { Button, Container, Flex, Text, Title } from '@mantine/core';
+import { Button, Container, Group, Text, Title } from '@mantine/core';
 import { ChangeEvent, useRef, useState } from 'react';
 import { IconCamera, IconFile } from '../components/Images';
 
@@ -62,12 +62,11 @@ export const Home = () => {
         Assign the items among your party and we&#39;ll do the math 🙌
       </Title>
       <form ref={formRef}>
-        <Flex gap="md">
+        <Group gap="md" grow>
           <Button
             size="lg"
             onClick={() => handleOnFileClick(false)}
             disabled={!!filename}
-            fullWidth
             leftSection={<IconFile />}
           >
             Upload File
@@ -76,12 +75,11 @@ export const Home = () => {
             size="lg"
             onClick={() => handleOnFileClick(true)}
             disabled={!!filename}
-            fullWidth
             leftSection={<IconCamera />}
           >
             Scan Photo
           </Button>
-        </Flex>
+        </Group>
         <input
           type="file"
           name="receipt"
