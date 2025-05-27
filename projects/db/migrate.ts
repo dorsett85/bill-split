@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 // Run this file to run new migrations
-import { Pool, QueryResult } from 'pg';
+import { Pool, type QueryResult } from 'pg';
 
 const pool = new Pool({
   database: process.env.DB_NAME,
