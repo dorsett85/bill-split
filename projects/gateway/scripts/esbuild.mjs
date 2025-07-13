@@ -70,7 +70,7 @@ const sharedConfig = {
 const clientCtx = await esbuild.context({
   ...sharedConfig,
   entryPoints: await getClientEntryPoints(clientEntryPath, 'hydrate.tsx'),
-  entryNames: '[dir]/index-[hash]',
+  entryNames: '[dir]/entry-[hash]',
   format: 'esm',
   outdir: 'dist/static',
   plugins: [staticFileManifestPlugin],
