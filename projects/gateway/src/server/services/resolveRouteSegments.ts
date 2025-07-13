@@ -1,5 +1,5 @@
 /**
- * Given an url path and a dynamic route, return a record with dynamic segment
+ * Given a url path and a dynamic route, return a record with dynamic segment
  * identifier keys, and their corresponding values from the url path.
  *
  * This function assumes that the dynamic route is already in a valid format.

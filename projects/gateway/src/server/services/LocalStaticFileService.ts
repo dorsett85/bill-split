@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
-import { StaticFileService } from '../types/staticFileService.ts';
+import { type StaticFileService } from '../types/staticFileService.ts';
 
 interface StaticFileServiceConstructorInput {
   /**
@@ -17,14 +17,15 @@ export class LocalStaticFileService implements StaticFileService {
   private readonly hostPath: string;
   private readonly staticPath: string;
   /**
-   * Map with a page url as key (e.g., `/` is the homepage) and an array of
-   * static assets for that page.
+   * Map with a page url as key (e.g., `/` is the homepage) and a value of a
+   * list of static assets for that page.
    */
-  private readonly assetsByPage: Record<string, string[]> = {};
+  private assetsByPage: Record<string, string[]> = {};
   /**
-   * All file paths for our static assets
+   * Maps dynamic static file web path to our system file path, e.g.:
+   * '/bill/:id'/index.js --> '/bill/[id]/index.js'
    */
-  private readonly staticPaths: Set<string> = new Set();
+  private staticPathMap: Record<string, string> = {};
 
   public constructor({
     hostPath,
@@ -39,70 +40,39 @@ export class LocalStaticFileService implements StaticFileService {
    * serve static assets with the hash name that the bundler creates, instead of
    * looking it up during the request, and 2) have a way of easily looking up
    * that a request is for a static asset.
-   *
-   * @param pagePath directories to search within the static directory that are
-   *                 based on our app page paths
    */
-  async populateFilenameCache(pagePath = '/') {
-    const fullPath = path.join(this.hostPath, this.staticPath, pagePath);
-    for (const filePath of await fs.readdir(fullPath)) {
-      const nextPagePath = path.join(pagePath, filePath);
+  async populateFilenameCache(): Promise<void> {
+    const buffer = await fs.readFile(
+      path.join(this.hostPath, this.staticPath, 'staticFileManifest.json'),
+    );
+    const staticFileManifest: {
+      assetsByPage: Record<string, string[]>;
+      assetMapping: Record<string, string>;
+    } = JSON.parse(buffer.toString());
 
-      const isDirectory = (
-        await fs.lstat(path.join(fullPath, filePath))
-      ).isDirectory();
-
-      if (!isDirectory) {
-        const cachePath = path.join('/', this.staticPath, nextPagePath);
-        this.assetsByPage[pagePath] ??= [];
-        this.assetsByPage[pagePath].push(cachePath);
-
-        this.staticPaths.add(cachePath);
-        continue;
-      }
-
-      // At this point the cachePath is either a directory or not something we
-      // want to cache.
-      try {
-        await this.populateFilenameCache(nextPagePath);
-      } catch (_e) {
-        // no-op, not a dir
-      }
-    }
+    this.assetsByPage = staticFileManifest.assetsByPage;
+    this.staticPathMap = staticFileManifest.assetMapping;
   }
 
   /**
    * Get all static asset filenames for a give page
    */
   public getPageAssetFilenames(pattern: string): string[] {
-    return this.assetsByPage[this.toFileSystemPattern(pattern)] ?? [];
+    return this.assetsByPage[pattern] ?? [];
   }
 
   /**
    * Get the actual file asset
    */
   public async getAsset(file: string): Promise<Buffer> {
-    return await fs.readFile(path.join(this.hostPath, file));
+    const mappedFile = this.staticPathMap[file];
+    return await fs.readFile(path.join(this.hostPath, mappedFile));
   }
 
   /**
    * Check if the request has a static asset
    */
   public has(url: string): boolean {
-    return this.staticPaths.has(url);
-  }
-
-  /**
-   * We use dynamic url patterns with a `:`, like `/bill/:id`, but our file
-   * system uses `[]`, like `/bill/[id]`, so we'll replace the `:` prefix and
-   * wrap the segment in `[]`.
-   */
-  private toFileSystemPattern(pattern: string): string {
-    return pattern
-      .split('/')
-      .map((segment) => {
-        return segment[0] === ':' ? `[${segment.slice(1)}]` : segment;
-      })
-      .join('/');
+    return !!this.staticPathMap[url];
   }
 }
