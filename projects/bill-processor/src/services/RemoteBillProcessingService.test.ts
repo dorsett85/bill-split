@@ -3,12 +3,24 @@ import {
   TextractClient,
   TextractClientResolvedConfig,
 } from '@aws-sdk/client-textract';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RemoteBillProcessingService } from './RemoteBillProcessingService.ts';
+import * as utilsMod from './RemoteBillProcessingService.utils.ts';
+
+beforeEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('Test RemoteBillProcessingService', () => {
   it('processes image', async () => {
     // Arrange
+    const updateBillMock = vi
+      .spyOn(utilsMod, 'updateBill')
+      .mockResolvedValue(1);
+    const createBillItemsMock = vi
+      .spyOn(utilsMod, 'createBillItems')
+      .mockResolvedValue(1);
+
     const result: AnalyzeExpenseCommandOutput = {
       $metadata: {},
     };
@@ -30,7 +42,7 @@ describe('Test RemoteBillProcessingService', () => {
     });
 
     // Act
-    void remoteBillProcessService.process({ billId, imageName });
+    await remoteBillProcessService.process({ billId, imageName });
 
     // Assert
     expect(textractClient.send).toHaveBeenCalledOnce();
@@ -46,5 +58,14 @@ describe('Test RemoteBillProcessingService', () => {
         }),
       }),
     );
+    expect(updateBillMock).toHaveBeenCalledOnce();
+    expect(updateBillMock).toHaveBeenCalledWith(12435, {
+      business_location: undefined,
+      business_name: undefined,
+      gratuity: undefined,
+      tax: undefined,
+    });
+    expect(createBillItemsMock).toHaveBeenCalledOnce();
+    expect(createBillItemsMock).toHaveBeenCalledWith(12435, []);
   });
 });

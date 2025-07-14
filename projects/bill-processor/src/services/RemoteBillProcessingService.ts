@@ -4,8 +4,12 @@ import {
 } from '@aws-sdk/client-textract';
 import { type BillProcessingEventValue } from '../types/billProcessingEventValue.ts';
 import { BillProcessingService } from '../types/billProcessingService';
-import { ProcessedBill } from '../types/processedBill.ts';
-import { transformTextractToProcessedBill } from './RemoteBillProcessingService.utils.ts';
+import { ProcessedExpense } from '../types/processedExpense.ts';
+import {
+  createBillItems,
+  transformTextractToProcessedBill,
+  updateBill,
+} from './RemoteBillProcessingService.utils.ts';
 
 interface RemoteBillProcessingConstructorInput {
   bucketName: string;
@@ -40,14 +44,16 @@ export class RemoteBillProcessingService implements BillProcessingService {
       },
     });
 
-    const processedBill: ProcessedBill = {
-      id: billId,
-      ...transformTextractToProcessedBill(
-        await this.textractClient.send(command),
-      ),
-    };
+    const processExpense: ProcessedExpense = transformTextractToProcessedBill(
+      await this.textractClient.send(command),
+    );
 
-    // TODO Save result to db
-    console.log(processedBill);
+    await updateBill(billId, {
+      business_location: processExpense.business_location,
+      business_name: processExpense.business_name,
+      tax: processExpense.tax,
+      gratuity: processExpense.gratuity,
+    });
+    await createBillItems(billId, processExpense.items);
   }
 }

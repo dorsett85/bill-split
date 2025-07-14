@@ -42,7 +42,7 @@ export const handler: SelfManagedKafkaHandler = async (event) => {
   const promises = event.records[topic].map(async (record) => {
     const payload = JSON.parse(record.value);
 
-    void billProcessingService.process(payload);
+    return billProcessingService.process(payload);
   });
   const results = await Promise.allSettled(promises);
 

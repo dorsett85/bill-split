@@ -14,13 +14,3 @@ export interface ProcessedExpense {
   tax?: number;
   items: ProcessedExpenseItem[];
 }
-
-/**
- * Final processed bill ready for data storage
- */
-export interface ProcessedBill extends ProcessedExpense {
-  /**
-   * ID of the bill to store
-   */
-  id: number;
-}
