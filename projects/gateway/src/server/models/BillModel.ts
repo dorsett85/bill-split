@@ -49,6 +49,7 @@ export class BillModel implements BaseModel<Bill> {
           business_location,
           gratuity,
           image_path,
+          image_status,
           name,
           tax
       FROM bill

@@ -44,16 +44,16 @@ export class RemoteBillProcessingService implements BillProcessingService {
       },
     });
 
-    const processExpense: ProcessedExpense = transformTextractToProcessedBill(
+    const processedExpense: ProcessedExpense = transformTextractToProcessedBill(
       await this.textractClient.send(command),
     );
 
     await updateBill(billId, {
-      business_location: processExpense.business_location,
-      business_name: processExpense.business_name,
-      tax: processExpense.tax,
-      gratuity: processExpense.gratuity,
+      business_location: processedExpense.business_location,
+      business_name: processedExpense.business_name,
+      tax: processedExpense.tax,
+      gratuity: processedExpense.gratuity,
     });
-    await createBillItems(billId, processExpense.items);
+    await createBillItems(billId, processedExpense.items);
   }
 }

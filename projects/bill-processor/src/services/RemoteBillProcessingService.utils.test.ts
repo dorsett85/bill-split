@@ -26,8 +26,8 @@ describe('transformTextractToProcessedBill', () => {
         { name: 'PNLNO GRND BEEF', price: 5.99, quantity: 1 },
       ],
       tax: 1.66,
-      business_location: 'Bryant Park BPK\n1095 6th Ave\nNew York, NY 10036',
-      business_name: 'WHOLE\nFOODS\nMARKET',
+      business_location: 'Bryant Park BPK 1095 6th Ave New York, NY 10036',
+      business_name: 'WHOLE FOODS MARKET',
     };
     expect(actualOutput).toStrictEqual(expectedOutput);
   });

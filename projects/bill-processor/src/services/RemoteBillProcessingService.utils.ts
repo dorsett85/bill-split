@@ -15,6 +15,11 @@ const parseAmount = (amountText: string): number => {
 };
 
 /**
+ * Remove line feeds and carriage returns from a string
+ */
+const stripNewLines = (str: string): string => str.replace(/[\r\n]+/gm, ' ');
+
+/**
  * Transforms AWS Textract AnalyzeExpenseCommandOutput into ProcessedBill format
  */
 export const transformTextractToProcessedBill = (
@@ -33,18 +38,20 @@ export const transformTextractToProcessedBill = (
 
       if (!fieldValue) return;
 
+      const strippedValue = stripNewLines(fieldValue);
+
       switch (fieldType) {
         case 'VENDOR_NAME':
-          processedExpense.business_name = fieldValue;
+          processedExpense.business_name = strippedValue;
           break;
         case 'VENDOR_ADDRESS':
-          processedExpense.business_location = fieldValue;
+          processedExpense.business_location = strippedValue;
           break;
         case 'TAX':
-          processedExpense.tax = parseAmount(fieldValue);
+          processedExpense.tax = parseAmount(strippedValue);
           break;
         case 'GRATUITY':
-          processedExpense.gratuity = Number(fieldValue);
+          processedExpense.gratuity = Number(strippedValue);
       }
     });
 
@@ -63,15 +70,17 @@ export const transformTextractToProcessedBill = (
 
           if (!fieldValue) return;
 
+          const strippedValue = stripNewLines(fieldValue);
+
           switch (fieldType) {
             case 'ITEM':
-              item.name = fieldValue;
+              item.name = strippedValue;
               break;
             case 'PRICE':
-              item.price = parseAmount(fieldValue);
+              item.price = parseAmount(strippedValue);
               break;
             case 'QUANTITY':
-              item.quantity = Number(fieldValue);
+              item.quantity = Number(strippedValue);
           }
         });
 
