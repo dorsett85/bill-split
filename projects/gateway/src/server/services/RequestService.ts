@@ -62,7 +62,7 @@ export class RequestService {
     };
 
     try {
-      return requestHandler(serverRequest, res, context);
+      return await requestHandler(serverRequest, res, context);
     } catch (e) {
       console.log(e);
       res.statusCode = 500;
