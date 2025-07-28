@@ -9,6 +9,7 @@ import {
   createBillItems,
   transformTextractToProcessedBill,
   updateBill,
+  updateBillWithError,
 } from './RemoteBillProcessingService.utils.ts';
 
 interface RemoteBillProcessingConstructorInput {
@@ -44,16 +45,22 @@ export class RemoteBillProcessingService implements BillProcessingService {
       },
     });
 
-    const processedExpense: ProcessedExpense = transformTextractToProcessedBill(
-      await this.textractClient.send(command),
-    );
+    try {
+      const processedExpense: ProcessedExpense =
+        transformTextractToProcessedBill(
+          await this.textractClient.send(command),
+        );
 
-    await updateBill(billId, {
-      business_location: processedExpense.business_location,
-      business_name: processedExpense.business_name,
-      tax: processedExpense.tax,
-      gratuity: processedExpense.gratuity,
-    });
-    await createBillItems(billId, processedExpense.items);
+      await updateBill(billId, {
+        business_location: processedExpense.business_location,
+        business_name: processedExpense.business_name,
+        tax: processedExpense.tax,
+        gratuity: processedExpense.gratuity,
+      });
+      await createBillItems(billId, processedExpense.items);
+    } catch (error) {
+      console.log(error);
+      await updateBillWithError(billId);
+    }
   }
 }

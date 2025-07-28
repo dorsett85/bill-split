@@ -119,6 +119,25 @@ export const updateBill = async (
 };
 
 /**
+ * If image process fails, update the status with an error
+ */
+export const updateBillWithError = async (
+  billId: number,
+): Promise<number | null> => {
+  const db = getDb();
+  const res = await db.query(
+    `
+      UPDATE bill
+      SET image_status = $1
+      WHERE id = $2;
+    `,
+    ['error', billId],
+  );
+
+  return res.rowCount;
+};
+
+/**
  * Insert the processed bill items into the db
  */
 export const createBillItems = async (
