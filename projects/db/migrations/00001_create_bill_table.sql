@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS bill (
     business_location VARCHAR,
     gratuity NUMERIC,
     image_path VARCHAR,
-    image_status VARCHAR CHECK (image_status IN ('parsing', 'ready')),
+    image_status VARCHAR CHECK (image_status IN ('parsing', 'ready', 'error')),
     name VARCHAR,
     tax NUMERIC
 );

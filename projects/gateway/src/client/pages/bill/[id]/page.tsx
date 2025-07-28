@@ -7,7 +7,7 @@ import { Bill } from './Bill.tsx';
 interface BillPageProps extends PageProps {
   bill: {
     image_path?: string;
-    image_status: 'parsing' | 'ready';
+    image_status: 'parsing' | 'ready' | 'error';
   };
 }
 

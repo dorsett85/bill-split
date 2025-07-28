@@ -4,7 +4,7 @@ import { Bill } from './Bill.tsx';
 declare let window: Window & {
   bill: {
     image_path?: string;
-    image_status: 'parsing' | 'ready';
+    image_status: 'parsing' | 'ready' | 'error';
   };
 };
 

@@ -1,6 +1,6 @@
 import {
+  Center,
   Container,
-  Flex,
   SemiCircleProgress,
   TextInput,
   Title,
@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 interface BillProps {
   bill: {
     image_path?: string;
-    image_status: 'parsing' | 'ready';
+    image_status: 'parsing' | 'ready' | 'error';
   };
 }
 
@@ -37,7 +37,7 @@ export const Bill: React.FC<BillProps> = ({ bill }) => {
         Here is your bill, let&#39;s take a look!
       </Title>
       {bill.image_status === 'parsing' && (
-        <Flex justify="center" mb="xl">
+        <Center mb="xl">
           <SemiCircleProgress
             label="Extracting image upload"
             value={analyzeProgress}
@@ -45,11 +45,11 @@ export const Bill: React.FC<BillProps> = ({ bill }) => {
             thickness={20}
             transitionDuration={250}
           />
-        </Flex>
+        </Center>
       )}
-      <Flex justify="center" mb="xl">
+      <Center mb="xl">
         <img src={bill.image_path} alt="bill image" />
-      </Flex>
+      </Center>
       <form>
         <TextInput
           id="participant-input"
