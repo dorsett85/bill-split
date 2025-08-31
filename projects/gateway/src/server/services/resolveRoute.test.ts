@@ -32,8 +32,8 @@ describe('resolveRoute', () => {
   });
 
   it('matches exact route', () => {
-    const url = '/bills';
-    const expectedRoute = '/bills';
+    const url = '/api/bills';
+    const expectedRoute = '/api/bills';
 
     const actualRoute = resolveRoute(url, routeKeys);
     expect(actualRoute).toBe(expectedRoute);
