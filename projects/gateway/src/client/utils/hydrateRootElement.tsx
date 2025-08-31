@@ -1,4 +1,4 @@
-import { MantineProvider, createTheme } from '@mantine/core';
+import { createTheme, MantineProvider } from '@mantine/core';
 import { ReactElement, StrictMode } from 'react';
 import ReactDomClient from 'react-dom/client';
 

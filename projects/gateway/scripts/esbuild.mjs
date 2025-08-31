@@ -1,6 +1,6 @@
-import path from 'path';
 import * as esbuild from 'esbuild';
 import fs from 'fs/promises';
+import path from 'path';
 import { getClientEntryPoints } from './scriptUtils.mjs';
 
 const watchMode = process.argv.some((arg) => arg === '--watch');

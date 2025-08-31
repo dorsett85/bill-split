@@ -1,5 +1,5 @@
-import path from 'path';
 import fs from 'fs/promises';
+import path from 'path';
 import { type StaticFileService } from '../types/staticFileService.ts';
 
 interface StaticFileServiceConstructorInput {

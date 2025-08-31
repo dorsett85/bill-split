@@ -1,4 +1,4 @@
-import { ColorSchemeScript, MantineProvider, createTheme } from '@mantine/core';
+import { ColorSchemeScript, createTheme, MantineProvider } from '@mantine/core';
 import React, { ReactElement } from 'react';
 import packageJson from '../../../../package.json';
 import { StaticAssetAttributes } from '../../types/staticAssetAttributes.ts';

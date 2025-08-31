@@ -1,5 +1,5 @@
-import http from 'http';
 import { S3Client } from '@aws-sdk/client-s3';
+import http from 'http';
 import { startDevelopmentConsumer } from './services/KafkaService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import { RequestService } from './services/RequestService.ts';

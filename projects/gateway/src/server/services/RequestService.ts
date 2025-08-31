@@ -5,8 +5,8 @@ import { FileStorageService } from '../types/fileStorageService.ts';
 import { RequestContext, ServerRequest } from '../types/requestHandler.ts';
 import { StaticFileService } from '../types/staticFileService.ts';
 import { BillService } from './BillService.ts';
-import { KafkaService } from './KafkaService.ts';
 import { getDb } from './getDb.ts';
+import { KafkaService } from './KafkaService.ts';
 import { resolveRoute } from './resolveRoute.ts';
 
 interface RequestServiceConstructorInput {
