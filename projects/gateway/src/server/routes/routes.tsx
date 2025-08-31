@@ -1,4 +1,4 @@
-import { BillPage } from '../../client/pages/bill/[id]/page.tsx';
+import { BillPage } from '../../client/pages/bills/[id]/page.tsx';
 import { HomePage } from '../../client/pages/page.tsx';
 import { resolveRouteSegments } from '../services/resolveRouteSegments.ts';
 import { writeToHtml, writeToJson } from '../services/responseHelpers.ts';
@@ -13,7 +13,7 @@ export const routes: Record<string, RequestHandler> = {
     const staticAssets = staticFileService.getPageAssetFilenames(req.url);
     return writeToHtml(<HomePage staticAssets={staticAssets} />, res);
   },
-  '/bill': async (req, res, { billService }) => {
+  '/api/bills': async (req, res, { billService }) => {
     // Post a new bill with a receipt file upload
     if (req.method === 'POST') {
       try {
@@ -28,10 +28,38 @@ export const routes: Record<string, RequestHandler> = {
         );
       }
     }
-    res.statusCode = 404;
-    return writeToHtml(<>We could not find the page you requested</>, res);
+    res.statusCode = 405;
+    return writeToJson(
+      { error: { message: `method ${req.method} not allowed` } },
+      res,
+    );
   },
-  '/bill/:id': async (req, res, { billService, staticFileService }) => {
+  '/api/bills/:id': async (req, res, { billService }) => {
+    if (req.method === 'GET') {
+      try {
+        const { id } = resolveRouteSegments(req.url, req.urlPattern);
+        const bill = await billService.read(id);
+        return writeToJson({ data: bill }, res);
+      } catch (err) {
+        console.error(err);
+        res.statusCode = 400;
+        return writeToJson(
+          {
+            error: {
+              message: 'We were unable to get the resource you requested',
+            },
+          },
+          res,
+        );
+      }
+    }
+    res.statusCode = 405;
+    return writeToJson(
+      { error: { message: `method ${req.method} not allowed` } },
+      res,
+    );
+  },
+  '/bills/:id': async (req, res, { billService, staticFileService }) => {
     const { id } = resolveRouteSegments(req.url, req.urlPattern);
 
     const bill = await billService.read(id);

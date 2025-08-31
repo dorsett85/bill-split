@@ -6,7 +6,7 @@ export interface Bill {
   business_name?: string;
   business_location?: string;
   gratuity?: number;
-  image_path?: string;
+  image_path: string;
   image_status: 'parsing' | 'ready' | 'error';
   name?: string;
   tax?: number;

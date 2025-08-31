@@ -9,7 +9,7 @@ const watchMode = process.argv.some((arg) => arg === '--watch');
  * This plugin creates a custom manifest of our static assets. It will:
  *   1) Map assets that need to be available for each page
  *   2) Map dynamic web paths to our system paths, e.g.:
- *     '/bill/:id/index.js' --> '/bill/[id]/index.js'
+ *     '/bills/:id/index.js' --> '/bills/[id]/index.js'
  */
 const staticFileManifestPlugin = {
   name: 'staticFileManifest',

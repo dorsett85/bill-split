@@ -3,12 +3,10 @@ import { BasePage } from '../../../components/BasePage/BasePage.tsx';
 import { PageProps } from '../../../types/pageProps.ts';
 import { makeStaticAssetAttributes } from '../../../utils/makeStaticAssetAttributes.ts';
 import { Bill } from './Bill.tsx';
+import { BillData } from './types.ts';
 
 interface BillPageProps extends PageProps {
-  bill: {
-    image_path?: string;
-    image_status: 'parsing' | 'ready' | 'error';
-  };
+  bill: BillData;
 }
 
 export const BillPage: React.FC<BillPageProps> = ({ staticAssets, bill }) => {

@@ -36,15 +36,15 @@ export const Home = () => {
 
     // Automatically submit the form when the user uploads a file
     try {
-      const res = await fetch('/bill', {
+      const res = await fetch('/api/bills', {
         method: 'POST',
         body: new FormData(formRef.current),
       });
       const { data } = await res.json();
 
-      // Redirect to the specific bill page
+      // Redirect to the specific bills page
       // TODO Should we flash a success message before redirecting?
-      window.location.assign(`/bill/${data.id}`);
+      window.location.assign(`bills/${data.id}`);
     } catch (_err) {
       // TODO add error handler
     }

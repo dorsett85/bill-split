@@ -23,7 +23,7 @@ export class LocalStaticFileService implements StaticFileService {
   private assetsByPage: Record<string, string[]> = {};
   /**
    * Maps dynamic static file web path to our system file path, e.g.:
-   * '/bill/:id'/index.js --> '/bill/[id]/index.js'
+   * '/bills/:id'/index.js --> '/bills/[id]/index.js'
    */
   private staticPathMap: Record<string, string> = {};
 

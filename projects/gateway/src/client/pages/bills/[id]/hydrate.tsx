@@ -1,11 +1,9 @@
 import { hydrateRootElement } from '../../../utils/hydrateRootElement.tsx';
 import { Bill } from './Bill.tsx';
+import { BillData } from './types.ts';
 
 declare let window: Window & {
-  bill: {
-    image_path?: string;
-    image_status: 'parsing' | 'ready' | 'error';
-  };
+  bill: BillData;
 };
 
 hydrateRootElement(<Bill bill={window.bill} />);

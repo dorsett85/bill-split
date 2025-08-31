@@ -15,16 +15,16 @@ describe('resolveRoute', () => {
   });
 
   it('matches dynamic segment route', () => {
-    const url = '/bill/1234';
-    const expectedRoute = '/bill/:id';
+    const url = '/bills/1234';
+    const expectedRoute = '/bills/:id';
 
     const actualRoute = resolveRoute(url, routeKeys);
     expect(actualRoute).toBe(expectedRoute);
   });
 
   it('matches dynamic nested segment route', () => {
-    const url = '/bill/1234/name';
-    const expectedRoute = '/bill/:id/name';
+    const url = '/bills/1234/name';
+    const expectedRoute = '/bills/:id/name';
     const withNestedRoute = routeKeys.concat(expectedRoute);
 
     const actualRoute = resolveRoute(url, withNestedRoute);
@@ -32,8 +32,8 @@ describe('resolveRoute', () => {
   });
 
   it('matches exact route', () => {
-    const url = '/bill';
-    const expectedRoute = '/bill';
+    const url = '/bills';
+    const expectedRoute = '/bills';
 
     const actualRoute = resolveRoute(url, routeKeys);
     expect(actualRoute).toBe(expectedRoute);

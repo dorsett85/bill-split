@@ -3,8 +3,8 @@
  * dynamic paths.
  *
  * @example
- * const route = resolveRoute('/bill/12345')
- * console.log(route) // '/bill/:id'
+ * const route = resolveRoute('/bills/12345')
+ * console.log(route) // '/bills/:id'
  */
 export const resolveRoute = (url: string, routes: string[]): string | null => {
   const urlSegments = url.split('/');

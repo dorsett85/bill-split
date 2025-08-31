@@ -4,7 +4,7 @@ import { ProcessedExpense } from '../types/processedExpense.ts';
 import { transformTextractToProcessedBill } from './RemoteBillProcessingService.utils.ts';
 
 describe('transformTextractToProcessedBill', () => {
-  it('transforms output to process bill', () => {
+  it('transforms output to processed bill', () => {
     const actualOutput = transformTextractToProcessedBill(stubbedAnalyzeOutput);
 
     const expectedOutput: ProcessedExpense = {

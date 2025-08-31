@@ -3,8 +3,9 @@ import { Bill, BillModel } from '../models/BillModel.ts';
 import { FileStorageService } from '../types/fileStorageService.ts';
 import { ServerRequest } from '../types/requestHandler.ts';
 import { KafkaService } from './KafkaService.ts';
+import { S3FileStorageService } from './S3FileStorageService.ts';
 
-interface BillCycleConstructor {
+interface BillServiceConstructor {
   billModel: BillModel;
   fileStorageService: FileStorageService;
   kafkaService: KafkaService;
@@ -19,7 +20,7 @@ export class BillService {
     billModel,
     fileStorageService,
     kafkaService,
-  }: BillCycleConstructor) {
+  }: BillServiceConstructor) {
     this.billModel = billModel;
     this.fileStorageService = fileStorageService;
     this.kafkaService = kafkaService;
@@ -27,13 +28,23 @@ export class BillService {
 
   public async read(id: string): Promise<Bill> {
     const { rows } = await this.billModel.read(id);
-    return rows[0];
+    const bill = rows[0];
+
+    // Get a presigned image URL so the FE can fetch the image from a private
+    // repo.
+    if (this.fileStorageService instanceof S3FileStorageService) {
+      bill.image_path = await this.fileStorageService.getPresignedUrl(
+        bill.image_path,
+      );
+    }
+
+    return bill;
   }
 
   /**
    * This method is a little unusual. Normally we wouldn't use the request
    * object at this layer, but it's required for our file storage service. So
-   * we're both storing the bill image here and creating a new bill record in
+   * we're both storing the bills image here and creating a new bills record in
    * our db.
    */
   public async create(req: ServerRequest): Promise<Bill> {

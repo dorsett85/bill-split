@@ -1,9 +1,11 @@
 import { PassThrough } from 'node:stream';
 import {
   CompleteMultipartUploadCommandOutput,
+  GetObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import formidable, { VolatileFile } from 'formidable';
 import {
   FileStorageOutput,
@@ -63,5 +65,19 @@ export class S3FileStorageService implements FileStorageService {
     }
 
     return storageOutput;
+  }
+
+  /**
+   * Get a presigned url that the FE can access
+   *
+   * @param unsignedUrl - unsigned s3 bucket url
+   */
+  public getPresignedUrl(unsignedUrl: string): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: unsignedUrl.split('/').pop(),
+    });
+
+    return getSignedUrl(this.s3Client, command);
   }
 }
