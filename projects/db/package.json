@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.2.2",
     "@types/pg": "^8.15.5",
     "pg": "^8.16.3",
     "typescript": "^5.9.2"
