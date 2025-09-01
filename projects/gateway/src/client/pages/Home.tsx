@@ -1,6 +1,7 @@
 import { Button, Container, Group, Text, Title } from '@mantine/core';
+import { IconCamera, IconFile } from '@tabler/icons-react';
 import { ChangeEvent, useRef, useState } from 'react';
-import { IconCamera, IconFile } from '../components/Images';
+import { CreateBillResponse } from './dto.ts';
 
 export const Home = () => {
   const [filename, setFilename] = useState<string>();
@@ -40,7 +41,7 @@ export const Home = () => {
         method: 'POST',
         body: new FormData(formRef.current),
       });
-      const { data } = await res.json();
+      const { data } = CreateBillResponse.parse(await res.json());
 
       // Redirect to the specific bills page
       // TODO Should we flash a success message before redirecting?

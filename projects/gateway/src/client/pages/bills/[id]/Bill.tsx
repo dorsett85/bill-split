@@ -1,19 +1,28 @@
 import {
   Center,
   Container,
+  Divider,
+  Group,
   Loader,
   Notification,
   NotificationProps,
   Progress,
+  Stack,
   TagsInput,
+  Text,
   Title,
 } from '@mantine/core';
 import React, { useEffect, useState } from 'react';
-import { BillData } from './types.ts';
+import { BillData, BillResponse, ImageStatus } from './dto.ts';
+
+const USCurrency = Intl.NumberFormat('en-US', {
+  currency: 'USD',
+  style: 'currency',
+});
 
 type ImageStatusNotificationProps = {
   analyzeProgress: number;
-  imageStatus: BillData['image_status'];
+  imageStatus: ImageStatus;
 };
 
 const ImageStatusNotification: React.FC<ImageStatusNotificationProps> = ({
@@ -75,11 +84,9 @@ export const Bill: React.FC<BillProps> = (props) => {
   const [participants, setParticipants] = useState<string[]>([]);
   const [updatingParticipants, setUpdatingParticipants] = useState(false);
 
-  console.log();
-
   useEffect(() => {
     // No need to refetch the bill if it's done parsing
-    if (props.bill.image_status !== 'parsing') {
+    if (props.bill.imageStatus !== 'parsing') {
       return;
     }
 
@@ -88,8 +95,8 @@ export const Bill: React.FC<BillProps> = (props) => {
 
       try {
         const res = await fetch(`/api/bills/${bill.id}`);
-        const { data }: { data: BillData } = await res.json();
-        if (data.image_status === 'parsing') {
+        const { data } = BillResponse.parse(await res.json());
+        if (data.imageStatus === 'parsing') {
           // Refetch if it's still parsing
           return setTimeout(() => fetchBill(), 1000);
         }
@@ -104,7 +111,7 @@ export const Bill: React.FC<BillProps> = (props) => {
     };
 
     void fetchBill();
-  }, [props.bill.image_status]);
+  }, [props.bill.imageStatus]);
 
   const handleOnChangeParticipant = (newParticipants: string[]) => {
     setUpdatingParticipants(() => true);
@@ -113,6 +120,13 @@ export const Bill: React.FC<BillProps> = (props) => {
       setUpdatingParticipants(() => false);
     }, 750);
   };
+
+  const subTotal = bill.lineItems?.reduce(
+    (total, item) => item.price + total,
+    0,
+  );
+
+  const total = (subTotal ?? 0) + (bill.gratuity ?? 0) + (bill.tax ?? 0);
 
   return (
     <Container mt={32}>
@@ -123,17 +137,54 @@ export const Bill: React.FC<BillProps> = (props) => {
         <img
           width="auto"
           height="300px"
-          src={bill.image_path}
+          src={bill.imagePath}
           alt="bill image"
         />
       </Center>
       {/* Only show image status notification if it's not initially ready */}
-      {props.bill.image_status !== 'ready' && (
+      {props.bill.imageStatus !== 'ready' && (
         <ImageStatusNotification
           analyzeProgress={analyzeProgress}
-          imageStatus={bill.image_status}
+          imageStatus={bill.imageStatus}
         />
       )}
+      <Stack gap="xs" mb="xl">
+        <Group gap="md" justify="space-between">
+          <Text>Subtotal:</Text>
+          <Text>
+            {bill.imageStatus === 'ready'
+              ? USCurrency.format(subTotal ?? 0)
+              : 'Pending'}
+          </Text>
+        </Group>
+        <Group gap="md" justify="space-between">
+          <Text>Tax:</Text>
+          <Text>
+            {bill.imageStatus === 'ready'
+              ? USCurrency.format(bill.tax ?? 0)
+              : 'Pending'}
+          </Text>
+        </Group>
+        <Group gap="md" justify="space-between">
+          <Text>Gratuity:</Text>
+          <Text>
+            {bill.imageStatus === 'ready'
+              ? USCurrency.format(bill.gratuity ?? 0)
+              : 'Pending'}
+          </Text>
+        </Group>
+        <Divider />
+        <Group gap="md" justify="space-between">
+          <Text size="xl" component={'b'} fw={'bolder'}>
+            Total:
+          </Text>
+          <Text size="xl" component={'b'} fw={'bolder'}>
+            {bill.imageStatus === 'ready'
+              ? USCurrency.format(total)
+              : 'Pending'}
+          </Text>
+        </Group>
+      </Stack>
       <TagsInput
         disabled={updatingParticipants}
         id="add-participant-input"
@@ -149,13 +200,6 @@ export const Bill: React.FC<BillProps> = (props) => {
         value={participants}
         onChange={handleOnChangeParticipant}
       />
-      <Title order={2}>Subtotal: Pending</Title>
-      <Title order={2}>
-        Tax: {bill.tax !== undefined ? bill.tax : 'Pending'}
-      </Title>
-      <Title order={2}>
-        Gratuity: {bill.gratuity !== undefined ? bill.gratuity : 'Pending'}
-      </Title>
     </Container>
   );
 };

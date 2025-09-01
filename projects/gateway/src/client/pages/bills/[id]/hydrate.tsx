@@ -1,9 +1,9 @@
 import { hydrateRootElement } from '../../../utils/hydrateRootElement.tsx';
 import { Bill } from './Bill.tsx';
-import { BillData } from './types.ts';
+import { BillData } from './dto.ts';
 
 declare let window: Window & {
-  bill: BillData;
+  bill: unknown;
 };
 
-hydrateRootElement(<Bill bill={window.bill} />);
+hydrateRootElement(<Bill bill={BillData.parse(window.bill)} />);

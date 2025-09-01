@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { BillModel } from '../models/BillModel.ts';
+import { BillDao } from '../dao/BillDao.ts';
 import { routes } from '../routes/routes.tsx';
 import { FileStorageService } from '../types/fileStorageService.ts';
 import { RequestContext, ServerRequest } from '../types/requestHandler.ts';
@@ -54,7 +54,7 @@ export class RequestService {
 
     const context: RequestContext = {
       billService: new BillService({
-        billModel: new BillModel(getDb()),
+        billModel: new BillDao(getDb()),
         fileStorageService: this.fileStorageService,
         kafkaService: new KafkaService(),
       }),
