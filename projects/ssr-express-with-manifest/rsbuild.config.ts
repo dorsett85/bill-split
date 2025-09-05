@@ -4,10 +4,10 @@ import fs from 'fs/promises';
 
 /**
  * Recursively looks through directories starting with the baseEntryPath and
- * returns a record of entry points (relative to the baseEntryPath) that match
- * the target file name.
+ * returns a record of url entry points (relative to the baseEntryPath) that
+ * match the target file name.
  */
-export const getClientEntryPoints = async (
+export const getEntryPoints = async (
   baseEntryPath: string,
   target: string,
 ): Promise<Record<string, string>> => {
@@ -18,8 +18,12 @@ export const getClientEntryPoints = async (
       const newPath = `${dir}/${path}`;
       if (path === target) {
         const strippedPath = newPath
-          .replace(new RegExp(`^${baseEntryPath}\/`), '')
-          .replace(/^(.*index).*$/, '$1');
+          // Get just the url path
+          .replace(new RegExp(`^${baseEntryPath}(.*)index.*$`), '$1')
+          // Remove trailing /
+          .replace(/(.+)\/$/, '$1')
+          // Replace bracket segments with colon, [id] --> :id
+          .replace(/\[(\w+)]/g, ':$1');
         entryPoints[strippedPath] = newPath;
         continue;
       }
@@ -39,23 +43,29 @@ export default defineConfig(async () => ({
   environments: {
     web: {
       source: {
-        entry: await getClientEntryPoints('./src/pages', 'index.client.tsx'),
+        entry: await getEntryPoints('./src/pages', 'index.client.tsx'),
       },
       output: {
+        filename: {
+          js: 'chunk_[contenthash].js',
+          css: 'chunk_[contenthash].css',
+        },
         manifest: true,
       },
     },
     node: {
+      source: {
+        entry: await getEntryPoints('./src/pages', 'index.server.tsx'),
+      },
       output: {
+        filename: {
+          js: 'index_[contenthash].js',
+        },
+        manifest: true,
         module: true,
         target: 'node' as const,
         distPath: {
           root: 'dist/server',
-        },
-      },
-      source: {
-        entry: {
-          index: './src/pages/index.server',
         },
       },
     },

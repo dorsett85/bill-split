@@ -1,67 +1,19 @@
 import { createRequire } from 'node:module';
 import { createRsbuild, loadConfig, logger } from '@rsbuild/core';
-import fs from 'fs/promises';
-import http from 'http';
 import path from 'path';
-import type {
-  MiddlewareFunction,
-  ServerRequest,
-} from './types/serverRequest.ts';
+import { App } from './App.ts';
+import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
+import { type RenderHtmlModule } from './types/serverRequest.ts';
 import { htmlMiddleware } from './utils/htmlMiddleware.ts';
-import { writeToText } from './utils/responseHelpers.ts';
-
-class App {
-  public readonly server = http.createServer();
-  private middlewares: MiddlewareFunction[] = [];
-
-  public constructor() {
-    //
-  }
-
-  public use(middleware: MiddlewareFunction) {
-    this.middlewares.push(middleware);
-  }
-
-  private onRequest() {
-    this.server.on('request', (req, res) => {
-      if (!req.url) {
-        res.statusCode = 400;
-        return res.end('You need to specify a url in your request');
-      }
-
-      const serverRequest: ServerRequest = Object.assign(req, {
-        url: req.url,
-      });
-
-      // Run all the middleware starting at the beginning
-      const dispatch = (middlewareIndex: number) => {
-        const middleware = this.middlewares[middlewareIndex];
-
-        // Check if there's no more middleware to run
-        if (!middleware) {
-          res.statusCode = 404;
-          return res.end('We were unable to find the resource you requested');
-        }
-
-        // Create the next function that will call the next middleware
-        const next = () => {
-          dispatch(middlewareIndex + 1);
-        };
-
-        middleware(serverRequest, res, next);
-      };
-      dispatch(0);
-    });
-  }
-
-  public listen(port: number | string, onListen: () => void) {
-    this.onRequest();
-    return this.server.listen(port, onListen);
-  }
-}
+import { writeToHtml } from './utils/responseHelpers.ts';
+import { staticMiddleware } from './utils/staticMiddleware.ts';
 
 const startServer = async () => {
   const app = new App();
+
+  const staticFileService = new LocalStaticFileService({
+    path: 'dist',
+  });
 
   if (process.env.NODE_ENV === 'development') {
     const { content } = await loadConfig({});
@@ -77,10 +29,17 @@ const startServer = async () => {
     app.use(rsbuildServer.middlewares);
     app.use(
       htmlMiddleware({
-        loadManifest: async () =>
-          JSON.parse(await fs.readFile('./dist/manifest.json', 'utf-8')),
-        loadRenderModule: () => {
-          return rsbuildServer.environments.node.loadBundle('index');
+        renderHtml: async (url) => {
+          const resources = await staticFileService.getPageResources(url);
+          if (!resources) {
+            return null;
+          }
+
+          const { render }: RenderHtmlModule =
+            await rsbuildServer.environments.node.loadBundle(
+              resources.resolvedKey,
+            );
+          return render({ staticAssets: resources.static });
         },
       }),
     );
@@ -89,44 +48,53 @@ const startServer = async () => {
       // Notify Rsbuild that the custom server has started
       rsbuildServer.afterListen();
 
-      console.log(`Server started at http://localhost:${rsbuildServer.port}`);
+      logger.start(`Server started at http://localhost:${rsbuildServer.port}`);
     });
 
     rsbuildServer.connectWebSocket({ server: app.server });
   } else {
     const require = createRequire(import.meta.url);
 
-    const port = process.env.PORT || 3007;
-
-    // TODO only add this when testing prod build locally
-    app.use(async (req, res, next) => {
-      // check for static assets (only do this testing prod build locally)
-      try {
-        const content = await fs.readFile(path.join('./dist', req.url));
-        writeToText(content, req.url, res);
-      } catch {
-        // Not a static file we have, move on
-        next();
-      }
-    });
+    // TODO only add this when testing prod build locally, we'll hopefully have
+    //  our static files on a cdn.
+    app.use(staticMiddleware('dist'));
     app.use(
       htmlMiddleware({
-        loadManifest: async () =>
-          JSON.parse(await fs.readFile('./dist/manifest.json', 'utf-8')),
-        loadRenderModule: () => {
+        renderHtml: async (url) => {
+          const resources = await staticFileService.getPageResources(url);
+          if (!resources) {
+            return null;
+          }
+
           const remotesPath = path.join(
             process.cwd(),
-            `./dist/server/index.js`,
+            'dist/server',
+            resources.server.js,
           );
-          return require(remotesPath);
+          const { render }: RenderHtmlModule = require(remotesPath);
+          return render({ staticAssets: resources.static });
         },
       }),
     );
 
+    const port = 3001;
+
     app.listen(port, () => {
-      console.log(`Server started at http://localhost:${port}`);
+      logger.start(`Server started at http://localhost:${port}`);
     });
   }
+
+  app.onRequestError((_, res, err) => {
+    logger.error(err);
+    res.statusCode = 500;
+    // based on the context request we could send back different response
+    // types. For instance if they requested html we could send back a html
+    // error page, or a json object if the request was for json data.
+    return writeToHtml(
+      'We experienced an unexpected issue, please try again later',
+      res,
+    );
+  });
 };
 
 void startServer();

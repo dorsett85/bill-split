@@ -1,4 +1,5 @@
-import { IncomingMessage, ServerResponse } from 'node:http';
+import { type IncomingMessage, type ServerResponse } from 'node:http';
+import { type StaticAssets } from './staticAssets.ts';
 
 /**
  * We'll make this easy and assume we know the url is a string
@@ -21,3 +22,12 @@ export type MiddlewareFunction = (
   res: ServerResponse,
   next: NextFunction,
 ) => Promise<unknown> | unknown;
+
+type RenderHtmlInput = {
+  staticAssets: StaticAssets;
+  data?: unknown;
+};
+
+export type RenderHtmlModule = {
+  render: (input: RenderHtmlInput) => string;
+};
