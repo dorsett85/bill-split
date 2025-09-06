@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "rsbuild build",
-    "dev": "node --env-file=.env --experimental-vm-modules src/server/server.ts",
+    "dev": "node --env-file=.env --watch src/server/server.ts --experimental-vm-modules src/server/server.ts",
     "test": "vitest --config test/vitest.config.mts",
     "type-check": "tsc",
     "preview": "node --env-file=.env --env-file=.env.prod src/server/server.ts"
