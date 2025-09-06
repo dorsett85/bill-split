@@ -1,9 +1,8 @@
-import { type ManifestData } from '@rsbuild/core';
+import type { ManifestData } from '@rsbuild/core';
 import fs from 'fs/promises';
 import path from 'path';
-import { type StaticAssets } from '../types/staticAssets.ts';
-import { type StaticFileService } from '../types/staticFileService.ts';
-import { resolveRoute } from '../utils/resolveRoute.ts';
+import type { StaticAssets } from '../types/staticAssets.ts';
+import type { StaticFileService } from '../types/staticFileService.ts';
 
 interface StaticFileServiceConstructorInput {
   /**
@@ -20,9 +19,9 @@ export class LocalStaticFileService implements StaticFileService {
   }
 
   /**
-   * Get the build manifest that contains our static assets
+   * Get the build manifests that contains our static assets
    */
-  private async getManifest(): Promise<{
+  private async getManifests(): Promise<{
     static: ManifestData;
     server: ManifestData;
   }> {
@@ -39,30 +38,21 @@ export class LocalStaticFileService implements StaticFileService {
   }
 
   /**
-   * Get all resources required to render a html page. This also returns a
-   * resolved route key which is used internally as a key to get static assets.
-   * For instance if the url is /bill/1, the resolved key will be /bill/:id
+   * Get all static assets for a page
    *
    * If there's no resource for the passed in url then we return null.
    */
-  public async getPageResources(url: string): Promise<{
+  public async getAssets(route: string): Promise<{
     static: StaticAssets;
-    server: { js: string };
-    resolvedKey: string;
-  } | null> {
-    const manifest = await this.getManifest();
-    const resolvedKey = resolveRoute(url, Object.keys(manifest.static.entries));
+    serverJs: string;
+  }> {
+    const manifest = await this.getManifests();
 
-    if (!resolvedKey) {
-      return null;
-    }
-
-    const serverAssets = manifest.server.entries[resolvedKey].initial?.js ?? [];
-    const { initial } = manifest.static.entries[resolvedKey];
+    const serverAssets = manifest.server.entries[route].initial?.js ?? [];
+    const { initial } = manifest.static.entries[route];
 
     return {
-      resolvedKey,
-      server: { js: serverAssets[0] },
+      serverJs: serverAssets[0],
       static: {
         css: initial?.css ?? [],
         js: initial?.js ?? [],

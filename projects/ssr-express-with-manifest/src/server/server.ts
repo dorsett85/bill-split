@@ -2,18 +2,14 @@ import { createRequire } from 'node:module';
 import { createRsbuild, loadConfig, logger } from '@rsbuild/core';
 import path from 'path';
 import { App } from './App.ts';
-import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
-import { type RenderHtmlModule } from './types/serverRequest.ts';
+import type { LoadRenderModuleFunction } from './services/HtmlService.ts';
 import { htmlMiddleware } from './utils/htmlMiddleware.ts';
 import { writeToHtml } from './utils/responseHelpers.ts';
 import { staticMiddleware } from './utils/staticMiddleware.ts';
 
 const startServer = async () => {
   const app = new App();
-
-  const staticFileService = new LocalStaticFileService({
-    path: 'dist',
-  });
+  const assetPath = 'dist';
 
   if (process.env.NODE_ENV === 'development') {
     const { content } = await loadConfig({});
@@ -25,24 +21,18 @@ const startServer = async () => {
 
     // Create Rsbuild DevServer instance
     const rsbuildServer = await rsbuild.createDevServer();
+    const getHtmlMiddleware = () => {
+      const loadRenderModule: LoadRenderModuleFunction = ({ resolvedRoute }) =>
+        rsbuildServer.environments.node.loadBundle(resolvedRoute);
+      return htmlMiddleware({
+        path: assetPath,
+        loadRenderModule,
+      });
+    };
 
     app.use(rsbuildServer.middlewares);
-    app.use(
-      htmlMiddleware({
-        renderHtml: async (url) => {
-          const resources = await staticFileService.getPageResources(url);
-          if (!resources) {
-            return null;
-          }
-
-          const { render }: RenderHtmlModule =
-            await rsbuildServer.environments.node.loadBundle(
-              resources.resolvedKey,
-            );
-          return render({ staticAssets: resources.static });
-        },
-      }),
-    );
+    app.get('/', getHtmlMiddleware());
+    app.get('/bill/:id', getHtmlMiddleware());
 
     app.listen(rsbuildServer.port, () => {
       // Notify Rsbuild that the custom server has started
@@ -57,25 +47,20 @@ const startServer = async () => {
 
     // TODO only add this when testing prod build locally, we'll hopefully have
     //  our static files on a cdn.
-    app.use(staticMiddleware('dist'));
-    app.use(
-      htmlMiddleware({
-        renderHtml: async (url) => {
-          const resources = await staticFileService.getPageResources(url);
-          if (!resources) {
-            return null;
-          }
+    const getHtmlMiddleware = () => {
+      const loadRenderModule: LoadRenderModuleFunction = ({ serverJs }) => {
+        const renderModule = path.join(process.cwd(), 'dist/server', serverJs);
+        return require(renderModule);
+      };
+      return htmlMiddleware({
+        path: assetPath,
+        loadRenderModule,
+      });
+    };
 
-          const remotesPath = path.join(
-            process.cwd(),
-            'dist/server',
-            resources.server.js,
-          );
-          const { render }: RenderHtmlModule = require(remotesPath);
-          return render({ staticAssets: resources.static });
-        },
-      }),
-    );
+    app.use(staticMiddleware(assetPath));
+    app.get('/', getHtmlMiddleware());
+    app.get('/bill/:id', getHtmlMiddleware());
 
     const port = 3001;
 

@@ -1,14 +1,19 @@
-import { ServerResponse } from 'node:http';
+import type { ServerResponse } from 'node:http';
 import http from 'http';
 import type {
   MiddlewareFunction,
   ServerRequest,
 } from './types/serverRequest.ts';
+import { resolveRoute } from './utils/resolveRoute.ts';
 import { writeToHtml } from './utils/responseHelpers.ts';
 
 export class App {
   public readonly server = http.createServer();
-  private middlewares: MiddlewareFunction[] = [];
+  private middlewares: {
+    execute: MiddlewareFunction;
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    route?: string;
+  }[] = [];
   /**
    * Handles errors originating during a request only, not other server errors
    * like EADDRINUSE if the server can't start.
@@ -21,8 +26,19 @@ export class App {
     //
   }
 
-  public use(middleware: MiddlewareFunction) {
-    this.middlewares.push(middleware);
+  public use(middleware: MiddlewareFunction): App {
+    this.middlewares.push({ execute: middleware });
+    return this;
+  }
+
+  public get(route: string, middleware: MiddlewareFunction): App {
+    this.middlewares.push({ execute: middleware, route, method: 'GET' });
+    return this;
+  }
+
+  public post(route: string, middleware: MiddlewareFunction): App {
+    this.middlewares.push({ execute: middleware, route, method: 'POST' });
+    return this;
   }
 
   private onRequest() {
@@ -32,8 +48,16 @@ export class App {
         return writeToHtml('You need to specify a url in your request', res);
       }
 
+      const route = resolveRoute(
+        req.url,
+        this.middlewares
+          .map((middleware) => middleware.route)
+          .filter((url) => url !== undefined),
+      );
+
       const serverRequest: ServerRequest = Object.assign(req, {
         url: req.url,
+        route: route ?? req.url,
       });
 
       // Run all the middleware starting at the beginning
@@ -54,8 +78,17 @@ export class App {
           dispatch(middlewareIndex + 1);
         };
 
+        // If route and method are defined for the middleware then make sure
+        // they match the request.
+        if (
+          (middleware.route && middleware.route !== serverRequest.route) ||
+          (middleware.method && middleware.method !== serverRequest.method)
+        ) {
+          return next();
+        }
+
         try {
-          middleware(serverRequest, res, next);
+          middleware.execute(serverRequest, res, next);
         } catch (err) {
           // TODO maybe add a fallback handler in case one is not defined
           this.handleRequestError?.(serverRequest, res, err);

@@ -1,7 +1,8 @@
 import { ColorSchemeScript, createTheme, MantineProvider } from '@mantine/core';
-import React, { ReactElement } from 'react';
-import packageJson from '../../../package.json';
-import { StaticAssetAttributes } from '../../types/staticAssetAttributes.ts';
+import type React from 'react';
+import type { ReactElement } from 'react';
+import packageJson from '../../../../package.json';
+import type { StaticAssetAttributes } from '../../types/staticAssetAttributes.ts';
 import { rootId } from '../../utils/hydrateRootElement.tsx';
 
 export interface BasePageProps extends StaticAssetAttributes {

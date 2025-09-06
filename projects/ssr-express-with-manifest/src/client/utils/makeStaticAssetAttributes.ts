@@ -1,4 +1,4 @@
-import { StaticAssetAttributes } from '../types/staticAssetAttributes.ts';
+import type { StaticAssetAttributes } from '../types/staticAssetAttributes.ts';
 
 /**
  * Takes a list of static filenames and maps them with the appropriate html

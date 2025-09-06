@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { type MiddlewareFunction } from '../types/serverRequest.ts';
+import type { MiddlewareFunction } from '../types/serverRequest.ts';
 import { writeToText } from './responseHelpers.ts';
 
 /**

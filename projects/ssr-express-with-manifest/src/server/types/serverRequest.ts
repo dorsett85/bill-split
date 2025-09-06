@@ -1,18 +1,15 @@
-import { type IncomingMessage, type ServerResponse } from 'node:http';
-import { type StaticAssets } from './staticAssets.ts';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 
-/**
- * We'll make this easy and assume we know the url is a string
- */
 export interface ServerRequest extends Omit<IncomingMessage, 'url'> {
   /**
    * Url of the request
    */
   url: string;
-  // /**
-  //  * A url pattern for dynamic matching with the request url (e.g., /book/:id)
-  //  */
-  // urlPattern: string;
+  /**
+   * A url pattern resolved from the request url that matches our available
+   * routes (e.g., /book/:id)
+   */
+  route: string;
 }
 
 export type NextFunction = () => void;
@@ -22,12 +19,3 @@ export type MiddlewareFunction = (
   res: ServerResponse,
   next: NextFunction,
 ) => Promise<unknown> | unknown;
-
-type RenderHtmlInput = {
-  staticAssets: StaticAssets;
-  data?: unknown;
-};
-
-export type RenderHtmlModule = {
-  render: (input: RenderHtmlInput) => string;
-};

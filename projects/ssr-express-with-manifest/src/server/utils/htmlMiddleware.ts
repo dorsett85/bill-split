@@ -1,22 +1,25 @@
-import { ServerResponse } from 'node:http';
+import type { ServerResponse } from 'node:http';
 import {
-  type NextFunction,
-  type ServerRequest,
-} from '../types/serverRequest.ts';
+  HtmlService,
+  type LoadRenderModuleFunction,
+} from '../services/HtmlService.ts';
+import { LocalStaticFileService } from '../services/LocalStaticFileService.ts';
+import type { ServerRequest } from '../types/serverRequest.ts';
 import { writeToHtml } from './responseHelpers.ts';
 
 type HtmlMiddlewareOptions = {
-  renderHtml: (url: string) => Promise<string | null> | string | null;
+  path: string;
+  loadRenderModule: LoadRenderModuleFunction;
 };
 
 export const htmlMiddleware =
-  ({ renderHtml }: HtmlMiddlewareOptions) =>
-  async (req: ServerRequest, res: ServerResponse, next: NextFunction) => {
-    const html = await renderHtml(req.url);
+  ({ loadRenderModule, path }: HtmlMiddlewareOptions) =>
+  async (req: ServerRequest, res: ServerResponse) => {
+    const htmlService = new HtmlService({
+      loadRenderModule,
+      staticFileService: new LocalStaticFileService({ path }),
+    });
+    const html = await htmlService.render(req.url);
 
-    if (html) {
-      writeToHtml(html, res);
-    } else {
-      next();
-    }
+    writeToHtml(html, res);
   };

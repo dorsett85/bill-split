@@ -43,7 +43,7 @@ export default defineConfig(async () => ({
   environments: {
     web: {
       source: {
-        entry: await getEntryPoints('./src/pages', 'index.client.tsx'),
+        entry: await getEntryPoints('./src/client/pages', 'index.client.tsx'),
       },
       output: {
         filename: {
@@ -55,7 +55,7 @@ export default defineConfig(async () => ({
     },
     node: {
       source: {
-        entry: await getEntryPoints('./src/pages', 'index.server.tsx'),
+        entry: await getEntryPoints('./src/client/pages', 'index.server.tsx'),
       },
       output: {
         filename: {

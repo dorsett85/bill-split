@@ -1,7 +1,7 @@
-import React from 'react';
+import type React from 'react';
 import ReactDomServer from 'react-dom/server';
-import { BasePage } from '../components/BasePage/BasePage';
-import { PageProps } from '../types/pageProps.ts';
+import { BasePage } from '../components/BasePage/BasePage.tsx';
+import type { PageProps } from '../types/pageProps.ts';
 import { makeStaticAssetAttributes } from '../utils/makeStaticAssetAttributes.ts';
 import { Home } from './Home.tsx';
 
