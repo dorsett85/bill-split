@@ -8,11 +8,11 @@ import {
   postBill,
 } from './controllers/controllers.ts';
 import { HtmlService } from './services/HtmlService.ts';
+import { startDevelopmentConsumer } from './services/KafkaService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import type { MiddlewareFunction } from './types/serverRequest.ts';
 import { writeToHtml } from './utils/responseHelpers.ts';
 import { staticMiddleware } from './utils/staticMiddleware.ts';
-import {startDevelopmentConsumer} from "./services/KafkaService.ts";
 
 const startServer = async () => {
   const { content } = await loadConfig({});
