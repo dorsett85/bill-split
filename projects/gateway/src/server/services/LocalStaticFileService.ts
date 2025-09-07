@@ -1,78 +1,60 @@
+import type { ManifestData } from '@rsbuild/core';
 import fs from 'fs/promises';
 import path from 'path';
-import { type StaticFileService } from '../types/staticFileService.ts';
+import type { StaticAssets } from '../types/staticAssets.ts';
+import type { StaticFileService } from '../types/staticFileService.ts';
 
 interface StaticFileServiceConstructorInput {
   /**
-   * Absolute path to the server hosting our static assets
+   * Path to our static assets
    */
-  hostPath: string;
-  /**
-   * relative path where static assets are located
-   */
-  staticPath: string;
+  path: string;
 }
 
 export class LocalStaticFileService implements StaticFileService {
-  private readonly hostPath: string;
-  private readonly staticPath: string;
-  /**
-   * Map with a page url as key (e.g., `/` is the homepage) and a value of a
-   * list of static assets for that page.
-   */
-  private assetsByPage: Record<string, string[]> = {};
-  /**
-   * Maps dynamic static file web path to our system file path, e.g.:
-   * '/bills/:id'/index.js --> '/bills/[id]/index.js'
-   */
-  private staticPathMap: Record<string, string> = {};
+  private readonly path: string;
 
-  public constructor({
-    hostPath,
-    staticPath,
-  }: StaticFileServiceConstructorInput) {
-    this.hostPath = hostPath;
-    this.staticPath = staticPath;
+  public constructor({ path }: StaticFileServiceConstructorInput) {
+    this.path = path;
   }
 
   /**
-   * Prepopulate a list of static file paths for each page. This allows us to 1)
-   * serve static assets with the hash name that the bundler creates, instead of
-   * looking it up during the request, and 2) have a way of easily looking up
-   * that a request is for a static asset.
+   * Get the build manifests that contains our static assets
    */
-  async populateFilenameCache(): Promise<void> {
-    const buffer = await fs.readFile(
-      path.join(this.hostPath, this.staticPath, 'staticFileManifest.json'),
-    );
-    const staticFileManifest: {
-      assetsByPage: Record<string, string[]>;
-      assetMapping: Record<string, string>;
-    } = JSON.parse(buffer.toString());
+  private async getManifests(): Promise<{
+    static: ManifestData;
+    server: ManifestData;
+  }> {
+    const [staticManifest, serverManifest] = await Promise.all([
+      fs.readFile(path.join(this.path, 'manifest.json'), 'utf-8'),
+      fs.readFile(path.join(this.path, 'server', 'manifest.json'), 'utf-8'),
+    ]);
 
-    this.assetsByPage = staticFileManifest.assetsByPage;
-    this.staticPathMap = staticFileManifest.assetMapping;
+    // TODO we should cache these in production
+    return {
+      static: JSON.parse(staticManifest),
+      server: JSON.parse(serverManifest),
+    };
   }
 
   /**
-   * Get all static asset filenames for a give page
+   * Get all static assets for a page
    */
-  public getPageAssetFilenames(pattern: string): string[] {
-    return this.assetsByPage[pattern] ?? [];
-  }
+  public async getAssets(route: string): Promise<{
+    static: StaticAssets;
+    serverJs: string;
+  }> {
+    const manifest = await this.getManifests();
 
-  /**
-   * Get the actual file asset
-   */
-  public async getAsset(file: string): Promise<Buffer> {
-    const mappedFile = this.staticPathMap[file];
-    return await fs.readFile(path.join(this.hostPath, mappedFile));
-  }
+    const serverAssets = manifest.server.entries[route].initial?.js ?? [];
+    const { initial } = manifest.static.entries[route];
 
-  /**
-   * Check if the request has a static asset
-   */
-  public has(url: string): boolean {
-    return !!this.staticPathMap[url];
+    return {
+      serverJs: serverAssets[0],
+      static: {
+        css: initial?.css ?? [],
+        js: initial?.js ?? [],
+      },
+    };
   }
 }

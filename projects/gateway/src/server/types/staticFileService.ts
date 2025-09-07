@@ -1,14 +1,11 @@
+import type { StaticAssets } from './staticAssets.ts';
+
 export interface StaticFileService {
   /**
-   * Get a static asset
+   * Get all the static resources required to render a page
    */
-  getAsset(path: string): Promise<Buffer>;
-  /**
-   * Get all static asset filenames for a give page
-   */
-  getPageAssetFilenames(path: string): string[];
-  /**
-   * Check if the request has a static asset
-   */
-  has(url: string): boolean;
+  getAssets(url: string): Promise<{
+    static: StaticAssets;
+    serverJs: string;
+  }>;
 }

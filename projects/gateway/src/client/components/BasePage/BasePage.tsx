@@ -1,7 +1,8 @@
 import { ColorSchemeScript, createTheme, MantineProvider } from '@mantine/core';
-import React, { ReactElement } from 'react';
+import type React from 'react';
+import type { ReactElement } from 'react';
 import packageJson from '../../../../package.json';
-import { StaticAssetAttributes } from '../../types/staticAssetAttributes.ts';
+import type { StaticAssetAttributes } from '../../types/staticAssetAttributes.ts';
 import { rootId } from '../../utils/hydrateRootElement.tsx';
 
 export interface BasePageProps extends StaticAssetAttributes {
@@ -43,21 +44,21 @@ export const BasePage: React.FC<BasePageProps> = ({
         <link
           rel="apple-touch-icon"
           sizes="180x180"
-          href="/static/apple-touch-icon.png"
+          href="/apple-touch-icon.png"
         />
         <link
           rel="icon"
           type="image/png"
           sizes="32x32"
-          href="/static/favicon-32x32.png"
+          href="/favicon-32x32.png"
         />
         <link
           rel="icon"
           type="image/png"
           sizes="16x16"
-          href="/static/favicon-16x16.png"
+          href="/favicon-16x16.png"
         />
-        <link rel="manifest" href="/static/site.webmanifest" />
+        <link rel="manifest" href="/site.webmanifest" />
         <link
           rel="stylesheet"
           href={`https://unpkg.com/@mantine/core@${mantineVersion}/styles.css`}

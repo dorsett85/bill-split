@@ -1,4 +1,4 @@
-import { ServerRequest } from './requestHandler.ts';
+import type { ServerRequest } from './requestHandler.ts';
 
 export interface FileStorageOutput {
   /**

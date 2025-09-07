@@ -1,5 +1,5 @@
 import { createTheme, MantineProvider } from '@mantine/core';
-import { ReactElement, StrictMode } from 'react';
+import { type ReactElement, StrictMode } from 'react';
 import ReactDomClient from 'react-dom/client';
 
 const theme = createTheme({});

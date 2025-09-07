@@ -5,15 +5,16 @@ import {
   Group,
   Loader,
   Notification,
-  NotificationProps,
+  type NotificationProps,
   Progress,
   Stack,
   TagsInput,
   Text,
   Title,
 } from '@mantine/core';
-import React, { useEffect, useState } from 'react';
-import { BillData, BillResponse, ImageStatus } from './dto.ts';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { type BillData, BillResponse, type ImageStatus } from './dto.ts';
 
 const USCurrency = Intl.NumberFormat('en-US', {
   currency: 'USD',

@@ -1,10 +1,10 @@
 import path from 'path';
-import { BillDao } from '../dao/BillDao.ts';
-import { BillCreate, BillRead } from '../dto/bill.ts';
-import { IdRecord } from '../dto/id.ts';
-import { FileStorageService } from '../types/fileStorageService.ts';
-import { ServerRequest } from '../types/requestHandler.ts';
-import { KafkaService } from './KafkaService.ts';
+import type { BillDao } from '../dao/BillDao.ts';
+import { BillCreate, type BillRead } from '../dto/bill.ts';
+import type { IdRecord } from '../dto/id.ts';
+import type { FileStorageService } from '../types/fileStorageService.ts';
+import type { ServerRequest } from '../types/serverRequest.ts';
+import type { KafkaService } from './KafkaService.ts';
 import { S3FileStorageService } from './S3FileStorageService.ts';
 
 interface BillServiceConstructor {

@@ -1,4 +1,15 @@
-.pnpm-debug.log*
+# Local
+.DS_Store
+*.local
+*.log*
 
+# Dist
+node_modules
 dist/
-node_modules/
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+.env.prod

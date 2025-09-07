@@ -1,4 +1,9 @@
-import { Kafka, Partitioners, Producer, RecordMetadata } from 'kafkajs';
+import {
+  Kafka,
+  Partitioners,
+  type Producer,
+  type RecordMetadata,
+} from 'kafkajs';
 
 const kafka = new Kafka({
   clientId: 'gateway',

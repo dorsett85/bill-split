@@ -1,3 +1,4 @@
+import type { ManifestData } from '@rsbuild/core';
 import fs from 'fs/promises';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocalStaticFileService } from './LocalStaticFileService.ts';
@@ -6,64 +7,109 @@ beforeEach(() => {
   vi.restoreAllMocks();
 });
 
+const stubServerManifest: ManifestData = {
+  allFiles: [
+    '/index_0c9017043a6cb1a8.js',
+    '/index_d2eb40c92588d937.js',
+    '/index_0c9017043a6cb1a8.js.map',
+    '/index_d2eb40c92588d937.js.map',
+  ],
+  entries: {
+    '/bills/:id': {
+      assets: ['index_0c9017043a6cb1a8.js.map'],
+      initial: {
+        js: ['/index_0c9017043a6cb1a8.js'],
+      },
+    },
+    '/': {
+      assets: ['index_d2eb40c92588d937.js.map'],
+      initial: {
+        js: ['/index_d2eb40c92588d937.js'],
+      },
+    },
+  },
+};
+
+const stubClientManifest: ManifestData = {
+  allFiles: [
+    '/static/js/chunk_33e071f143292d2a.js',
+    '/static/js/chunk_0437b221017200e1.js',
+    '/static/js/chunk_544515b3f82c8e2b.js',
+    '/static/js/chunk_20b9cfb1f9f8bf8f.js',
+    '/static/js/chunk_2a1c051ec4f4e0dc.js',
+    '/static/js/chunk_c18044a7b9add364.js',
+    '/static/js/chunk_33e071f143292d2a.js.map',
+    '/static/js/chunk_0437b221017200e1.js.map',
+    '/static/js/chunk_544515b3f82c8e2b.js.map',
+    '/static/js/chunk_20b9cfb1f9f8bf8f.js.map',
+    '/static/js/chunk_2a1c051ec4f4e0dc.js.map',
+    '/static/js/chunk_c18044a7b9add364.js.map',
+  ],
+  entries: {
+    '/bills/:id': {
+      assets: [
+        'static/js/chunk_2a1c051ec4f4e0dc.js.map',
+        'static/js/chunk_20b9cfb1f9f8bf8f.js.map',
+        'static/js/chunk_544515b3f82c8e2b.js.map',
+        'static/js/chunk_33e071f143292d2a.js.map',
+      ],
+      initial: {
+        js: [
+          '/static/js/chunk_2a1c051ec4f4e0dc.js',
+          '/static/js/chunk_20b9cfb1f9f8bf8f.js',
+          '/static/js/chunk_544515b3f82c8e2b.js',
+          '/static/js/chunk_33e071f143292d2a.js',
+        ],
+      },
+    },
+    '/': {
+      assets: [
+        'static/js/chunk_c18044a7b9add364.js.map',
+        'static/js/chunk_20b9cfb1f9f8bf8f.js.map',
+        'static/js/chunk_544515b3f82c8e2b.js.map',
+        'static/js/chunk_0437b221017200e1.js.map',
+      ],
+      initial: {
+        js: [
+          '/static/js/chunk_c18044a7b9add364.js',
+          '/static/js/chunk_20b9cfb1f9f8bf8f.js',
+          '/static/js/chunk_544515b3f82c8e2b.js',
+          '/static/js/chunk_0437b221017200e1.js',
+        ],
+      },
+    },
+  },
+};
+
 describe('test LocalStaticFileService', () => {
-  it('creates a new instance without paths', () => {
+  it('get assets for a page', async () => {
     const staticFileService = new LocalStaticFileService({
-      hostPath: 'host',
-      staticPath: 'static',
+      path: 'dist',
     });
-    expect(staticFileService.has('static/asset.js')).toBe(false);
-  });
 
-  it('gets assets by page', async () => {
-    // Arrange
-    const url = '/';
-    const staticAsset = 'static-asset.jpg';
-    const staticFileManifest = { assetsByPage: { [url]: [staticAsset] } };
     const readFileSpy = vi
       .spyOn(fs, 'readFile')
-      .mockResolvedValueOnce(Buffer.from(JSON.stringify(staticFileManifest)));
-    const staticFileService = new LocalStaticFileService({
-      hostPath: 'host',
-      staticPath: 'static',
+      .mockImplementation(async (path) => {
+        return Buffer.from(
+          JSON.stringify(
+            path === 'dist/manifest.json'
+              ? stubClientManifest
+              : stubServerManifest,
+          ),
+        );
+      });
+
+    const assets = await staticFileService.getAssets('/');
+
+    expect(assets).toStrictEqual({
+      serverJs: '/index_d2eb40c92588d937.js',
+      static: { css: [], js: stubClientManifest.entries['/'].initial?.js },
     });
-    await staticFileService.populateFilenameCache();
-
-    // Act
-    const assetsByPage = staticFileService.getPageAssetFilenames(url);
-
-    // Assert
-    expect(assetsByPage).toStrictEqual([staticAsset]);
-    expect(readFileSpy).toHaveBeenCalledTimes(1);
-    expect(readFileSpy).toHaveBeenCalledWith(
-      'host/static/staticFileManifest.json',
-    );
-  });
-
-  it('gets a static file', async () => {
-    // Arrange
-    const staticAsset = 'static-asset.jpg';
-    const staticFileManifest = { assetMapping: { [staticAsset]: staticAsset } };
-    const expectedString = 'static file contents';
-    const readFileSpy = vi
-      .spyOn(fs, 'readFile')
-      .mockResolvedValueOnce(Buffer.from(JSON.stringify(staticFileManifest)))
-      .mockResolvedValueOnce(Buffer.from(expectedString));
-    const staticFileService = new LocalStaticFileService({
-      hostPath: 'host',
-      staticPath: 'static',
-    });
-    await staticFileService.populateFilenameCache();
-
-    // Act
-    const buffer = await staticFileService.getAsset(staticAsset);
-
-    // Assert
-    expect(buffer.toString()).toBe(expectedString);
     expect(readFileSpy).toHaveBeenCalledTimes(2);
+    expect(readFileSpy).toHaveBeenCalledWith('dist/manifest.json', 'utf-8');
     expect(readFileSpy).toHaveBeenCalledWith(
-      'host/static/staticFileManifest.json',
+      'dist/server/manifest.json',
+      'utf-8',
     );
-    expect(readFileSpy).toHaveBeenCalledWith('host/static-asset.jpg');
   });
 });

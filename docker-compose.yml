@@ -86,7 +86,7 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./projects/gateway
+          path: projects/gateway
           target: /app
           ignore:
             - node_modules/

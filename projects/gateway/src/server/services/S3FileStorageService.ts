@@ -1,19 +1,19 @@
 import { PassThrough } from 'node:stream';
 import {
-  CompleteMultipartUploadCommandOutput,
+  type CompleteMultipartUploadCommandOutput,
   GetObjectCommand,
-  S3Client,
+  type S3Client,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import formidable, { VolatileFile } from 'formidable';
-import {
+import type {
   FileStorageOutput,
   FileStorageService,
 } from '../types/fileStorageService.ts';
-import { ServerRequest } from '../types/requestHandler.ts';
+import type { ServerRequest } from '../types/serverRequest.ts';
 
-interface S3FileServiceConstructorInput {
+interface S3FileServiceConstructor {
   bucketName: string;
   s3Client: S3Client;
 }
@@ -22,7 +22,7 @@ export class S3FileStorageService implements FileStorageService {
   private readonly bucketName: string;
   private readonly s3Client: S3Client;
 
-  constructor({ bucketName, s3Client }: S3FileServiceConstructorInput) {
+  constructor({ bucketName, s3Client }: S3FileServiceConstructor) {
     this.bucketName = bucketName;
     this.s3Client = s3Client;
   }

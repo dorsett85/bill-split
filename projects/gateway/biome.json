@@ -61,7 +61,8 @@
         "noNamespace": "error",
         "useAsConstAssertion": "error",
         "useBlockStatements": "off",
-        "useArrayLiterals": "off"
+        "useArrayLiterals": "off",
+        "useImportType": "error"
       },
       "suspicious": {
         "noAsyncPromiseExecutor": "error",

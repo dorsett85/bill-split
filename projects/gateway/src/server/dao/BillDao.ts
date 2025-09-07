@@ -1,14 +1,14 @@
-import { Pool } from 'pg';
+import type { Pool } from 'pg';
 import {
-  BillCreate,
-  BillRead,
+  type BillCreate,
+  type BillRead,
   BillReadStorage,
   mapToBillCreateStorage,
   mapToBillRead,
 } from '../dto/bill.ts';
 import { IdRecord } from '../dto/id.ts';
 import { LineItemReadStorage, mapToLineItemRead } from '../dto/lineItem.ts';
-import { BaseDao } from '../types/baseDao.ts';
+import type { BaseDao } from '../types/baseDao.ts';
 
 export class BillDao implements BaseDao<BillRead> {
   private db: Pool;

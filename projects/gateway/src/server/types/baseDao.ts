@@ -1,4 +1,4 @@
-import { IdRecord } from '../dto/id.ts';
+import type { IdRecord } from '../dto/id.ts';
 
 /**
  * Base data access object

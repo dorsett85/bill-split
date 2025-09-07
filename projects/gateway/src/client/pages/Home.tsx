@@ -1,6 +1,6 @@
 import { Button, Container, Group, Text, Title } from '@mantine/core';
 import { IconCamera, IconFile } from '@tabler/icons-react';
-import { ChangeEvent, useRef, useState } from 'react';
+import { type ChangeEvent, useRef, useState } from 'react';
 import { CreateBillResponse } from './dto.ts';
 
 export const Home = () => {
