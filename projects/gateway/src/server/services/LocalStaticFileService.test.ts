@@ -85,6 +85,7 @@ describe('test LocalStaticFileService', () => {
   it('get assets for a page', async () => {
     const staticFileService = new LocalStaticFileService({
       path: 'dist',
+      ssrModulePath: 'dist/server',
     });
 
     const readFileSpy = vi
@@ -102,7 +103,7 @@ describe('test LocalStaticFileService', () => {
     const assets = await staticFileService.getAssets('/');
 
     expect(assets).toStrictEqual({
-      serverJs: '/index_d2eb40c92588d937.js',
+      ssrJs: '/index_d2eb40c92588d937.js',
       static: { css: [], js: stubClientManifest.entries['/'].initial?.js },
     });
     expect(readFileSpy).toHaveBeenCalledTimes(2);

@@ -13,14 +13,14 @@ type RenderHtmlModule = {
   render: (input: RenderHtmlInput) => string;
 };
 
-export type LoadRenderModuleFunction = (keys: {
-  serverJs: string;
+export type LoadSSRModuleFunction = (keys: {
+  ssrJs: string;
   route: string;
 }) => Promise<RenderHtmlModule> | RenderHtmlModule;
 
 interface HtmlServiceConstructor {
   staticFileService: StaticFileService;
-  loadRenderModule: LoadRenderModuleFunction;
+  loadSSRModule: LoadSSRModuleFunction;
 }
 
 /**
@@ -28,22 +28,22 @@ interface HtmlServiceConstructor {
  */
 export class HtmlService {
   private readonly staticFileService: StaticFileService;
-  private readonly loadRenderModule: LoadRenderModuleFunction;
+  private readonly loadSSRModule: LoadSSRModuleFunction;
 
   public constructor({
     staticFileService,
-    loadRenderModule,
+    loadSSRModule,
   }: HtmlServiceConstructor) {
     this.staticFileService = staticFileService;
-    this.loadRenderModule = loadRenderModule;
+    this.loadSSRModule = loadSSRModule;
   }
 
   public async render(route: string, data?: unknown): Promise<string> {
     const assets = await this.staticFileService.getAssets(route);
 
-    const { render } = await this.loadRenderModule({
+    const { render } = await this.loadSSRModule({
       route,
-      serverJs: assets.serverJs,
+      ssrJs: assets.ssrJs,
     });
 
     return render({ staticAssets: assets.static, data });

@@ -21,6 +21,11 @@ const startServer = async () => {
   const staticServerPath =
     content.environments?.node.output?.distPath?.root ?? 'dist/server';
 
+  const staticFileService = new LocalStaticFileService({
+    path: staticPath,
+    ssrModulePath: staticServerPath,
+  });
+
   // declare variables that will be assigned based on the environment
   let envMiddleware: MiddlewareFunction;
   let htmlService: HtmlService;
@@ -40,9 +45,9 @@ const startServer = async () => {
     await startDevelopmentConsumer();
 
     htmlService = new HtmlService({
-      loadRenderModule: ({ route }) =>
+      loadSSRModule: ({ route }) =>
         rsbuildServer.environments.node.loadBundle(route),
-      staticFileService: new LocalStaticFileService({ path: staticPath }),
+      staticFileService,
     });
 
     port = rsbuildServer.port;
@@ -54,15 +59,11 @@ const startServer = async () => {
     rsbuildServer.connectWebSocket({ server: app.server });
   } else {
     htmlService = new HtmlService({
-      loadRenderModule: ({ serverJs }) => {
-        const renderModule = path.join(
-          process.cwd(),
-          staticServerPath,
-          serverJs,
-        );
+      loadSSRModule: ({ ssrJs }) => {
+        const renderModule = path.join(process.cwd(), staticServerPath, ssrJs);
         return import(renderModule);
       },
-      staticFileService: new LocalStaticFileService({ path: staticPath }),
+      staticFileService,
     });
 
     port = 3001;

@@ -9,13 +9,22 @@ interface StaticFileServiceConstructorInput {
    * Path to our static assets
    */
   path: string;
+  /**
+   * Path to our js module that
+   */
+  ssrModulePath: string;
 }
 
 export class LocalStaticFileService implements StaticFileService {
   private readonly path: string;
+  private readonly ssrModulePath: string;
 
-  public constructor({ path }: StaticFileServiceConstructorInput) {
+  public constructor({
+    path,
+    ssrModulePath,
+  }: StaticFileServiceConstructorInput) {
     this.path = path;
+    this.ssrModulePath = ssrModulePath;
   }
 
   /**
@@ -27,7 +36,7 @@ export class LocalStaticFileService implements StaticFileService {
   }> {
     const [staticManifest, serverManifest] = await Promise.all([
       fs.readFile(path.join(this.path, 'manifest.json'), 'utf-8'),
-      fs.readFile(path.join(this.path, 'server', 'manifest.json'), 'utf-8'),
+      fs.readFile(path.join(this.ssrModulePath, 'manifest.json'), 'utf-8'),
     ]);
 
     // TODO we should cache these in production
@@ -42,7 +51,7 @@ export class LocalStaticFileService implements StaticFileService {
    */
   public async getAssets(route: string): Promise<{
     static: StaticAssets;
-    serverJs: string;
+    ssrJs: string;
   }> {
     const manifest = await this.getManifests();
 
@@ -50,7 +59,7 @@ export class LocalStaticFileService implements StaticFileService {
     const { initial } = manifest.static.entries[route];
 
     return {
-      serverJs: serverAssets[0],
+      ssrJs: serverAssets[0],
       static: {
         css: initial?.css ?? [],
         js: initial?.js ?? [],

@@ -6,6 +6,6 @@ export interface StaticFileService {
    */
   getAssets(url: string): Promise<{
     static: StaticAssets;
-    serverJs: string;
+    ssrJs: string;
   }>;
 }
