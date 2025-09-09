@@ -4,7 +4,7 @@
   "description": "Receives a bill image and handles processing it",
   "scripts": {
     "type-check": "tsc",
-    "build": "esbuild src/index.ts --bundle --minify --platform=node --target=es2022 --outfile=dist/index.js",
+    "build": "rsbuild build",
     "test": "vitest --config test/vitest.config.mts"
   },
   "keywords": [],
@@ -12,9 +12,9 @@
   "license": "ISC",
   "devDependencies": {
     "@biomejs/biome": "2.2.2",
+    "@rsbuild/core": "^1.5.4",
     "@types/aws-lambda": "^8.10.152",
     "@types/node": "^22.18.0",
-    "esbuild": "^0.25.9",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
