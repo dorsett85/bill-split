@@ -1,16 +1,16 @@
 import type { Pool } from 'pg';
 import {
   type BillCreate,
+  BillCreateStorage,
   type BillRead,
   BillReadStorage,
-  mapToBillCreateStorage,
-  mapToBillRead,
+  toBillRead,
 } from '../dto/bill.ts';
 import { IdRecord } from '../dto/id.ts';
-import { LineItemReadStorage, mapToLineItemRead } from '../dto/lineItem.ts';
+import { LineItemReadStorage } from '../dto/lineItem.ts';
 import type { BaseDao } from '../types/baseDao.ts';
 
-export class BillDao implements BaseDao<BillRead> {
+export class BillDao implements BaseDao<BillCreate, BillRead> {
   private db: Pool;
 
   constructor(pool: Pool) {
@@ -18,15 +18,17 @@ export class BillDao implements BaseDao<BillRead> {
   }
 
   public async create(bill: BillCreate): Promise<IdRecord> {
-    const billToInsert = mapToBillCreateStorage(bill);
+    const billToInsert = BillCreateStorage.parse(bill);
     const keys: string[] = [];
     const values: (string | number | null)[] = [];
     const params: string[] = [];
-    Object.entries(billToInsert).forEach(([key, value], i) => {
+    let paramCount = 1;
+    for (const [key, value] of Object.entries(billToInsert)) {
+      if (value === undefined) continue;
       keys.push(key);
       values.push(value);
-      params.push(`$${i + 1}`);
-    });
+      params.push(`$${paramCount++}`);
+    }
 
     const result = await this.db.query(
       `
@@ -61,9 +63,11 @@ export class BillDao implements BaseDao<BillRead> {
       [id],
     );
 
-    return mapToBillRead({
-      ...billResult.rows[0],
-      lineItems: lineItemsResult.rows.map(mapToLineItemRead),
-    });
+    return BillReadStorage.transform((bill) =>
+      toBillRead(
+        bill,
+        lineItemsResult.rows.map((row) => LineItemReadStorage.parse(row)),
+      ),
+    ).parse(billResult.rows[0]);
   }
 }

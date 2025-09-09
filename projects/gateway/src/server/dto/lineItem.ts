@@ -7,31 +7,13 @@ const LineItemCreate = z.object({
   price: z.number(),
 });
 
-export const LineItemRead = LineItemCreate.extend({ id });
+export const LineItemReadStorage = z
+  .object({
+    id,
+    bill_id: LineItemCreate.shape.billId,
+    name: LineItemCreate.shape.name,
+    price: LineItemCreate.shape.price,
+  })
+  .strict();
 
-const LineItemCreateStorage = LineItemCreate.omit({ billId: true }).extend({
-  bill_id: z.number(),
-});
-
-export const LineItemReadStorage = LineItemCreateStorage.extend({ id });
-
-type LineItemCreate = z.infer<typeof LineItemCreate>;
-type LineItemRead = z.infer<typeof LineItemRead>;
-type LineItemCreateStorage = z.infer<typeof LineItemCreateStorage>;
 export type LineItemReadStorage = z.infer<typeof LineItemReadStorage>;
-
-export const mapToLineItemCreateStorage = (
-  lineItem: LineItemCreate,
-): LineItemCreateStorage =>
-  LineItemCreateStorage.parse({
-    ...lineItem,
-    bill_id: lineItem.billId,
-  });
-
-export const mapToLineItemRead = (
-  lineItem: LineItemReadStorage,
-): LineItemRead =>
-  LineItemRead.parse({
-    ...lineItem,
-    billId: lineItem.bill_id,
-  });
