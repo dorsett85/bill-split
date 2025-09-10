@@ -1,6 +1,6 @@
 import path from 'path';
 import type { BillDao } from '../dao/BillDao.ts';
-import { BillCreate, type BillRead } from '../dto/bill.ts';
+import { BillCreate, type BillRead, type BillUpdate } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
 import type { FileStorageService } from '../types/fileStorageService.ts';
 import type { ServerRequest } from '../types/serverRequest.ts';
@@ -66,5 +66,9 @@ export class BillService {
     }
 
     return bill;
+  }
+
+  public async update(id: number, bill: BillUpdate): Promise<IdRecord> {
+    return await this.billModel.update(id, bill);
   }
 }

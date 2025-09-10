@@ -4,6 +4,8 @@ import {
   BillCreateStorage,
   type BillRead,
   BillReadStorage,
+  type BillUpdate,
+  BillUpdateStorage,
   toBillRead,
 } from '../dto/bill.ts';
 import { IdRecord } from '../dto/id.ts';
@@ -69,5 +71,28 @@ export class BillDao implements BaseDao<BillCreate, BillRead> {
         lineItemsResult.rows.map((row) => LineItemReadStorage.parse(row)),
       ),
     ).parse(billResult.rows[0]);
+  }
+
+  public async update(id: number, billUpdates: BillUpdate): Promise<IdRecord> {
+    const billToUpdate = BillUpdateStorage.parse(billUpdates);
+    const keys: string[] = [];
+    const values: (string | number | null)[] = [];
+    let paramCount = 1;
+    for (const [key, value] of Object.entries(billToUpdate)) {
+      if (value === undefined) continue;
+      keys.push(`${key} = $${paramCount++}`);
+      values.push(value);
+    }
+
+    const result = await this.db.query(
+      `
+      UPDATE bill set ${keys.join(',')}
+      WHERE id = $${paramCount++}
+      RETURNING id
+      `,
+      [...values, id],
+    );
+
+    return IdRecord.parse(result.rows[0]);
   }
 }

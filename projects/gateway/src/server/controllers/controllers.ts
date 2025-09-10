@@ -1,6 +1,7 @@
 import { S3Client } from '@aws-sdk/client-s3';
 import { BillDao } from '../dao/BillDao.ts';
 import { getDb } from '../db/getDb.ts';
+import { BillUpdate } from '../dto/bill.ts';
 import { BillService } from '../services/BillService.ts';
 import type { HtmlService } from '../services/HtmlService.ts';
 import { KafkaService } from '../services/KafkaService.ts';
@@ -45,6 +46,23 @@ export const getBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
   const bill = await billService.read(req.params.id);
   return writeToJson({ data: bill }, res);
+};
+
+export const patchBill: MiddlewareFunction = async (req, res) => {
+  const billService = getBillService();
+
+  const billStream = [];
+  for await (const chunk of req.read()) {
+    billStream.push(chunk);
+  }
+  const text = Buffer.from(new Uint16Array(billStream)).toString();
+  const body = JSON.parse(text);
+
+  const idRecord = await billService.update(
+    +req.params.id,
+    BillUpdate.parse(body),
+  );
+  return writeToJson({ data: idRecord }, res);
 };
 
 export const postBill: MiddlewareFunction = async (req, res) => {

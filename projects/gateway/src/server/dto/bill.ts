@@ -14,12 +14,25 @@ export const BillCreate = z.object({
   tax: z.number().nullish(),
 });
 
+export const BillUpdate = BillCreate.omit({
+  imagePath: true,
+  imageStatus: true,
+});
+
 export const BillCreateStorage = BillCreate.transform((bill) => ({
   business_location: bill.businessLocation,
   business_name: bill.businessName,
   gratuity: bill.gratuity,
   image_path: bill.imagePath,
   image_status: bill.imageStatus,
+  name: bill.name,
+  tax: bill.tax,
+}));
+
+export const BillUpdateStorage = BillUpdate.transform((bill) => ({
+  business_location: bill.businessLocation,
+  business_name: bill.businessName,
+  gratuity: bill.gratuity,
   name: bill.name,
   tax: bill.tax,
 }));
@@ -57,4 +70,5 @@ export const toBillRead = (
 });
 
 export type BillCreate = z.infer<typeof BillCreate>;
+export type BillUpdate = z.infer<typeof BillUpdate>;
 export type BillRead = ReturnType<typeof toBillRead>;

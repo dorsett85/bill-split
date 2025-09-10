@@ -5,6 +5,7 @@ import {
   getBill,
   getBillPage,
   getHomePage,
+  patchBill,
   postBill,
 } from './controllers/controllers.ts';
 import { HtmlService } from './services/HtmlService.ts';
@@ -74,6 +75,7 @@ const startServer = async () => {
 
   app.get('/', getHomePage({ htmlService }));
   app.post('/api/bills', postBill);
+  app.patch('/api/bills/:id', patchBill);
   app.get('/api/bills/:id', getBill);
   app.get('/bills/:id', getBillPage({ htmlService }));
 

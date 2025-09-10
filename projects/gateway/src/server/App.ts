@@ -11,8 +11,8 @@ import { writeToHtml } from './utils/responseHelpers.ts';
 export class App {
   public readonly server = http.createServer();
   private middlewares: {
-    execute: MiddlewareFunction;
-    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    handle: MiddlewareFunction;
+    method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
     route?: string;
   }[] = [];
   /**
@@ -28,22 +28,32 @@ export class App {
   }
 
   public use(middleware: MiddlewareFunction): App {
-    this.middlewares.push({ execute: middleware });
+    this.middlewares.push({ handle: middleware });
     return this;
   }
 
   public get(route: string, middleware: MiddlewareFunction): App {
-    this.middlewares.push({ execute: middleware, route, method: 'GET' });
+    this.middlewares.push({ handle: middleware, route, method: 'GET' });
+    return this;
+  }
+
+  public patch(route: string, middleware: MiddlewareFunction): App {
+    this.middlewares.push({ handle: middleware, route, method: 'PATCH' });
     return this;
   }
 
   public post(route: string, middleware: MiddlewareFunction): App {
-    this.middlewares.push({ execute: middleware, route, method: 'POST' });
+    this.middlewares.push({ handle: middleware, route, method: 'POST' });
+    return this;
+  }
+
+  public delete(route: string, middleware: MiddlewareFunction): App {
+    this.middlewares.push({ handle: middleware, route, method: 'DELETE' });
     return this;
   }
 
   private onRequest() {
-    this.server.on('request', (req, res) => {
+    this.server.on('request', async (req, res) => {
       if (!req.url) {
         res.statusCode = 400;
         return writeToHtml('You need to specify a url in your request', res);
@@ -63,7 +73,7 @@ export class App {
       });
 
       // Run all the middleware starting at the beginning
-      const dispatch = (middlewareIndex: number) => {
+      const dispatch = async (middlewareIndex: number) => {
         const middleware = this.middlewares[middlewareIndex];
 
         // Check if there's no more middleware to run
@@ -90,13 +100,13 @@ export class App {
         }
 
         try {
-          middleware.execute(serverRequest, res, next);
+          await middleware.handle(serverRequest, res, next);
         } catch (err) {
           // TODO maybe add a fallback handler in case one is not defined
           this.handleRequestError?.(serverRequest, res, err);
         }
       };
-      dispatch(0);
+      await dispatch(0);
     });
   }
 
