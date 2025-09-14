@@ -1,29 +1,35 @@
 import path from 'path';
 import type { BillDao } from '../dao/BillDao.ts';
+import type { LineItemDao } from '../dao/LineItemDao.ts';
 import { BillCreate, type BillRead, type BillUpdate } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
+import type { LineItemCreate } from '../dto/lineItem.ts';
 import type { FileStorageService } from '../types/fileStorageService.ts';
 import type { ServerRequest } from '../types/serverRequest.ts';
 import type { KafkaService } from './KafkaService.ts';
 import { S3FileStorageService } from './S3FileStorageService.ts';
 
 interface BillServiceConstructor {
-  billModel: BillDao;
+  billDao: BillDao;
+  lineItemDao: LineItemDao;
   fileStorageService: FileStorageService;
   kafkaService: KafkaService;
 }
 
 export class BillService {
-  private billModel: BillDao;
-  private fileStorageService: FileStorageService;
+  private billDao: BillDao;
+  private lineItemDao: LineItemDao;
+  private readonly fileStorageService: FileStorageService;
   private kafkaService: KafkaService;
 
   constructor({
-    billModel,
+    billDao,
+    lineItemDao,
     fileStorageService,
     kafkaService,
   }: BillServiceConstructor) {
-    this.billModel = billModel;
+    this.billDao = billDao;
+    this.lineItemDao = lineItemDao;
     this.fileStorageService = fileStorageService;
     this.kafkaService = kafkaService;
   }
@@ -36,7 +42,7 @@ export class BillService {
    */
   public async create(req: ServerRequest): Promise<IdRecord> {
     const storedFiles = await this.fileStorageService.store(req);
-    const idRecord = await this.billModel.create(
+    const idRecord = await this.billDao.create(
       BillCreate.parse({
         imagePath: storedFiles[0].path,
         imageStatus: 'parsing',
@@ -54,8 +60,8 @@ export class BillService {
     return idRecord;
   }
 
-  public async read(id: string): Promise<BillRead> {
-    const bill = await this.billModel.read(id);
+  public async read(id: number): Promise<BillRead> {
+    const bill = await this.billDao.read(id);
 
     // Get a presigned image URL so the FE can fetch the image from a private
     // repo.
@@ -69,6 +75,10 @@ export class BillService {
   }
 
   public async update(id: number, bill: BillUpdate): Promise<IdRecord> {
-    return await this.billModel.update(id, bill);
+    return await this.billDao.update(id, bill);
+  }
+
+  public async createLineItem(lineItem: LineItemCreate): Promise<IdRecord> {
+    return await this.lineItemDao.create(lineItem);
   }
 }

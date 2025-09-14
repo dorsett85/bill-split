@@ -3,7 +3,7 @@ import * as z from 'zod';
 const ImageStatus = z.literal(['parsing', 'ready', 'error']);
 
 const LineItemRead = z.object({
-  billId: z.number(),
+  id: z.number(),
   name: z.string(),
   price: z.number(),
 });

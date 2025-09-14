@@ -7,6 +7,7 @@ import {
   getHomePage,
   patchBill,
   postBill,
+  postBillItem,
 } from './controllers/controllers.ts';
 import { HtmlService } from './services/HtmlService.ts';
 import { startDevelopmentConsumer } from './services/KafkaService.ts';
@@ -77,6 +78,7 @@ const startServer = async () => {
   app.post('/api/bills', postBill);
   app.patch('/api/bills/:id', patchBill);
   app.get('/api/bills/:id', getBill);
+  app.get('/api/bills/:id/item', postBillItem);
   app.get('/bills/:id', getBillPage({ htmlService }));
 
   app.listen(port, () => {
