@@ -68,7 +68,8 @@ export class App {
 
       const serverRequest: ServerRequest = Object.assign(req, {
         params: resolveRouteParams(req.url, route ?? ''),
-        route: route ?? req.url,
+        queryParams: Object.fromEntries(new URLSearchParams(req.url)),
+        route: route ?? req.url.split('?')[0],
         url: req.url,
       });
 

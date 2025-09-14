@@ -70,7 +70,7 @@ export const postBill: MiddlewareFunction = async (req, res) => {
   return writeToJson({ data: idRecord }, res);
 };
 
-export const patchBillItem: MiddlewareFunction = async (req, res) => {
+export const patchLineItem: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
 
   const billService = getBillService();
@@ -81,10 +81,28 @@ export const patchBillItem: MiddlewareFunction = async (req, res) => {
   return writeToJson({ data: idRecord }, res);
 };
 
-export const postBillItem: MiddlewareFunction = async (req, res) => {
+export const postLineItem: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
 
   const billService = getBillService();
   const idRecord = await billService.createLineItem(LineItemCreate.parse(body));
   return writeToJson({ data: idRecord }, res);
+};
+
+export const getParticipants: MiddlewareFunction = async (req, res) => {
+  // TODO
+  const billId = +req.queryParams.billId;
+  return writeToJson({ data: billId }, res);
+};
+
+export const postParticipant: MiddlewareFunction = async (req, res) => {
+  // TODO
+  const body = await parseJsonBody(req);
+  return writeToJson({ data: body }, res);
+};
+
+export const deleteParticipant: MiddlewareFunction = async (req, res) => {
+  // TODO
+  const id = +req.params.id;
+  return writeToJson({ data: id }, res);
 };
