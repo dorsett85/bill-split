@@ -3,7 +3,7 @@ import { BillDao } from '../dao/BillDao.ts';
 import { LineItemDao } from '../dao/LineItemDao.ts';
 import { getDb } from '../db/getDb.ts';
 import { BillUpdate } from '../dto/bill.ts';
-import { LineItemCreate } from '../dto/lineItem.ts';
+import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import { BillService } from '../services/BillService.ts';
 import type { HtmlService } from '../services/HtmlService.ts';
 import { KafkaService } from '../services/KafkaService.ts';
@@ -67,6 +67,17 @@ export const patchBill: MiddlewareFunction = async (req, res) => {
 export const postBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
   const idRecord = await billService.create(req);
+  return writeToJson({ data: idRecord }, res);
+};
+
+export const patchBillItem: MiddlewareFunction = async (req, res) => {
+  const body = await parseJsonBody(req);
+
+  const billService = getBillService();
+  const idRecord = await billService.updateLineItem(
+    +req.params.id,
+    LineItemUpdate.parse(body),
+  );
   return writeToJson({ data: idRecord }, res);
 };
 

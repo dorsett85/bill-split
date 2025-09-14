@@ -6,6 +6,7 @@ import {
   getBillPage,
   getHomePage,
   patchBill,
+  patchBillItem,
   postBill,
   postBillItem,
 } from './controllers/controllers.ts';
@@ -78,7 +79,8 @@ const startServer = async () => {
   app.post('/api/bills', postBill);
   app.patch('/api/bills/:id', patchBill);
   app.get('/api/bills/:id', getBill);
-  app.get('/api/bills/:id/item', postBillItem);
+  app.patch('/api/bills/:id/item', patchBillItem);
+  app.post('/api/bills/:id/item', postBillItem);
   app.get('/bills/:id', getBillPage({ htmlService }));
 
   app.listen(port, () => {

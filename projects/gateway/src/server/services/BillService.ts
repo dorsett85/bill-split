@@ -3,7 +3,7 @@ import type { BillDao } from '../dao/BillDao.ts';
 import type { LineItemDao } from '../dao/LineItemDao.ts';
 import { BillCreate, type BillRead, type BillUpdate } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
-import type { LineItemCreate } from '../dto/lineItem.ts';
+import type { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import type { FileStorageService } from '../types/fileStorageService.ts';
 import type { ServerRequest } from '../types/serverRequest.ts';
 import type { KafkaService } from './KafkaService.ts';
@@ -80,5 +80,12 @@ export class BillService {
 
   public async createLineItem(lineItem: LineItemCreate): Promise<IdRecord> {
     return await this.lineItemDao.create(lineItem);
+  }
+
+  public async updateLineItem(
+    id: number,
+    lineItem: LineItemUpdate,
+  ): Promise<IdRecord> {
+    return await this.lineItemDao.update(id, lineItem);
   }
 }
