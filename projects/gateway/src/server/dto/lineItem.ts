@@ -29,7 +29,7 @@ export type LineItemReadStorage = z.infer<typeof LineItemReadStorage>;
 export type LineItemUpdate = z.infer<typeof LineItemUpdate>;
 
 export const toLineItemStorage = (
-  lineItem: z.infer<typeof LineItemCreate> | z.infer<typeof LineItemUpdate>,
+  lineItem: LineItemCreate | LineItemUpdate,
 ) => ({
   bill_id: 'billId' in lineItem ? lineItem.billId : undefined,
   name: lineItem.name,

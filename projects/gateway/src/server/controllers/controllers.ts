@@ -1,12 +1,15 @@
 import { S3Client } from '@aws-sdk/client-s3';
 import { BillDao } from '../dao/BillDao.ts';
 import { LineItemDao } from '../dao/LineItemDao.ts';
+import { ParticipantDao } from '../dao/ParticipantDao.ts';
 import { getDb } from '../db/getDb.ts';
 import { BillUpdate } from '../dto/bill.ts';
 import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
+import { ParticipantCreate, ParticipantSearch } from '../dto/participant.ts';
 import { BillService } from '../services/BillService.ts';
 import type { HtmlService } from '../services/HtmlService.ts';
 import { KafkaService } from '../services/KafkaService.ts';
+import { ParticipantService } from '../services/ParticipantService.ts';
 import { S3FileStorageService } from '../services/S3FileStorageService.ts';
 import type { MiddlewareFunction } from '../types/serverRequest.ts';
 import { parseJsonBody } from '../utils/parseJsonBody.ts';
@@ -27,6 +30,12 @@ const getBillService = () => {
       }),
     }),
     kafkaService: new KafkaService(),
+  });
+};
+
+const getParticipantService = () => {
+  return new ParticipantService({
+    participantDao: new ParticipantDao(getDb()),
   });
 };
 
@@ -90,15 +99,21 @@ export const postLineItem: MiddlewareFunction = async (req, res) => {
 };
 
 export const getParticipants: MiddlewareFunction = async (req, res) => {
-  // TODO
-  const billId = +req.queryParams.billId;
-  return writeToJson({ data: billId }, res);
+  const participantService = getParticipantService();
+  const participants = await participantService.search(
+    ParticipantSearch.parse(req.queryParams.billId),
+  );
+
+  return writeToJson({ data: participants }, res);
 };
 
 export const postParticipant: MiddlewareFunction = async (req, res) => {
-  // TODO
   const body = await parseJsonBody(req);
-  return writeToJson({ data: body }, res);
+  const participantService = getParticipantService();
+  const participant = await participantService.create(
+    ParticipantCreate.parse(body),
+  );
+  return writeToJson({ data: participant }, res);
 };
 
 export const deleteParticipant: MiddlewareFunction = async (req, res) => {

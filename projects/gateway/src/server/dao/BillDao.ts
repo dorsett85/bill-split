@@ -28,7 +28,7 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
     const billResult = await this.db.query(
       `
       SELECT ${billCols}
-      FROM bill
+      FROM ${this.tableName}
       WHERE id = $1
       `,
       [id],
@@ -53,5 +53,10 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
   public async update(id: number, billUpdates: BillUpdate): Promise<IdRecord> {
     const billToUpdate = toBillStorage(billUpdates);
     return this.updateRecord(id, billToUpdate);
+  }
+
+  public async search(): Promise<BillRead[]> {
+    // TODO
+    throw new Error('Not implemented');
   }
 }

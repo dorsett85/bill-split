@@ -30,8 +30,8 @@ export class LineItemDao extends BaseDao<
     const lineItemsResult = await this.db.query(
       `
       SELECT ${lineItemCols}
-      FROM line_item
-      where bill_id = $1
+      FROM ${this.tableName}
+      where id = $1
       `,
       [id],
     );
@@ -45,5 +45,10 @@ export class LineItemDao extends BaseDao<
   ): Promise<IdRecord> {
     const updates = toLineItemStorage(lineItemUpdates);
     return this.updateRecord(id, updates);
+  }
+
+  public async search(): Promise<LineItemRead[]> {
+    // TODO
+    throw new Error('Not implemented');
   }
 }

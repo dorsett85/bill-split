@@ -1,4 +1,4 @@
-import type { Pool } from 'pg';
+import type { Pool, QueryResult } from 'pg';
 import { IdRecord } from '../dto/id.ts';
 
 type StorageValue = string | null | number;
@@ -60,6 +60,8 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
 
   abstract update(id: number, updates: U): Promise<IdRecord>;
 
+  abstract search(searchParams: Record<string, number | string>): Promise<R[]>;
+
   protected async updateRecord(
     id: number,
     data: StorageRecordWithUndefined,
@@ -84,6 +86,26 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
     );
 
     return IdRecord.parse(result.rows[0]);
+  }
+
+  protected async searchRecords(
+    searchParams: Record<string, string | number | undefined>,
+    cols: string[],
+  ): Promise<QueryResult> {
+    const dbParams = this.stripUndefined(searchParams);
+    const values = Object.values(dbParams);
+    const params = Object.keys(dbParams)
+      .map((param, i) => `${param} = $${i + 1}`)
+      .join(' AND ');
+
+    return await this.db.query(
+      `
+      SELECT ${cols.join(',')}
+      FROM ${this.tableName}
+      where ${params}
+      `,
+      [values],
+    );
   }
 
   private stripUndefined(data: StorageRecordWithUndefined): StorageRecord {
