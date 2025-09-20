@@ -1,4 +1,4 @@
-import type { Pool } from 'pg';
+import type { Pool, PoolClient } from 'pg';
 import {
   type BillCreate,
   type BillRead,
@@ -20,10 +20,10 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
     return this.createRecord(billToInsert);
   }
 
-  public async read(id: number): Promise<BillRead> {
+  public async read(id: number, client?: PoolClient): Promise<BillRead> {
     const billCols = BillReadStorage.keyof().options.join(',');
 
-    const billResult = await this.db.query(
+    const billResult = await (client ?? this.db).query(
       `
       SELECT ${billCols}
       FROM ${this.tableName}

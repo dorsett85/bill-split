@@ -1,4 +1,4 @@
-import type { Pool, QueryResult } from 'pg';
+import type { Pool, PoolClient, QueryResult } from 'pg';
 import { IdRecord } from '../dto/id.ts';
 
 type StorageValue = string | null | number;
@@ -23,14 +23,14 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
    * The data param should include all the data required to create a new record
    * which does not include the id as it gets assigned by the db.
    */
-  abstract create(data: C): Promise<IdRecord>;
+  abstract create(data: C, client?: PoolClient): Promise<IdRecord>;
 
-  abstract read(id: number): Promise<R>;
+  abstract read(id: number, client?: PoolClient): Promise<R>;
 
   abstract update(id: number, updates: U): Promise<IdRecord>;
 
-  public async delete(id: number): Promise<IdRecord> {
-    const { rows } = await this.db.query(
+  public async delete(id: number, client?: PoolClient): Promise<IdRecord> {
+    const { rows } = await (client ?? this.db).query(
       `
       DELETE FROM ${this.tableName}
       WHERE id = $1
@@ -42,7 +42,31 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
     return IdRecord.parse(rows[0]);
   }
 
-  abstract search(searchParams: Record<string, number | string>): Promise<R[]>;
+  abstract search(
+    searchParams: Record<string, number | string>,
+    client?: PoolClient,
+  ): Promise<R[]>;
+
+  /**
+   * Use this method for all transactions. Any queries inside the transaction
+   * callback MUST use the client arg passed to the callback!
+   */
+  public async tx<TReturn>(
+    transaction: (client: PoolClient) => Promise<TReturn> | TReturn,
+  ): Promise<TReturn> {
+    const client = await this.db.connect();
+    try {
+      await client.query('BEGIN');
+      const res = await transaction(client);
+      await client.query('COMMIT');
+      return res;
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
 
   /**
    * Call this method inside the derived base class's create method to remove
@@ -50,6 +74,7 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
    */
   protected async createRecord(
     data: StorageRecordWithUndefined,
+    client?: PoolClient,
   ): Promise<IdRecord> {
     const storageData = this.stripUndefined(data);
 
@@ -63,7 +88,7 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
       params.push(`$${paramCount++}`);
     }
 
-    const { rows } = await this.db.query(
+    const { rows } = await (client ?? this.db).query(
       `
       INSERT INTO ${this.tableName} (${keys.join(',')})
       VALUES (${params.join(',')})
@@ -104,6 +129,7 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
   protected async searchRecords(
     searchParams: Record<string, string | number | undefined>,
     cols: string[],
+    client?: PoolClient,
   ): Promise<QueryResult> {
     const dbParams = this.stripUndefined(searchParams);
     const values = Object.values(dbParams);
@@ -111,7 +137,7 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
       .map((param, i) => `${param} = $${i + 1}`)
       .join(' AND ');
 
-    return await this.db.query(
+    return await (client ?? this.db).query(
       `
       SELECT ${cols.join(',')}
       FROM ${this.tableName}

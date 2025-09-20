@@ -1,4 +1,4 @@
-import type { Pool } from 'pg';
+import type { Pool, PoolClient } from 'pg';
 import type { IdRecord } from '../dto/id.ts';
 import {
   type LineItemCreate,
@@ -38,11 +38,14 @@ export class LineItemDao extends BaseDao<
     return this.updateRecord(id, updates);
   }
 
-  public async search(searchParams: LineItemSearch): Promise<LineItemRead[]> {
+  public async search(
+    searchParams: LineItemSearch,
+    client?: PoolClient,
+  ): Promise<LineItemRead[]> {
     const cols = LineItemReadStorage.keyof().options;
 
     const dbParams = toLineItemStorage(searchParams);
-    const { rows } = await this.searchRecords(dbParams, cols);
+    const { rows } = await this.searchRecords(dbParams, cols, client);
 
     return rows.map((rows) =>
       LineItemReadStorage.transform(toLineItemRead).parse(rows),

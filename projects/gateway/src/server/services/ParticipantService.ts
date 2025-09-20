@@ -28,14 +28,18 @@ export class ParticipantService {
     billId: number,
     participant: ParticipantCreate,
   ): Promise<IdRecord> {
-    // TODO this needs to be a transaction
-    const idRecord = await this.participantDao.create(participant);
-    await this.billParticipantDao.create({
-      billId,
-      participantId: idRecord.id,
+    return await this.participantDao.tx(async (client) => {
+      // Create both the participant and the bill_participant
+      const res = await this.participantDao.create(participant, client);
+      await this.billParticipantDao.create(
+        {
+          billId,
+          participantId: res.id,
+        },
+        client,
+      );
+      return res;
     });
-
-    return idRecord;
   }
 
   /**
@@ -45,9 +49,10 @@ export class ParticipantService {
     billId,
     participantId,
   }: BillParticipantDelete): Promise<IdRecord> {
-    // TODO this needs to be a transaction
-    const idRecord = await this.participantDao.delete(participantId);
-    console.log('TODO Recalculate participant payment for bill id:', billId);
-    return idRecord;
+    return await this.participantDao.tx(async (client) => {
+      const res = await this.participantDao.delete(participantId, client);
+      console.log('TODO Recalculate participant payment for bill id:', billId);
+      return res;
+    });
   }
 }

@@ -66,23 +66,32 @@ export class BillService {
   }
 
   public async read(id: number): Promise<BillResponse> {
-    const bill = await this.billDao.read(id);
-    const lineItems = await this.lineItemDao.search({ billId: bill.id });
-    const participants = await this.participantDao.searchByBillId(bill.id);
+    const res: BillResponse = await this.billDao.tx(async (client) => {
+      const bill = await this.billDao.read(id, client);
+      const lineItems = await this.lineItemDao.search(
+        { billId: bill.id },
+        client,
+      );
+      const participants = await this.participantDao.searchByBillId(
+        bill.id,
+        client,
+      );
+      return {
+        ...bill,
+        lineItems,
+        participants,
+      };
+    });
 
     // Get a presigned image URL so the FE can fetch the image from a private
     // repo.
     if (this.fileStorageService instanceof S3FileStorageService) {
-      bill.imagePath = await this.fileStorageService.getPresignedUrl(
-        bill.imagePath,
+      res.imagePath = await this.fileStorageService.getPresignedUrl(
+        res.imagePath,
       );
     }
 
-    return {
-      ...bill,
-      lineItems,
-      participants,
-    };
+    return res;
   }
 
   public async update(id: number, bill: BillUpdate): Promise<IdRecord> {

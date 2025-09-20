@@ -1,4 +1,4 @@
-import type { Pool } from 'pg';
+import type { Pool, PoolClient } from 'pg';
 import {
   type BillParticipantCreate,
   type BillParticipantRead,
@@ -16,9 +16,12 @@ export class BillParticipantDao extends BaseDao<
     super(db, 'bill_participant');
   }
 
-  public async create(data: BillParticipantCreate): Promise<IdRecord> {
+  public async create(
+    data: BillParticipantCreate,
+    client?: PoolClient,
+  ): Promise<IdRecord> {
     const insertItem = toBillParticipantStorage(data);
-    return this.createRecord(insertItem);
+    return this.createRecord(insertItem, client);
   }
 
   public async read(): Promise<BillParticipantRead> {

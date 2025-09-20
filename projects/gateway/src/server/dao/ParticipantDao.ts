@@ -1,4 +1,4 @@
-import type { Pool } from 'pg';
+import type { Pool, PoolClient } from 'pg';
 import type { IdRecord } from '../dto/id.ts';
 import {
   type ParticipantCreate,
@@ -18,9 +18,12 @@ export class ParticipantDao extends BaseDao<
     super(db, 'participant');
   }
 
-  public async create(participant: ParticipantCreate): Promise<IdRecord> {
+  public async create(
+    participant: ParticipantCreate,
+    client?: PoolClient,
+  ): Promise<IdRecord> {
     const insertItem = toParticipantStorage(participant);
-    return this.createRecord(insertItem);
+    return this.createRecord(insertItem, client);
   }
 
   public async read(): Promise<ParticipantRead> {
@@ -38,12 +41,15 @@ export class ParticipantDao extends BaseDao<
     throw new Error('Not implemented');
   }
 
-  public async searchByBillId(billId: number): Promise<ParticipantRead[]> {
+  public async searchByBillId(
+    billId: number,
+    client?: PoolClient,
+  ): Promise<ParticipantRead[]> {
     const cols = ParticipantReadStorage.keyof()
       .options.map((col) => `${this.tableName}.${col}`)
       .join(',');
 
-    const { rows } = await this.db.query(
+    const { rows } = await (client ?? this.db).query(
       `
         SELECT ${cols}
         FROM ${this.tableName}

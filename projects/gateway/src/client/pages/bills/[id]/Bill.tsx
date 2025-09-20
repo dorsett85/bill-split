@@ -149,10 +149,14 @@ export const Bill: React.FC<BillProps> = (props) => {
   }, [props.bill.imageStatus]);
 
   const handleOnChangeParticipant = async (newParticipants: string[]) => {
+    if (updatingParticipants) {
+      return;
+    }
+
     setUpdatingParticipants(() => true);
 
     // Any new names not in the old list need to be created
-    const createList = newParticipants.filter(
+    const createName = newParticipants.find(
       (newParticipant) =>
         !participants
           .map((participant) => participant.name)
@@ -160,25 +164,25 @@ export const Bill: React.FC<BillProps> = (props) => {
     );
 
     // Any names in the old list that aren't in the new list need to be deleted
-    const deleteList = participants
-      .filter((participant) => !newParticipants.includes(participant.name))
-      .map((participant) => participant.id);
+    const deleteId = participants.find(
+      (participant) => !newParticipants.includes(participant.name),
+    )?.id;
 
-    for (const name of createList) {
+    if (createName) {
       try {
-        const { data } = await createBillParticipant(bill.id, name);
+        const { data } = await createBillParticipant(bill.id, createName);
         setParticipants((participants) => [
           ...participants,
-          { id: data.id, name },
+          { id: data.id, name: createName },
         ]);
       } catch {
         // no-op
       }
     }
 
-    for (const id of deleteList) {
+    if (deleteId) {
       try {
-        const { data } = await deleteParticipant(bill.id, id);
+        const { data } = await deleteParticipant(bill.id, deleteId);
         setParticipants((participants) =>
           participants.filter((participant) => participant.id !== data.id),
         );
