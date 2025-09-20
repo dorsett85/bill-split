@@ -43,6 +43,7 @@ services:
     build:
       context: projects/db
       target: dev
+    container_name: db-migrations
     depends_on:
       - postgres
     environment:
@@ -69,9 +70,23 @@ services:
     build:
       context: projects/kafka
       target: dev
+    container_name: kafka-init
     depends_on:
       - kafka
     environment:
+      KAFKA_HOST: *kafka-host
+      KAFKA_PORT: *kafka-port
+      KAFKA_BILL_PROCESSING_TOPIC: *kafka-bill-processing-topic
+
+  bill-consumer:
+    build:
+      context: projects/bill-consumer
+      target: dev
+    container_name: bill-consumer
+    depends_on:
+      - kafka-init
+    environment:
+      BILL_PROCESSOR_URL: *bill-processor-url
       KAFKA_HOST: *kafka-host
       KAFKA_PORT: *kafka-port
       KAFKA_BILL_PROCESSING_TOPIC: *kafka-bill-processing-topic
@@ -94,10 +109,10 @@ services:
           path: package.json
     environment:
       <<: [*db-env, *aws-env]
+      BILL_PROCESSOR_URL: *bill-processor-url
       KAFKA_HOST: *kafka-host
       KAFKA_PORT: *kafka-port
       KAFKA_BILL_PROCESSING_TOPIC: *kafka-bill-processing-topic
-      BILL_PROCESSOR_URL: *bill-processor-url
     ports:
       - "8080:8080"
 

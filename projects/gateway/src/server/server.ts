@@ -32,9 +32,6 @@ const startServer = async () => {
     ssrModulePath: staticServerPath,
   });
 
-  // start the kafka consumer for dev only
-  await startDevelopmentConsumer();
-
   // declare variables that will be assigned based on the environment
   let envMiddleware: MiddlewareFunction;
   let htmlService: HtmlService;

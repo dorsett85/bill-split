@@ -4,6 +4,9 @@ parameters:
   bill_processor_is_changed:
     type: boolean
     default: false
+  bill_consumer_is_changed:
+    type: boolean
+    default: false
   gateway_is_changed:
     type: boolean
     default: false
@@ -15,7 +18,7 @@ jobs:
   test-bill-processor:
     executor:
       name: node/default
-      tag: 22.15.0
+      tag: 22.19.0
     working_directory: ~/project/projects/bill-processor
     steps:
       - checkout:
@@ -39,10 +42,34 @@ jobs:
       - run:
           name: Run tests
           command: pnpm test
+  test-bill-consumer:
+    executor:
+      name: node/default
+      tag: 22.19.0
+    working_directory: ~/project/projects/bill-processor
+    steps:
+      - checkout:
+          path: ~/project
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+      - run:
+          name: Install dependencies
+          command: pnpm install
+      - save_cache:
+          key: v1-dependencies-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: Type checking
+          command: pnpm tsc
+      - run:
+          name: Linting
+          command: pnpm biome ci
   test-gateway:
     executor:
       name: node/default
-      tag: 22.15.0
+      tag: 22.19.0
     working_directory: ~/project/projects/gateway
     steps:
       - checkout:
@@ -81,6 +108,10 @@ workflows:
     when: << pipeline.parameters.bill_processor_is_changed >>
     jobs:
       - test-bill-processor
+  bill-consumer:
+    when: << pipeline.parameters.bill_consumer_is_changed >>
+    jobs:
+      - test-bill-consumer
   gateway:
     when: << pipeline.parameters.gateway_is_changed >>
     jobs:

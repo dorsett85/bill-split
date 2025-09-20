@@ -13,4 +13,5 @@ workflows:
           config-path: .circleci/continue_config.yml
           mapping: |
             projects/bill-processor/.* bill_processor_is_changed true
+            projects/bill-consumer/.* bill_consumer_is_changed true
             projects/gateway/.* gateway_is_changed true      
