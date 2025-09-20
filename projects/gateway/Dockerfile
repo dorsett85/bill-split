@@ -1,7 +1,7 @@
 FROM node:22.19.0-slim AS base
 WORKDIR /app
 RUN corepack enable
-RUN corepack use pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b
+RUN corepack use pnpm@10.17.0+sha512.fce8a3dd29a4ed2ec566fb53efbb04d8c44a0f05bc6f24a73046910fb9c3ce7afa35a0980500668fa3573345bd644644fa98338fa168235c80f4aa17aa17fbef
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.pnpm to speed up subsequent builds.
@@ -20,6 +20,4 @@ FROM base AS dev
 # Expose the port that the application listens on
 EXPOSE 8080
 
-# Run the application. We're using docker compose for env vars so unset the
-# .env file.
 CMD pnpm dev

@@ -17,9 +17,6 @@ importers:
       pg:
         specifier: ^8.16.3
         version: 8.16.3
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.2
 
 packages:
 
@@ -136,11 +133,6 @@ packages:
     resolution: {integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==}
     engines: {node: '>= 10.x'}
 
-  typescript@5.9.2:
-    resolution: {integrity: sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-
   undici-types@7.10.0:
     resolution: {integrity: sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag==}
 
@@ -241,8 +233,6 @@ snapshots:
       xtend: 4.0.2
 
   split2@4.2.0: {}
-
-  typescript@5.9.2: {}
 
   undici-types@7.10.0: {}
 

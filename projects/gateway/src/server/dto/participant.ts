@@ -2,14 +2,12 @@ import { z } from 'zod';
 import { type IdRecord, id } from './id.ts';
 
 export const ParticipantCreate = z.object({
-  billId: z.number(),
   name: z.string(),
 });
 
 export const ParticipantReadStorage = z
   .object({
     id,
-    bill_id: ParticipantCreate.shape.billId,
     name: ParticipantCreate.shape.name,
   })
   .strict();
@@ -28,14 +26,13 @@ export type ParticipantSearch = z.infer<typeof ParticipantSearch>;
 export const toParticipantStorage = (
   participant: ParticipantCreate | ParticipantSearch,
 ) => ({
-  bill_id: participant.billId,
   name: 'name' in participant ? participant.name : undefined,
+  bill_id: 'billId' in participant ? participant.billId : undefined,
 });
 
 export const toParticipantRead = (
   Participant: ParticipantReadStorage,
 ): ParticipantRead => ({
   id: Participant.id,
-  billId: Participant.bill_id,
   name: Participant.name,
 });
