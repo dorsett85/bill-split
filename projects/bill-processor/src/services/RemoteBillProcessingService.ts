@@ -1,10 +1,10 @@
 import {
   AnalyzeExpenseCommand,
-  TextractClient,
+  type TextractClient,
 } from '@aws-sdk/client-textract';
-import { type BillProcessingEventValue } from '../types/billProcessingEventValue.ts';
-import { BillProcessingService } from '../types/billProcessingService';
-import { ProcessedExpense } from '../types/processedExpense.ts';
+import type { BillProcessingEventValue } from '../types/billProcessingEventValue.ts';
+import type { BillProcessingService } from '../types/billProcessingService';
+import type { ProcessedExpense } from '../types/processedExpense.ts';
 import {
   createBillItems,
   transformTextractToProcessedBill,

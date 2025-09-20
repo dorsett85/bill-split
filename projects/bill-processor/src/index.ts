@@ -1,11 +1,11 @@
 import {
   TextractClient,
-  TextractClientResolvedConfig,
+  type TextractClientResolvedConfig,
 } from '@aws-sdk/client-textract';
-import { SelfManagedKafkaHandler } from 'aws-lambda';
+import type { SelfManagedKafkaHandler } from 'aws-lambda';
 import { stubbedAnalyzeOutput } from './data/analyzeExpenseCommandOutput.ts';
 import { RemoteBillProcessingService } from './services/RemoteBillProcessingService.ts';
-import { BillProcessingService } from './types/billProcessingService.ts';
+import type { BillProcessingService } from './types/billProcessingService.ts';
 
 // Only make an actual textract client in production. It costs 25 cents per
 // request!

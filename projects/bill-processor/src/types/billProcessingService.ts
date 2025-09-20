@@ -1,4 +1,4 @@
-import { BillProcessingEventValue } from './billProcessingEventValue.ts';
+import type { BillProcessingEventValue } from './billProcessingEventValue.ts';
 
 /**
  * Responsible for handling a bill processing event

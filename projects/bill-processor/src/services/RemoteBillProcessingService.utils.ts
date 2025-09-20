@@ -1,5 +1,5 @@
-import { AnalyzeExpenseCommandOutput } from '@aws-sdk/client-textract';
-import {
+import type { AnalyzeExpenseCommandOutput } from '@aws-sdk/client-textract';
+import type {
   ProcessedExpense,
   ProcessedExpenseItem,
 } from '../types/processedExpense.ts';

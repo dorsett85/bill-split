@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { stubbedAnalyzeOutput } from '../data/analyzeExpenseCommandOutput.ts';
-import { ProcessedExpense } from '../types/processedExpense.ts';
+import type { ProcessedExpense } from '../types/processedExpense.ts';
 import { transformTextractToProcessedBill } from './RemoteBillProcessingService.utils.ts';
 
 describe('transformTextractToProcessedBill', () => {

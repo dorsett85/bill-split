@@ -1,4 +1,4 @@
-import { AnalyzeExpenseCommandOutput } from '@aws-sdk/client-textract';
+import type { AnalyzeExpenseCommandOutput } from '@aws-sdk/client-textract';
 
 export const stubbedAnalyzeOutput: AnalyzeExpenseCommandOutput = {
   $metadata: {
