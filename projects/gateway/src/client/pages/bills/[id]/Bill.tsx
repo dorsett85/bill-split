@@ -3,111 +3,25 @@ import {
   Container,
   Divider,
   Group,
-  Loader,
-  Notification,
-  type NotificationProps,
-  Progress,
   Stack,
-  TagsInput,
   Text,
   Title,
 } from '@mantine/core';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { BillParticipantInput } from '../../../components/BasePage/BillParticipantInput.tsx';
+import { BillStatusNotification } from '../../../components/BasePage/BillStatusNotification.tsx';
 import {
-  type BillData,
-  BillResponse,
-  IdResponse,
-  type ImageStatus,
-} from './dto.ts';
-
-const fetchBill = async (billId: number): Promise<BillResponse> => {
-  const res = await fetch(`/api/bills/${billId}`);
-  return BillResponse.parse(await res.json());
-};
-
-const createBillParticipant = async (
-  billId: number,
-  name: string,
-): Promise<IdResponse> => {
-  const res = await fetch(`/api/bills/${billId}/participants`, {
-    method: 'POST',
-    body: JSON.stringify({ name }),
-  });
-  return IdResponse.parse(await res.json());
-};
-
-const deleteParticipant = async (
-  billId: number,
-  participantId: number,
-): Promise<IdResponse> => {
-  const res = await fetch(
-    `/api/bills/${billId}/participants/${participantId}`,
-    {
-      method: 'DELETE',
-    },
-  );
-  return IdResponse.parse(await res.json());
-};
+  createBillParticipant,
+  deleteParticipant,
+  fetchBill,
+} from '../../../utils/api.ts';
+import type { BillData } from './dto.ts';
 
 const USCurrency = Intl.NumberFormat('en-US', {
   currency: 'USD',
   style: 'currency',
 });
-
-type ImageStatusNotificationProps = {
-  analyzeProgress: number;
-  imageStatus: ImageStatus;
-};
-
-const ImageStatusNotification: React.FC<ImageStatusNotificationProps> = ({
-  analyzeProgress,
-  imageStatus,
-}) => {
-  const notificationProps: Pick<
-    NotificationProps,
-    'children' | 'color' | 'title'
-  > = (() => {
-    switch (imageStatus) {
-      case 'parsing':
-        return {
-          children: (
-            <Progress
-              animated
-              value={analyzeProgress}
-              m="md"
-              size="md"
-              color={'yellow'}
-              transitionDuration={250}
-            />
-          ),
-          color: 'yellow',
-          title:
-            "We're still analyzing your bill. You can add participants in the meantime below!",
-        };
-      case 'error':
-        return {
-          children: (
-            <>
-              Click <a href="/">here</a> to try again
-            </>
-          ),
-          color: 'red',
-          title: 'Something went wrong analyzing your bill',
-        };
-      case 'ready':
-        return {
-          children: <>Add participants and assign bill items below</>,
-          color: 'green',
-          title: 'Your bill has been successfully analyzed!',
-        };
-    }
-  })();
-
-  return (
-    <Notification {...notificationProps} mb="xl" withCloseButton={false} />
-  );
-};
 
 interface BillProps {
   bill: BillData;
@@ -216,7 +130,7 @@ export const Bill: React.FC<BillProps> = (props) => {
       </Center>
       {/* Only show image status notification if it's not initially ready */}
       {props.bill.imageStatus !== 'ready' && (
-        <ImageStatusNotification
+        <BillStatusNotification
           analyzeProgress={analyzeProgress}
           imageStatus={bill.imageStatus}
         />
@@ -258,19 +172,10 @@ export const Bill: React.FC<BillProps> = (props) => {
           </Text>
         </Group>
       </Stack>
-      <TagsInput
-        id="add-participant-input"
-        label="Add Participants"
-        leftSection={
-          updatingParticipants ? (
-            <Loader size={'sm'} color={'yellow'} />
-          ) : undefined
-        }
-        placeholder="Enter someone's name"
-        mb="xl"
-        size="md"
-        value={participants.map((participant) => participant.name)}
+      <BillParticipantInput
+        participants={participants}
         onChange={handleOnChangeParticipant}
+        updating={updatingParticipants}
       />
     </Container>
   );
