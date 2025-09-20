@@ -1,11 +1,13 @@
 import { S3Client } from '@aws-sdk/client-s3';
 import { BillDao } from '../dao/BillDao.ts';
+import { BillParticipantDao } from '../dao/BillParticipantDao.ts';
 import { LineItemDao } from '../dao/LineItemDao.ts';
 import { ParticipantDao } from '../dao/ParticipantDao.ts';
 import { getDb } from '../db/getDb.ts';
 import { BillUpdate } from '../dto/bill.ts';
+import { BillParticipantDelete } from '../dto/billParticipant.ts';
 import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
-import { ParticipantCreate, ParticipantSearch } from '../dto/participant.ts';
+import { ParticipantCreate } from '../dto/participant.ts';
 import { BillService } from '../services/BillService.ts';
 import type { HtmlService } from '../services/HtmlService.ts';
 import { KafkaService } from '../services/KafkaService.ts';
@@ -19,6 +21,7 @@ const getBillService = () => {
   return new BillService({
     billDao: new BillDao(getDb()),
     lineItemDao: new LineItemDao(getDb()),
+    participantDao: new ParticipantDao(getDb()),
     fileStorageService: new S3FileStorageService({
       bucketName: process.env.AWS_BILL_IMAGE_S3_BUCKET ?? '',
       s3Client: new S3Client({
@@ -36,6 +39,7 @@ const getBillService = () => {
 const getParticipantService = () => {
   return new ParticipantService({
     participantDao: new ParticipantDao(getDb()),
+    billParticipantDao: new BillParticipantDao(getDb()),
   });
 };
 
@@ -50,7 +54,9 @@ export const getBillPage =
   ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
   async (req, res) => {
     const billService = getBillService();
+
     const bill = await billService.read(+req.params.id);
+
     const html = await htmlService.render(req.route, bill);
     return writeToHtml(html, res);
   };
@@ -79,7 +85,31 @@ export const postBill: MiddlewareFunction = async (req, res) => {
   return writeToJson({ data: idRecord }, res);
 };
 
+export const postBillParticipant: MiddlewareFunction = async (req, res) => {
+  const body = await parseJsonBody(req);
+  const participantService = getParticipantService();
+  const participant = await participantService.createBillParticipant(
+    +req.params.billId,
+    ParticipantCreate.parse(body),
+  );
+  return writeToJson({ data: participant }, res);
+};
+
+export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
+  // TODO need to recalculate existing participant line item percentages
+  const participantService = getParticipantService();
+  const idRecord = await participantService.deleteBillParticipant(
+    BillParticipantDelete.parse({
+      billId: +req.params.billId,
+      participantId: +req.params.id,
+    }),
+  );
+
+  return writeToJson({ data: idRecord }, res);
+};
+
 export const patchLineItem: MiddlewareFunction = async (req, res) => {
+  // TODO include participant update
   const body = await parseJsonBody(req);
 
   const billService = getBillService();
@@ -96,28 +126,4 @@ export const postLineItem: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
   const idRecord = await billService.createLineItem(LineItemCreate.parse(body));
   return writeToJson({ data: idRecord }, res);
-};
-
-export const getParticipants: MiddlewareFunction = async (req, res) => {
-  const participantService = getParticipantService();
-  const participants = await participantService.search(
-    ParticipantSearch.parse(req.queryParams.billId),
-  );
-
-  return writeToJson({ data: participants }, res);
-};
-
-export const postParticipant: MiddlewareFunction = async (req, res) => {
-  const body = await parseJsonBody(req);
-  const participantService = getParticipantService();
-  const participant = await participantService.create(
-    ParticipantCreate.parse(body),
-  );
-  return writeToJson({ data: participant }, res);
-};
-
-export const deleteParticipant: MiddlewareFunction = async (req, res) => {
-  // TODO
-  const id = +req.params.id;
-  return writeToJson({ data: id }, res);
 };

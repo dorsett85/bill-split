@@ -4,6 +4,7 @@ import {
   type LineItemCreate,
   type LineItemRead,
   LineItemReadStorage,
+  type LineItemSearch,
   type LineItemUpdate,
   toLineItemRead,
   toLineItemStorage,
@@ -24,19 +25,9 @@ export class LineItemDao extends BaseDao<
     return this.createRecord(lineItemToInsert);
   }
 
-  public async read(id: number): Promise<LineItemRead> {
-    const lineItemCols = LineItemReadStorage.keyof().options.join(',');
-
-    const lineItemsResult = await this.db.query(
-      `
-      SELECT ${lineItemCols}
-      FROM ${this.tableName}
-      where id = $1
-      `,
-      [id],
-    );
-
-    return toLineItemRead(LineItemReadStorage.parse(lineItemsResult));
+  public async read(): Promise<LineItemRead> {
+    // TODO
+    throw new Error('Not implemented');
   }
 
   public async update(
@@ -47,8 +38,14 @@ export class LineItemDao extends BaseDao<
     return this.updateRecord(id, updates);
   }
 
-  public async search(): Promise<LineItemRead[]> {
-    // TODO
-    throw new Error('Not implemented');
+  public async search(searchParams: LineItemSearch): Promise<LineItemRead[]> {
+    const cols = LineItemReadStorage.keyof().options;
+
+    const dbParams = toLineItemStorage(searchParams);
+    const { rows } = await this.searchRecords(dbParams, cols);
+
+    return rows.map((rows) =>
+      LineItemReadStorage.transform(toLineItemRead).parse(rows),
+    );
   }
 }

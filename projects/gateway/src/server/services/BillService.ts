@@ -1,7 +1,8 @@
 import path from 'path';
 import type { BillDao } from '../dao/BillDao.ts';
 import type { LineItemDao } from '../dao/LineItemDao.ts';
-import { BillCreate, type BillRead, type BillUpdate } from '../dto/bill.ts';
+import type { ParticipantDao } from '../dao/ParticipantDao.ts';
+import { BillCreate, type BillResponse, type BillUpdate } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
 import type { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import type { FileStorageService } from '../types/fileStorageService.ts';
@@ -12,6 +13,7 @@ import { S3FileStorageService } from './S3FileStorageService.ts';
 interface BillServiceConstructor {
   billDao: BillDao;
   lineItemDao: LineItemDao;
+  participantDao: ParticipantDao;
   fileStorageService: FileStorageService;
   kafkaService: KafkaService;
 }
@@ -19,17 +21,20 @@ interface BillServiceConstructor {
 export class BillService {
   private billDao: BillDao;
   private lineItemDao: LineItemDao;
+  private participantDao: ParticipantDao;
   private readonly fileStorageService: FileStorageService;
   private kafkaService: KafkaService;
 
   constructor({
     billDao,
     lineItemDao,
+    participantDao,
     fileStorageService,
     kafkaService,
   }: BillServiceConstructor) {
     this.billDao = billDao;
     this.lineItemDao = lineItemDao;
+    this.participantDao = participantDao;
     this.fileStorageService = fileStorageService;
     this.kafkaService = kafkaService;
   }
@@ -60,8 +65,10 @@ export class BillService {
     return idRecord;
   }
 
-  public async read(id: number): Promise<BillRead> {
+  public async read(id: number): Promise<BillResponse> {
     const bill = await this.billDao.read(id);
+    const lineItems = await this.lineItemDao.search({ billId: bill.id });
+    const participants = await this.participantDao.searchByBillId(bill.id);
 
     // Get a presigned image URL so the FE can fetch the image from a private
     // repo.
@@ -71,7 +78,11 @@ export class BillService {
       );
     }
 
-    return bill;
+    return {
+      ...bill,
+      lineItems,
+      participants,
+    };
   }
 
   public async update(id: number, bill: BillUpdate): Promise<IdRecord> {

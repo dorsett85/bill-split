@@ -8,7 +8,6 @@ import {
   toBillStorage,
 } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
-import { LineItemReadStorage } from '../dto/lineItem.ts';
 import { BaseDao } from '../types/baseDao.ts';
 
 export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
@@ -23,7 +22,6 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
 
   public async read(id: number): Promise<BillRead> {
     const billCols = BillReadStorage.keyof().options.join(',');
-    const lineItemCols = LineItemReadStorage.keyof().options.join(',');
 
     const billResult = await this.db.query(
       `
@@ -33,21 +31,10 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
       `,
       [id],
     );
-    const lineItemsResult = await this.db.query(
-      `
-      SELECT ${lineItemCols}
-      FROM line_item
-      where bill_id = $1
-      `,
-      [id],
-    );
 
-    return BillReadStorage.transform((bill) =>
-      toBillRead(
-        bill,
-        lineItemsResult.rows.map((row) => LineItemReadStorage.parse(row)),
-      ),
-    ).parse(billResult.rows[0]);
+    return BillReadStorage.transform((bill) => toBillRead(bill)).parse(
+      billResult.rows[0],
+    );
   }
 
   public async update(id: number, billUpdates: BillUpdate): Promise<IdRecord> {

@@ -2,19 +2,17 @@ import { createRsbuild, loadConfig, logger } from '@rsbuild/core';
 import path from 'path';
 import { App } from './App.ts';
 import {
-  deleteParticipant,
+  deleteBillParticipant,
   getBill,
   getBillPage,
   getHomePage,
-  getParticipants,
   patchBill,
   patchLineItem,
   postBill,
+  postBillParticipant,
   postLineItem,
-  postParticipant,
 } from './controllers/controllers.ts';
 import { HtmlService } from './services/HtmlService.ts';
-import { startDevelopmentConsumer } from './services/KafkaService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import type { MiddlewareFunction } from './types/serverRequest.ts';
 import { writeToHtml } from './utils/responseHelpers.ts';
@@ -83,13 +81,11 @@ const startServer = async () => {
   app.post('/api/bills', postBill);
   app.patch('/api/bills/:id', patchBill);
   app.get('/api/bills/:id', getBill);
+  app.post('/api/bills/:billId/participants', postBillParticipant);
+  app.delete('/api/bills/:billId/participants/:id', deleteBillParticipant);
 
   app.patch('/api/lineitem/:id', patchLineItem);
   app.post('/api/lineitem', postLineItem);
-
-  app.get('/api/participants', getParticipants);
-  app.post('/api/participants', postParticipant);
-  app.delete('/api/participants/:id', deleteParticipant);
 
   app.listen(port, () => {
     handleEnvListen();

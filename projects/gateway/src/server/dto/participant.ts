@@ -12,22 +12,14 @@ export const ParticipantReadStorage = z
   })
   .strict();
 
-export const ParticipantSearch = z.object({
-  billId: z.preprocess((val) => Number(val), z.number()),
-});
-
 export type ParticipantCreate = z.infer<typeof ParticipantCreate>;
 export type ParticipantRead = {
   [K in keyof ParticipantCreate]: Exclude<ParticipantCreate[K], null>;
 } & IdRecord;
 export type ParticipantReadStorage = z.infer<typeof ParticipantReadStorage>;
-export type ParticipantSearch = z.infer<typeof ParticipantSearch>;
 
-export const toParticipantStorage = (
-  participant: ParticipantCreate | ParticipantSearch,
-) => ({
-  name: 'name' in participant ? participant.name : undefined,
-  bill_id: 'billId' in participant ? participant.billId : undefined,
+export const toParticipantStorage = (participant: ParticipantCreate) => ({
+  name: participant.name,
 });
 
 export const toParticipantRead = (

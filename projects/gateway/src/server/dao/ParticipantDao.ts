@@ -4,7 +4,6 @@ import {
   type ParticipantCreate,
   type ParticipantRead,
   ParticipantReadStorage,
-  type ParticipantSearch,
   toParticipantRead,
   toParticipantStorage,
 } from '../dto/participant.ts';
@@ -34,15 +33,28 @@ export class ParticipantDao extends BaseDao<
     throw new Error('Not implemented');
   }
 
-  public async search(
-    searchParams: ParticipantSearch,
-  ): Promise<ParticipantRead[]> {
-    const dbParams = toParticipantStorage(searchParams);
-    const cols = ParticipantReadStorage.keyof().options;
-    const { rows } = await this.searchRecords(dbParams, cols);
+  public async search(): Promise<ParticipantRead[]> {
+    // TODO
+    throw new Error('Not implemented');
+  }
+
+  public async searchByBillId(billId: number): Promise<ParticipantRead[]> {
+    const cols = ParticipantReadStorage.keyof()
+      .options.map((col) => `${this.tableName}.${col}`)
+      .join(',');
+
+    const { rows } = await this.db.query(
+      `
+        SELECT ${cols}
+        FROM ${this.tableName}
+        INNER JOIN bill_participant bp ON bp.participant_id = ${this.tableName}.id
+        WHERE bp.bill_id = $1
+      `,
+      [billId],
+    );
 
     return rows.map((row) =>
-      toParticipantRead(ParticipantReadStorage.parse(row)),
+      ParticipantReadStorage.transform(toParticipantRead).parse(row),
     );
   }
 }

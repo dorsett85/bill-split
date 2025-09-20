@@ -21,19 +21,24 @@ export const LineItemUpdate = LineItemCreate.pick({
   price: true,
 });
 
+export const LineItemSearch = z.object({
+  billId: z.preprocess((val) => Number(val), z.number()),
+});
+
 export type LineItemCreate = z.infer<typeof LineItemCreate>;
 export type LineItemRead = {
   [K in keyof LineItemCreate]: Exclude<LineItemCreate[K], null>;
 } & IdRecord;
 export type LineItemReadStorage = z.infer<typeof LineItemReadStorage>;
 export type LineItemUpdate = z.infer<typeof LineItemUpdate>;
+export type LineItemSearch = z.infer<typeof LineItemSearch>;
 
 export const toLineItemStorage = (
-  lineItem: LineItemCreate | LineItemUpdate,
+  lineItem: LineItemCreate | LineItemUpdate | LineItemSearch,
 ) => ({
   bill_id: 'billId' in lineItem ? lineItem.billId : undefined,
-  name: lineItem.name,
-  price: lineItem.price,
+  name: 'name' in lineItem ? lineItem.name : undefined,
+  price: 'price' in lineItem ? lineItem.price : undefined,
 });
 
 export const toLineItemRead = (

@@ -1,10 +1,7 @@
 import * as z from 'zod';
 import { type IdRecord, id } from './id.ts';
-import {
-  type LineItemRead,
-  type LineItemReadStorage,
-  toLineItemRead,
-} from './lineItem.ts';
+import type { LineItemRead } from './lineItem.ts';
+import type { ParticipantRead } from './participant.ts';
 
 const ImageStatus = z.literal(['parsing', 'ready', 'error']);
 
@@ -39,8 +36,12 @@ export const BillUpdate = BillCreate.omit({
 export type BillCreate = z.infer<typeof BillCreate>;
 export type BillRead = {
   [K in keyof BillCreate]: Exclude<BillCreate[K], null>;
-} & IdRecord & { lineItems: Omit<LineItemRead, 'billId'>[] };
+} & IdRecord;
 export type BillUpdate = z.infer<typeof BillUpdate>;
+export type BillResponse = BillRead & {
+  lineItems: Omit<LineItemRead, 'billId'>[];
+  participants: ParticipantRead[];
+};
 
 export const toBillStorage = (bill: BillCreate | BillUpdate) => ({
   business_location: bill.businessLocation,
@@ -54,7 +55,6 @@ export const toBillStorage = (bill: BillCreate | BillUpdate) => ({
 
 export const toBillRead = (
   bill: z.infer<typeof BillReadStorage>,
-  lineItems: LineItemReadStorage[],
 ): BillRead => ({
   id: bill.id,
   businessLocation: bill.business_location ?? undefined,
@@ -62,8 +62,6 @@ export const toBillRead = (
   gratuity: bill.gratuity ?? undefined,
   imagePath: bill.image_path,
   imageStatus: bill.image_status,
-  // Remove the bill id as it's already on the parent object
-  lineItems: lineItems.map(toLineItemRead).map(({ billId, ...rest }) => rest),
   name: bill.name ?? undefined,
   tax: bill.tax ?? undefined,
 });

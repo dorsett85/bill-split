@@ -25,6 +25,25 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
    */
   abstract create(data: C): Promise<IdRecord>;
 
+  abstract read(id: number): Promise<R>;
+
+  abstract update(id: number, updates: U): Promise<IdRecord>;
+
+  public async delete(id: number): Promise<IdRecord> {
+    const { rows } = await this.db.query(
+      `
+      DELETE FROM ${this.tableName}
+      WHERE id = $1
+      RETURNING id
+      `,
+      [id],
+    );
+
+    return IdRecord.parse(rows[0]);
+  }
+
+  abstract search(searchParams: Record<string, number | string>): Promise<R[]>;
+
   /**
    * Call this method inside the derived base class's create method to remove
    * undefined values and insert the remaining values into the table.
@@ -44,7 +63,7 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
       params.push(`$${paramCount++}`);
     }
 
-    const result = await this.db.query(
+    const { rows } = await this.db.query(
       `
       INSERT INTO ${this.tableName} (${keys.join(',')})
       VALUES (${params.join(',')})
@@ -53,14 +72,8 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
       values,
     );
 
-    return IdRecord.parse(result.rows[0]);
+    return IdRecord.parse(rows[0]);
   }
-
-  abstract read(id: number): Promise<R>;
-
-  abstract update(id: number, updates: U): Promise<IdRecord>;
-
-  abstract search(searchParams: Record<string, number | string>): Promise<R[]>;
 
   protected async updateRecord(
     id: number,
@@ -102,13 +115,18 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
       `
       SELECT ${cols.join(',')}
       FROM ${this.tableName}
-      where ${params}
+      WHERE ${params}
       `,
-      [values],
+      values,
     );
   }
 
-  private stripUndefined(data: StorageRecordWithUndefined): StorageRecord {
+  /**
+   * Utility to filter out all values from an object that are undefined since
+   * undefined will get stored in the data as null, but we don't want to treat
+   * missing data as the user wanting to override an existing value.
+   */
+  protected stripUndefined(data: StorageRecordWithUndefined): StorageRecord {
     const values: StorageRecord = {};
     for (const [key, value] of Object.entries(data)) {
       if (value === undefined) continue;
