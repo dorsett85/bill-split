@@ -1,7 +1,8 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-// Run this file to run new migrations
 import { Pool, type QueryResult } from 'pg';
+
+// Run this file to run new migrations
 
 const pool = new Pool({
   database: process.env.DB_NAME,
@@ -40,6 +41,7 @@ const runMigrations = async () => {
       continue;
     }
 
+    // Check for existing migration
     const { rows } = await pool.query(
       `
       SELECT * FROM migration
@@ -49,6 +51,7 @@ const runMigrations = async () => {
     );
 
     if (rows.length === 0) {
+      // Run the migration script
       await runScript(file);
 
       // Finally, add the migration record so we don't run it again
@@ -59,6 +62,8 @@ const runMigrations = async () => {
       `,
         [basename],
       );
+
+      console.log('Successfully migrated script:', file)
     }
   }
 };
