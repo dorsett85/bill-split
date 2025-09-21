@@ -6,7 +6,7 @@ import { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import { ParticipantDao } from '../dao/ParticipantDao.ts';
 import { getDb } from '../db/getDb.ts';
 import { BillUpdate } from '../dto/bill.ts';
-import { BillParticipantDelete } from '../dto/billParticipant.ts';
+import { id } from '../dto/id.ts';
 import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import { ParticipantCreate } from '../dto/participant.ts';
 import { BillService } from '../services/BillService.ts';
@@ -57,7 +57,7 @@ export const getBillPage =
   async (req, res) => {
     const billService = getBillService();
 
-    const bill = await billService.read(+req.params.id);
+    const bill = await billService.read(id.parse(+req.params.id));
 
     const html = await htmlService.render(req.route, bill);
     return writeToHtml(html, res);
@@ -65,7 +65,7 @@ export const getBillPage =
 
 export const getBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
-  const bill = await billService.read(+req.params.id);
+  const bill = await billService.read(id.parse(+req.params.id));
   return writeToJson({ data: bill }, res);
 };
 
@@ -75,7 +75,7 @@ export const patchBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
 
   const idRecord = await billService.update(
-    +req.params.id,
+    id.parse(+req.params.id),
     BillUpdate.parse(body),
   );
   return writeToJson({ data: idRecord }, res);
@@ -91,7 +91,7 @@ export const postBillParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
   const participantService = getParticipantService();
   const participant = await participantService.createBillParticipant(
-    +req.params.billId,
+    id.parse(+req.params.billId),
     ParticipantCreate.parse(body),
   );
   return writeToJson({ data: participant }, res);
@@ -100,10 +100,8 @@ export const postBillParticipant: MiddlewareFunction = async (req, res) => {
 export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
   const participantService = getParticipantService();
   const idRecord = await participantService.deleteBillParticipant(
-    BillParticipantDelete.parse({
-      billId: +req.params.billId,
-      participantId: +req.params.id,
-    }),
+    id.parse(+req.params.billId),
+    id.parse(+req.params.id),
   );
 
   return writeToJson({ data: idRecord }, res);
@@ -115,7 +113,7 @@ export const patchLineItem: MiddlewareFunction = async (req, res) => {
 
   const billService = getBillService();
   const idRecord = await billService.updateLineItem(
-    +req.params.id,
+    id.parse(+req.params.id),
     LineItemUpdate.parse(body),
   );
   return writeToJson({ data: idRecord }, res);

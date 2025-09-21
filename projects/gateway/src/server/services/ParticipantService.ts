@@ -1,7 +1,6 @@
 import type { BillParticipantDao } from '../dao/BillParticipantDao.ts';
 import type { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
-import type { BillParticipantDelete } from '../dto/billParticipant.ts';
 import type { IdRecord } from '../dto/id.ts';
 import type { ParticipantCreate } from '../dto/participant.ts';
 
@@ -50,10 +49,10 @@ export class ParticipantService {
   /**
    * Deletes a participant and recalculates participant payments for that bill
    */
-  public async deleteBillParticipant({
-    billId,
-    participantId,
-  }: BillParticipantDelete): Promise<IdRecord> {
+  public async deleteBillParticipant(
+    billId: number,
+    participantId: number,
+  ): Promise<IdRecord> {
     return await this.participantDao.tx(async (client) => {
       const lineItemParticipants =
         await this.lineItemParticipantDao.searchByBillAndParticipant(
