@@ -8,7 +8,10 @@ import { getDb } from '../db/getDb.ts';
 import { BillUpdate } from '../dto/bill.ts';
 import { id } from '../dto/id.ts';
 import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
-import { LineItemParticipantCreate } from '../dto/lineItemParticipant.ts';
+import {
+  LineItemParticipantCreate,
+  LineItemParticipantUpdate,
+} from '../dto/lineItemParticipant.ts';
 import { ParticipantCreate } from '../dto/participant.ts';
 import { BillService } from '../services/BillService.ts';
 import type { HtmlService } from '../services/HtmlService.ts';
@@ -141,9 +144,14 @@ export const patchLineItemParticipant: MiddlewareFunction = async (
   req,
   res,
 ) => {
-  // TODO
   const body = await parseJsonBody(req);
-  return writeToJson({ data: body }, res);
+  const participantService = getParticipantService();
+  const idRecord = await participantService.updateLineItemParticipant(
+    id.parse(+req.params.lineItemId),
+    id.parse(+req.params.id),
+    LineItemParticipantUpdate.parse(body),
+  );
+  return writeToJson({ data: idRecord }, res);
 };
 
 export const deleteLineItemParticipant: MiddlewareFunction = async (

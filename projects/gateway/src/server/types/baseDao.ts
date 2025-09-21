@@ -103,6 +103,7 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
   protected async updateRecord(
     id: number,
     data: StorageRecordWithUndefined,
+    client?: PoolClient,
   ): Promise<IdRecord> {
     const dbData = this.stripUndefined(data);
 
@@ -114,7 +115,7 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
       values.push(value);
     }
 
-    const result = await this.db.query(
+    const result = await (client ?? this.db).query(
       `
       UPDATE ${this.tableName} set ${keys.join(',')}
       WHERE id = $${paramCount++}

@@ -104,8 +104,8 @@ export class BillService {
 
   public async updateLineItem(
     id: number,
-    lineItem: LineItemUpdate,
+    update: LineItemUpdate,
   ): Promise<IdRecord> {
-    return await this.lineItemDao.update(id, lineItem);
+    return await this.lineItemDao.update(id, update);
   }
 }

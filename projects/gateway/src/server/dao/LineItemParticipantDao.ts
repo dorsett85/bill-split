@@ -37,9 +37,10 @@ export class LineItemParticipantDao extends BaseDao<
   public async update(
     id: number,
     updates: LineItemParticipantUpdate,
+    client?: PoolClient,
   ): Promise<IdRecord> {
     const itemsToInsert = toLineItemParticipantStorage(updates);
-    return await this.updateRecord(id, itemsToInsert);
+    return await this.updateRecord(id, itemsToInsert, client);
   }
 
   public async search(
