@@ -7,6 +7,7 @@ import type {
   LineItemParticipantUpdate,
 } from '../dto/lineItemParticipant.ts';
 import type { ParticipantCreate } from '../dto/participant.ts';
+import { calculateRemainingPctOwes } from '../utils/calculateRemainingPctOwes.ts';
 
 interface ParticipantServiceConstructor {
   billParticipantDao: BillParticipantDao;
@@ -74,41 +75,13 @@ export class ParticipantService {
           participantId,
         );
 
-      // Here we'll group by each line item with the outstanding pct the deleted
-      // participant owes and the ids of the remaining people to distribute it
-      // among.
-      const participantOwesByLineItem: Record<
-        string,
-        { outstandingPct: number; ids: number[] }
-      > = {};
+      const result = calculateRemainingPctOwes(
+        participantId,
+        lineItemParticipants,
+      );
 
-      for (const lip of lineItemParticipants) {
-        participantOwesByLineItem[lip.lineItemId] ??= {
-          outstandingPct: 0,
-          ids: [],
-        };
-
-        if (lip.participantId === participantId) {
-          participantOwesByLineItem[lip.lineItemId].outstandingPct =
-            lip.pctOwes;
-        } else {
-          participantOwesByLineItem[lip.lineItemId].ids.push(lip.id);
-        }
-      }
-
-      // Split evenly what the deleted participant owes amongst the other people
-      // and update their db records.
-      for (const participantOwes of Object.values(participantOwesByLineItem)) {
-        // Skip the line item if there's no other people to add the remainder to
-        if (participantOwes.ids.length === 0) {
-          continue;
-        }
-
-        await this.lineItemParticipantDao.addOwesAcrossIds(
-          participantOwes.outstandingPct,
-          participantOwes.ids,
-          client,
-        );
+      for (const { owes, ids } of result) {
+        await this.lineItemParticipantDao.addOwesAcrossIds(owes, ids, client);
       }
 
       // Now that we've balanced what the remaining participants owe we can
@@ -172,6 +145,35 @@ export class ParticipantService {
       return await this.lineItemParticipantDao.update(
         lineItemParticipant.id,
         update,
+        client,
+      );
+    });
+  }
+
+  public async deleteLineItemParticipant(
+    lineItemId: number,
+    participantId: number,
+  ): Promise<IdRecord> {
+    return await this.lineItemParticipantDao.tx(async (client) => {
+      const lineItemParticipants = await this.lineItemParticipantDao.search(
+        { lineItemId },
+        client,
+      );
+
+      const result = calculateRemainingPctOwes(
+        participantId,
+        lineItemParticipants,
+      );
+
+      for (const { owes, ids } of result) {
+        await this.lineItemParticipantDao.addOwesAcrossIds(owes, ids, client);
+      }
+
+      const [lineItemParticipant] = lineItemParticipants.filter(
+        (item) => item.participantId === participantId,
+      );
+      return await this.lineItemParticipantDao.delete(
+        lineItemParticipant.id,
         client,
       );
     });

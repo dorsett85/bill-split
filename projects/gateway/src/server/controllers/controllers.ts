@@ -158,7 +158,10 @@ export const deleteLineItemParticipant: MiddlewareFunction = async (
   req,
   res,
 ) => {
-  // TODO
-  const body = await parseJsonBody(req);
-  return writeToJson({ data: body }, res);
+  const participantService = getParticipantService();
+  const idRecord = await participantService.deleteLineItemParticipant(
+    id.parse(+req.params.lineItemId),
+    id.parse(+req.params.id),
+  );
+  return writeToJson({ data: idRecord }, res);
 };
