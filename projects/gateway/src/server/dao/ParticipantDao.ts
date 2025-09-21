@@ -53,7 +53,7 @@ export class ParticipantDao extends BaseDao<
       `
         SELECT ${cols}
         FROM ${this.tableName}
-        INNER JOIN bill_participant bp ON bp.participant_id = ${this.tableName}.id
+        INNER JOIN bill_participant bp ON ${this.tableName}.id = bp.participant_id 
         WHERE bp.bill_id = $1
       `,
       [billId],
@@ -62,5 +62,23 @@ export class ParticipantDao extends BaseDao<
     return rows.map((row) =>
       ParticipantReadStorage.transform(toParticipantRead).parse(row),
     );
+  }
+
+  public async nameAlreadyExistsByBillId(
+    billId: number,
+    name: string,
+    client?: PoolClient,
+  ): Promise<boolean> {
+    const { rowCount } = await (client ?? this.db).query(
+      `
+      SELECT ${this.tableName}.id
+      FROM ${this.tableName}
+      INNER JOIN bill_participant bp ON ${this.tableName}.id = bp.participant_id
+      WHERE bp.bill_id = $1 and ${this.tableName}.name = $2
+    `,
+      [billId, name],
+    );
+
+    return !!rowCount;
   }
 }

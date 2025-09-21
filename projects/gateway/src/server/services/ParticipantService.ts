@@ -33,6 +33,16 @@ export class ParticipantService {
     participant: ParticipantCreate,
   ): Promise<IdRecord> {
     return await this.participantDao.tx(async (client) => {
+      // Check if the name already exists for a bill
+      const exists = await this.participantDao.nameAlreadyExistsByBillId(
+        billId,
+        participant.name,
+      );
+
+      if (exists) {
+        throw new Error(`Participant '${participant.name}' already exists`);
+      }
+
       // Create both the participant and the bill_participant
       const res = await this.participantDao.create(participant, client);
       await this.billParticipantDao.create(
@@ -98,8 +108,12 @@ export class ParticipantService {
       }
 
       // Now that we've balanced what the remaining participants owe we can
-      // finally delete the selected participant.
-      return await this.participantDao.delete(participantId, client);
+      // finally delete the selected bill participant.
+      const [billParticipant] = await this.billParticipantDao.search(
+        { billId, participantId },
+        client,
+      );
+      return await this.billParticipantDao.delete(billParticipant.id, client);
     });
   }
 }

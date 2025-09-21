@@ -2,6 +2,9 @@ import type { Pool, PoolClient } from 'pg';
 import {
   type BillParticipantCreate,
   type BillParticipantRead,
+  BillParticipantReadStorage,
+  type BillParticipantSearch,
+  toBillParticipantRead,
   toBillParticipantStorage,
 } from '../dto/billParticipant.ts';
 import type { IdRecord } from '../dto/id.ts';
@@ -34,8 +37,16 @@ export class BillParticipantDao extends BaseDao<
     throw new Error('Not implemented');
   }
 
-  public async search(): Promise<BillParticipantRead[]> {
-    // TODO
-    throw new Error('Not implemented');
+  public async search(
+    searchParams: BillParticipantSearch,
+    client?: PoolClient,
+  ): Promise<BillParticipantRead[]> {
+    const cols = BillParticipantReadStorage.keyof().options;
+    const lineItemSearch = toBillParticipantStorage(searchParams);
+
+    const { rows } = await this.searchRecords(lineItemSearch, cols, client);
+    return rows.map((row) =>
+      BillParticipantReadStorage.transform(toBillParticipantRead).parse(row),
+    );
   }
 }

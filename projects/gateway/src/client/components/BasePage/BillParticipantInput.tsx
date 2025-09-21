@@ -18,7 +18,25 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
   const [error, setError] = useState<string>();
   const [updatingParticipants, setUpdatingParticipants] = useState(false);
 
-  const handleOnChange = async (newParticipants: string[]) => {
+  const handleOnOptionSubmit = async (name: string) => {
+    if (updatingParticipants || !name) {
+      return;
+    }
+
+    setUpdatingParticipants(true);
+    setError(undefined);
+
+    try {
+      const { data } = await createBillParticipant(billId, name);
+      onChange([...participants, { id: data.id, name }]);
+    } catch {
+      // no-up
+    }
+
+    setUpdatingParticipants(false);
+  };
+
+  const handleOnRemove = async (name: string) => {
     if (updatingParticipants) {
       return;
     }
@@ -26,30 +44,16 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
     setUpdatingParticipants(true);
     setError(undefined);
 
-    const loopLength = Math.max(participants.length, newParticipants.length);
+    const deleteId = participants.find((p) => p.name === name)?.id;
 
-    // We'll check for two conditions here. 1) If there is no existing
-    // participant then we know we need to add the new participant at the end
-    // of the new list. 2) If the existing participant name does not match the
-    // newName, that means it's been removed, and we need to delete it.
-    for (let i = 0; i < loopLength; i++) {
-      const existingParticipant = participants[i];
-      const newName = newParticipants[i];
+    if (deleteId) {
       try {
-        if (!existingParticipant) {
-          const { data } = await createBillParticipant(billId, newName);
-          onChange([...participants, { id: data.id, name: newName }]);
-          break;
-        } else if (existingParticipant.name !== newName) {
-          const { data } = await deleteParticipant(
-            billId,
-            existingParticipant.id,
-          );
-          onChange(
-            participants.filter((participant) => participant.id !== data.id),
-          );
-          break;
-        }
+        // TODO we probably want to create a modal here to warn users of the
+        //  consequences of deleting a participant.
+        const { data } = await deleteParticipant(billId, deleteId);
+        onChange(
+          participants.filter((participant) => participant.id !== data.id),
+        );
       } catch {
         // no-op
       }
@@ -63,15 +67,14 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
       id="add-participant-input"
       label="Add Participants"
       leftSection={
-        updatingParticipants ? (
-          <Loader size={'sm'} color={'yellow'} />
-        ) : undefined
+        updatingParticipants ? <Loader size="sm" color="yellow" /> : undefined
       }
       placeholder="Enter someone's name"
       mb="xl"
       size="md"
       value={participants.map((participant) => participant.name)}
-      onChange={handleOnChange}
+      onOptionSubmit={handleOnOptionSubmit}
+      onRemove={handleOnRemove}
       onDuplicate={(name) => setError(`There's already a "${name}"`)}
       error={error}
     />
