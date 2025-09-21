@@ -2,6 +2,7 @@ import type { BillParticipantDao } from '../dao/BillParticipantDao.ts';
 import type { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
 import type { IdRecord } from '../dto/id.ts';
+import type { LineItemParticipantCreate } from '../dto/lineItemParticipant.ts';
 import type { ParticipantCreate } from '../dto/participant.ts';
 
 interface ParticipantServiceConstructor {
@@ -114,6 +115,33 @@ export class ParticipantService {
         client,
       );
       return await this.billParticipantDao.delete(billParticipant.id, client);
+    });
+  }
+
+  public async createLineItemParticipant(
+    lineItemId: number,
+    lineItemParticipant: LineItemParticipantCreate,
+  ): Promise<IdRecord> {
+    return await this.lineItemParticipantDao.tx(async (client) => {
+      const lineItemParticipants = await this.lineItemParticipantDao.search(
+        {
+          lineItemId,
+        },
+        client,
+      );
+      const total = lineItemParticipants.reduce(
+        (total, item) => item.pctOwes + total,
+        lineItemParticipant.pctOwes,
+      );
+
+      if (total > 100) {
+        throw new Error('Total percentage owed for item is greater than 100');
+      }
+
+      return await this.lineItemParticipantDao.create(
+        lineItemParticipant,
+        client,
+      );
     });
   }
 }

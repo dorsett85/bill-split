@@ -3,14 +3,17 @@ import path from 'path';
 import { App } from './App.ts';
 import {
   deleteBillParticipant,
+  deleteLineItemParticipant,
   getBill,
   getBillPage,
   getHomePage,
   patchBill,
   patchLineItem,
+  patchLineItemParticipant,
   postBill,
   postBillParticipant,
   postLineItem,
+  postLineItemParticipant,
 } from './controllers/controllers.ts';
 import { HtmlService } from './services/HtmlService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
@@ -84,8 +87,17 @@ const startServer = async () => {
   app.post('/api/bills/:billId/participants', postBillParticipant);
   app.delete('/api/bills/:billId/participants/:id', deleteBillParticipant);
 
-  app.patch('/api/lineitem/:id', patchLineItem);
-  app.post('/api/lineitem', postLineItem);
+  app.patch('/api/lineitems/:id', patchLineItem);
+  app.post('/api/lineitems', postLineItem);
+  app.post('/api/lineitems/:lineItemId/participants', postLineItemParticipant);
+  app.patch(
+    '/api/lineitems/:lineItemId/participants/:id',
+    patchLineItemParticipant,
+  );
+  app.delete(
+    '/api/lineitems/:lineItemId/participants/:id',
+    deleteLineItemParticipant,
+  );
 
   app.listen(port, () => {
     handleEnvListen();

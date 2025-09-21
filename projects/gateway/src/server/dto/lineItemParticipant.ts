@@ -20,6 +20,10 @@ export const LineItemParticipantUpdate = z.object({
   pctOwes: z.number(),
 });
 
+export const LineItemParticipantSearch = z.object({
+  lineItemId: z.number(),
+});
+
 export type LineItemParticipantCreate = z.infer<
   typeof LineItemParticipantCreate
 >;
@@ -32,13 +36,19 @@ export type LineItemParticipantRead = {
 export type LineItemParticipantUpdate = z.infer<
   typeof LineItemParticipantUpdate
 >;
+export type LineItemParticipantSearch = z.infer<
+  typeof LineItemParticipantSearch
+>;
 
 export const toLineItemParticipantStorage = (
-  data: LineItemParticipantCreate | LineItemParticipantUpdate,
+  data:
+    | LineItemParticipantCreate
+    | LineItemParticipantUpdate
+    | LineItemParticipantSearch,
 ) => ({
   line_item_id: 'lineItemId' in data ? data.lineItemId : undefined,
   participant_id: 'participantId' in data ? data.participantId : undefined,
-  pct_owes: data.pctOwes,
+  pct_owes: 'pctOwes' in data ? data.pctOwes : undefined,
 });
 
 export const toLineItemParticipantRead = (

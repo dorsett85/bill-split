@@ -5,6 +5,7 @@ import {
   type LineItemParticipantCreate,
   type LineItemParticipantRead,
   LineItemParticipantReadStorage,
+  type LineItemParticipantSearch,
   type LineItemParticipantUpdate,
   toLineItemParticipantRead,
   toLineItemParticipantStorage,
@@ -41,9 +42,19 @@ export class LineItemParticipantDao extends BaseDao<
     return await this.updateRecord(id, itemsToInsert);
   }
 
-  public async search(): Promise<LineItemParticipantRead[]> {
-    // TODO
-    throw new Error('Not implemented');
+  public async search(
+    searchParams: LineItemParticipantSearch,
+    client?: PoolClient,
+  ): Promise<LineItemParticipantRead[]> {
+    const cols = LineItemParticipantReadStorage.keyof().options;
+    const lineItemSearch = toLineItemParticipantStorage(searchParams);
+
+    const { rows } = await this.searchRecords(lineItemSearch, cols, client);
+    return rows.map((row) =>
+      LineItemParticipantReadStorage.transform(toLineItemParticipantRead).parse(
+        row,
+      ),
+    );
   }
 
   /**
