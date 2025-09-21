@@ -2,6 +2,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { BillDao } from '../dao/BillDao.ts';
 import { BillParticipantDao } from '../dao/BillParticipantDao.ts';
 import { LineItemDao } from '../dao/LineItemDao.ts';
+import { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import { ParticipantDao } from '../dao/ParticipantDao.ts';
 import { getDb } from '../db/getDb.ts';
 import { BillUpdate } from '../dto/bill.ts';
@@ -40,6 +41,7 @@ const getParticipantService = () => {
   return new ParticipantService({
     participantDao: new ParticipantDao(getDb()),
     billParticipantDao: new BillParticipantDao(getDb()),
+    lineItemParticipantDao: new LineItemParticipantDao(getDb()),
   });
 };
 
@@ -96,7 +98,6 @@ export const postBillParticipant: MiddlewareFunction = async (req, res) => {
 };
 
 export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
-  // TODO need to recalculate existing participant line item percentages
   const participantService = getParticipantService();
   const idRecord = await participantService.deleteBillParticipant(
     BillParticipantDelete.parse({

@@ -32,9 +32,7 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
       [id],
     );
 
-    return BillReadStorage.transform((bill) => toBillRead(bill)).parse(
-      billResult.rows[0],
-    );
+    return BillReadStorage.transform(toBillRead).parse(billResult.rows[0]);
   }
 
   public async update(id: number, billUpdates: BillUpdate): Promise<IdRecord> {
