@@ -8,14 +8,12 @@ TODO
 
 1. Add api endpoints
    1. Endpoint for manual item creation
-   2. Create bill participant
-   3. Assign items to bill participant
+   2. Admin endpoint
+   3. Auth middleware
 2. Add UI pages
    1. Individual bill page
-      1. Show bill information
-      2. Create bill participant
-      3. Assign items to bill participant
-      4. Auto split bill
-      5. Tax input
-      6. Tip input
-      7. Manual override
+      1. Change bill name
+      2. Tip input
+      3. Display line items
+      4. Assign participants to items
+      5. Auto calculate what participants owe
