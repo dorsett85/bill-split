@@ -26,6 +26,7 @@ const getBillService = () => {
   return new BillService({
     billDao: new BillDao(getDb()),
     lineItemDao: new LineItemDao(getDb()),
+    lineItemParticipantDao: new LineItemParticipantDao(getDb()),
     participantDao: new ParticipantDao(getDb()),
     fileStorageService: new S3FileStorageService({
       bucketName: process.env.AWS_BILL_IMAGE_S3_BUCKET ?? '',

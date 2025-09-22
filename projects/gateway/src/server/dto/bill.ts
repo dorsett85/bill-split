@@ -1,6 +1,7 @@
 import * as z from 'zod';
 import { type IdRecord, id } from './id.ts';
 import type { LineItemRead } from './lineItem.ts';
+import type { LineItemParticipantRead } from './lineItemParticipant.ts';
 import type { ParticipantRead } from './participant.ts';
 
 const ImageStatus = z.literal(['parsing', 'ready', 'error']);
@@ -39,7 +40,11 @@ export type BillRead = {
 } & IdRecord;
 export type BillUpdate = z.infer<typeof BillUpdate>;
 export type BillResponse = BillRead & {
-  lineItems: Omit<LineItemRead, 'billId'>[];
+  lineItems: (Omit<LineItemRead, 'billId'> & {
+    participants: (Omit<LineItemParticipantRead, 'lineItemId'> & {
+      name: string;
+    })[];
+  })[];
   participants: ParticipantRead[];
 };
 

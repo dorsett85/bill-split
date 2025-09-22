@@ -1,6 +1,7 @@
 import path from 'path';
 import type { BillDao } from '../dao/BillDao.ts';
 import type { LineItemDao } from '../dao/LineItemDao.ts';
+import type { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
 import { BillCreate, type BillResponse, type BillUpdate } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
@@ -13,6 +14,7 @@ import { S3FileStorageService } from './S3FileStorageService.ts';
 interface BillServiceConstructor {
   billDao: BillDao;
   lineItemDao: LineItemDao;
+  lineItemParticipantDao: LineItemParticipantDao;
   participantDao: ParticipantDao;
   fileStorageService: FileStorageService;
   kafkaService: KafkaService;
@@ -21,6 +23,7 @@ interface BillServiceConstructor {
 export class BillService {
   private billDao: BillDao;
   private lineItemDao: LineItemDao;
+  private lineItemParticipantDao: LineItemParticipantDao;
   private participantDao: ParticipantDao;
   private readonly fileStorageService: FileStorageService;
   private kafkaService: KafkaService;
@@ -28,12 +31,14 @@ export class BillService {
   constructor({
     billDao,
     lineItemDao,
+    lineItemParticipantDao,
     participantDao,
     fileStorageService,
     kafkaService,
   }: BillServiceConstructor) {
     this.billDao = billDao;
     this.lineItemDao = lineItemDao;
+    this.lineItemParticipantDao = lineItemParticipantDao;
     this.participantDao = participantDao;
     this.fileStorageService = fileStorageService;
     this.kafkaService = kafkaService;
@@ -72,13 +77,40 @@ export class BillService {
         { billId: bill.id },
         client,
       );
+      const lineItemParticipants =
+        await this.lineItemParticipantDao.searchByBillId(bill.id, client);
       const participants = await this.participantDao.searchByBillId(
         bill.id,
         client,
       );
+
+      // This builds a few maps to be more efficient constructing the lineItems
+      // response property.
+      const participantMap = Object.fromEntries(
+        participants.map((participant) => [participant.id, participant.name]),
+      );
+      const lineItemParticipantMap: Record<
+        string,
+        BillResponse['lineItems'][number]['participants']
+      > = {};
+      lineItemParticipants.forEach((lip) => {
+        lineItemParticipantMap[lip.lineItemId] ??= [];
+        lineItemParticipantMap[lip.lineItemId].push({
+          id: lip.id,
+          name: participantMap[lip.participantId],
+          participantId: lip.participantId,
+          pctOwes: lip.pctOwes,
+        });
+      });
+
       return {
         ...bill,
-        lineItems,
+        lineItems: lineItems.map((li) => ({
+          id: li.id,
+          name: li.name,
+          price: li.price,
+          participants: lineItemParticipantMap[li.id],
+        })),
         participants,
       };
     });

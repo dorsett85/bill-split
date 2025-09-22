@@ -35,7 +35,10 @@ export const Bill: React.FC<BillProps> = (props) => {
           // Refetch if it's still parsing
           return setTimeout(() => pollBill(), 1000);
         }
-        setBill(data);
+        // The backend will get a new presigned url on each request, but we only
+        // need it on initial pageload, otherwise it will rerequest the image
+        // with the new presigned url.
+        setBill({ ...data, imagePath: bill.imagePath });
       } catch (e) {
         console.log(e);
         // Any fetch errors we can just set the image status to error
