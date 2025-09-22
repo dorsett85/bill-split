@@ -41,9 +41,7 @@ export type BillRead = {
 export type BillUpdate = z.infer<typeof BillUpdate>;
 export type BillResponse = BillRead & {
   lineItems: (Omit<LineItemRead, 'billId'> & {
-    participants: (Omit<LineItemParticipantRead, 'lineItemId'> & {
-      name: string;
-    })[];
+    participants: Omit<LineItemParticipantRead, 'lineItemId'>[];
   })[];
   participants: ParticipantRead[];
 };

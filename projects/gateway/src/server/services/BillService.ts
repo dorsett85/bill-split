@@ -86,9 +86,6 @@ export class BillService {
 
       // This builds a few maps to be more efficient constructing the lineItems
       // response property.
-      const participantMap = Object.fromEntries(
-        participants.map((participant) => [participant.id, participant.name]),
-      );
       const lineItemParticipantMap: Record<
         string,
         BillResponse['lineItems'][number]['participants']
@@ -97,7 +94,6 @@ export class BillService {
         lineItemParticipantMap[lip.lineItemId] ??= [];
         lineItemParticipantMap[lip.lineItemId].push({
           id: lip.id,
-          name: participantMap[lip.participantId],
           participantId: lip.participantId,
           pctOwes: lip.pctOwes,
         });
