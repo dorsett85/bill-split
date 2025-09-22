@@ -1,4 +1,9 @@
-import { Notification, type NotificationProps, Progress } from '@mantine/core';
+import {
+  Box,
+  Notification,
+  type NotificationProps,
+  Progress,
+} from '@mantine/core';
 import type React from 'react';
 import type { ImageStatus } from '../../pages/bills/[id]/dto.ts';
 
@@ -35,16 +40,18 @@ export const BillStatusNotification: React.FC<BillStatusNotificationProps> = ({
       case 'error':
         return {
           children: (
-            <>
+            <Box m="sm">
               Click <a href="/">here</a> to try again
-            </>
+            </Box>
           ),
           color: 'red',
           title: 'Something went wrong analyzing your bill',
         };
       case 'ready':
         return {
-          children: <>Add participants and assign bill items below</>,
+          children: (
+            <Box m="sm">Add participants and assign bill items below</Box>
+          ),
           color: 'green',
           title: 'Your bill has been successfully analyzed!',
         };

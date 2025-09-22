@@ -1,16 +1,20 @@
-import { Center, Container, Divider, Stack, Title } from '@mantine/core';
+import {
+  Center,
+  Container,
+  Divider,
+  Skeleton,
+  Stack,
+  Title,
+} from '@mantine/core';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { BillInfoItem } from '../../../components/BasePage/BillInfoItem.tsx';
 import { BillParticipantInput } from '../../../components/BasePage/BillParticipantInput.tsx';
 import { BillStatusNotification } from '../../../components/BasePage/BillStatusNotification.tsx';
+import { GratuityInput } from '../../../components/BasePage/GratuityInput.tsx';
 import { fetchBill } from '../../../utils/api.ts';
+import { USCurrency } from '../../../utils/UsCurrency.ts';
 import type { BillData, Participants } from './dto.ts';
-
-const USCurrency = Intl.NumberFormat('en-US', {
-  currency: 'USD',
-  style: 'currency',
-});
 
 interface BillProps {
   bill: BillData;
@@ -66,10 +70,20 @@ export const Bill: React.FC<BillProps> = (props) => {
 
   const total = (subTotal ?? 0) + (bill.gratuity ?? 0) + (bill.tax ?? 0);
 
+  const renderBillItemValue = (value?: number) => {
+    return bill.imageStatus === 'ready' ? (
+      USCurrency.format(value ?? 0)
+    ) : (
+      <Skeleton height={24} animate width={64} />
+    );
+  };
+
   return (
     <Container mt={32}>
       <Title size={56} order={1} ta="center" mb="xl">
-        Here is your bill!
+        {props.bill.businessName
+          ? `"${props.bill.businessName}" Bill`
+          : 'Here is your bill!'}
       </Title>
       <Center mb="xl">
         <img
@@ -86,26 +100,20 @@ export const Bill: React.FC<BillProps> = (props) => {
           imageStatus={bill.imageStatus}
         />
       )}
-      <Stack gap="xs" mb="xl">
+      <Stack gap="sm" mb="xl">
         <BillInfoItem label="Subtotal">
-          {bill.imageStatus === 'ready'
-            ? USCurrency.format(subTotal ?? 0)
-            : 'Pending'}
+          {renderBillItemValue(subTotal)}
         </BillInfoItem>
-        <BillInfoItem label="Tax">
-          {bill.imageStatus === 'ready'
-            ? USCurrency.format(bill.tax ?? 0)
-            : 'Pending'}
-        </BillInfoItem>
+        <BillInfoItem label="Tax">{renderBillItemValue(bill.tax)}</BillInfoItem>
         <BillInfoItem label="Gratuity">
-          {bill.imageStatus === 'ready'
-            ? USCurrency.format(bill.gratuity ?? 0)
-            : 'Pending'}
+          <GratuityInput
+            billId={bill.id}
+            gratuity={bill.gratuity}
+            onChange={(gratuity) => setBill({ ...bill, gratuity })}
+          />
         </BillInfoItem>
         <Divider />
-        <BillInfoItem label="Total">
-          {bill.imageStatus === 'ready' ? USCurrency.format(total) : 'Pending'}
-        </BillInfoItem>
+        <BillInfoItem label="Total">{renderBillItemValue(total)}</BillInfoItem>
       </Stack>
       <BillParticipantInput
         billId={bill.id}

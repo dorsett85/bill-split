@@ -1,19 +1,19 @@
-import { Group, Text } from '@mantine/core';
+import { Box, Group, Text } from '@mantine/core';
 import type React from 'react';
 import type { PropsWithChildren } from 'react';
 
-interface BillInfoItemProps {
+interface BillInfoItemProps extends PropsWithChildren {
   label: string;
 }
 
-export const BillInfoItem: React.FC<PropsWithChildren<BillInfoItemProps>> = ({
+export const BillInfoItem: React.FC<BillInfoItemProps> = ({
   label,
   children,
 }) => {
   return (
     <Group gap="md" justify="space-between">
       <Text>{label}:</Text>
-      <Text>{children}</Text>
+      <Box>{children}</Box>
     </Group>
   );
 };
