@@ -70,7 +70,7 @@ export class ParticipantService {
   ): Promise<IdRecord> {
     return await this.participantDao.tx(async (client) => {
       const lineItemParticipants =
-        await this.lineItemParticipantDao.searchByBillAndParticipant(
+        await this.lineItemParticipantDao.searchByLineItemIdUsingBillAndParticipant(
           billId,
           participantId,
         );
@@ -95,13 +95,12 @@ export class ParticipantService {
   }
 
   public async createLineItemParticipant(
-    lineItemId: number,
     lineItemParticipant: LineItemParticipantCreate,
   ): Promise<IdRecord> {
     return await this.lineItemParticipantDao.tx(async (client) => {
       const lineItemParticipants = await this.lineItemParticipantDao.search(
         {
-          lineItemId,
+          lineItemId: lineItemParticipant.lineItemId,
         },
         client,
       );
@@ -122,46 +121,40 @@ export class ParticipantService {
   }
 
   public async updateLineItemParticipant(
-    lineItemId: number,
-    participantId: number,
+    id: number,
     update: LineItemParticipantUpdate,
   ): Promise<IdRecord> {
     return await this.lineItemParticipantDao.tx(async (client) => {
-      const lineItemParticipants = await this.lineItemParticipantDao.search(
-        { lineItemId },
-        client,
+      const lineItemParticipants =
+        await this.lineItemParticipantDao.searchByLineItemIdAssociatedWithPk(
+          id,
+          client,
+        );
+
+      // Add up the other line item participants with the new pct owes amount
+      const total = lineItemParticipants.reduce(
+        (total, item) => (item.id !== id ? item : update).pctOwes + total,
+        0,
       );
-      const total = lineItemParticipants
-        .filter((item) => item.participantId !== participantId)
-        .reduce((total, item) => item.pctOwes + total, update.pctOwes);
 
       if (total > 100) {
         throw new Error('Total percentage owed cannot be greater than 100');
       }
 
-      const [lineItemParticipant] = lineItemParticipants.filter(
-        (item) => item.participantId === participantId,
-      );
-      return await this.lineItemParticipantDao.update(
-        lineItemParticipant.id,
-        update,
-        client,
-      );
+      return await this.lineItemParticipantDao.update(id, update, client);
     });
   }
 
-  public async deleteLineItemParticipant(
-    lineItemId: number,
-    participantId: number,
-  ): Promise<IdRecord> {
+  public async deleteLineItemParticipant(id: number): Promise<IdRecord> {
     return await this.lineItemParticipantDao.tx(async (client) => {
-      const lineItemParticipants = await this.lineItemParticipantDao.search(
-        { lineItemId },
-        client,
-      );
+      const lineItemParticipants =
+        await this.lineItemParticipantDao.searchByLineItemIdAssociatedWithPk(
+          id,
+          client,
+        );
 
       const result = calculateRemainingPctOwes(
-        participantId,
+        lineItemParticipants.filter((lip) => lip.id === id)[0].participantId,
         lineItemParticipants,
       );
 
@@ -169,13 +162,7 @@ export class ParticipantService {
         await this.lineItemParticipantDao.addOwesAcrossIds(owes, ids, client);
       }
 
-      const [lineItemParticipant] = lineItemParticipants.filter(
-        (item) => item.participantId === participantId,
-      );
-      return await this.lineItemParticipantDao.delete(
-        lineItemParticipant.id,
-        client,
-      );
+      return await this.lineItemParticipantDao.delete(id, client);
     });
   }
 }

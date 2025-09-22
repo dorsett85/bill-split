@@ -2,18 +2,23 @@ import * as z from 'zod';
 
 const ImageStatus = z.literal(['parsing', 'ready', 'error']);
 
-const LineItemRead = z.object({
+const LineItem = z.object({
   id: z.number(),
   name: z.string(),
   price: z.number(),
 });
 
-const Participants = z.array(
-  z.object({
-    id: z.number(),
-    name: z.string(),
-  }),
-);
+const Participant = z.object({
+  id: z.number(),
+  name: z.string(),
+  lineItems: z.array(
+    z.object({
+      id: z.number(),
+      lineItemId: z.number(),
+      pctOwes: z.number(),
+    }),
+  ),
+});
 
 export const BillData = z.object({
   id: z.number(),
@@ -24,8 +29,8 @@ export const BillData = z.object({
   imageStatus: ImageStatus,
   name: z.string().optional(),
   tax: z.number().optional(),
-  lineItems: z.array(LineItemRead).optional(),
-  participants: Participants,
+  lineItems: z.array(LineItem),
+  participants: z.array(Participant),
 });
 
 export const BillResponse = z.object({
@@ -39,7 +44,8 @@ export const IdResponse = z.object({
 });
 
 export type BillData = z.infer<typeof BillData>;
-export type Participants = z.infer<typeof Participants>;
+export type Participants = z.infer<typeof Participant>[];
+export type LineItems = z.infer<typeof LineItem>[];
 export type BillResponse = z.infer<typeof BillResponse>;
 export type IdResponse = z.infer<typeof IdResponse>;
 export type ImageStatus = z.infer<typeof ImageStatus>;

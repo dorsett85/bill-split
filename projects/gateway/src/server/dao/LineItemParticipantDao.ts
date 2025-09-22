@@ -68,8 +68,33 @@ export class LineItemParticipantDao extends BaseDao<
       FROM ${this.tableName} lip
       JOIN line_item li ON lip.line_item_id = li.id
       WHERE li.bill_id = $1
-    `,
+      `,
       [billId],
+    );
+
+    return rows.map((row) =>
+      LineItemParticipantReadStorage.transform(toLineItemParticipantRead).parse(
+        row,
+      ),
+    );
+  }
+
+  /**
+   * This query gets all the records from a line item id that are associated
+   * with an id (pk).
+   */
+  public async searchByLineItemIdAssociatedWithPk(
+    pk: number,
+    client?: PoolClient,
+  ): Promise<LineItemParticipantRead[]> {
+    const { rows } = await (client ?? this.db).query(
+      `
+      SELECT lip.*
+      FROM ${this.tableName} lip
+      LEFT JOIN line_item li ON lip.line_item_id = li.id
+      WHERE lip.id = $1
+      `,
+      [pk],
     );
 
     return rows.map((row) =>
@@ -94,32 +119,26 @@ export class LineItemParticipantDao extends BaseDao<
       `
       UPDATE line_item_participant lip SET pct_owes = pct_owes + $1
       WHERE lip.id in $2
-    `,
+      `,
       [splitPct, ids],
     );
 
     return { count: rowCount ?? 0 };
   }
 
-  public async searchByBillAndParticipant(
+  public async searchByLineItemIdUsingBillAndParticipant(
     billId: number,
     participantId: number,
     client?: PoolClient,
   ): Promise<LineItemParticipantRead[]> {
     const { rows } = await (client ?? this.db).query(
       `
-      WITH line_item_ids AS (
-        SELECT lip.line_item_id
-        FROM line_item_participant lip
-        WHERE lip.participant_id = $1
-      )
       SELECT lip.* 
       FROM line_item_participant lip
-      JOIN line_item li ON lip.line_item_id = li.id 
+      LEFT JOIN line_item li ON lip.line_item_id = li.id 
       JOIN bill b ON li.bill_id = b.id
-      JOIN line_item_ids lii ON lip.line_item_id = lii.line_item_id 
-      WHERE b.id = $2
-    `,
+      WHERE lip.participant_id = $1 AND b.id = $2
+      `,
       [participantId, billId],
     );
 

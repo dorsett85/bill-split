@@ -87,17 +87,12 @@ const startServer = async () => {
   app.post('/api/bills/:billId/participants', postBillParticipant);
   app.delete('/api/bills/:billId/participants/:id', deleteBillParticipant);
 
-  app.patch('/api/lineitems/:id', patchLineItem);
-  app.post('/api/lineitems', postLineItem);
-  app.post('/api/lineitems/:lineItemId/participants', postLineItemParticipant);
-  app.patch(
-    '/api/lineitems/:lineItemId/participants/:id',
-    patchLineItemParticipant,
-  );
-  app.delete(
-    '/api/lineitems/:lineItemId/participants/:id',
-    deleteLineItemParticipant,
-  );
+  app.patch('/api/line-items/:id', patchLineItem);
+  app.post('/api/line-items', postLineItem);
+
+  app.post('/api/line-item-participants', postLineItemParticipant);
+  app.patch('/api/line-item-participants/:id', patchLineItemParticipant);
+  app.delete('/api/line-item-participants/:id', deleteLineItemParticipant);
 
   app.listen(port, () => {
     handleEnvListen();

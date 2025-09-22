@@ -84,30 +84,18 @@ export class BillService {
         client,
       );
 
-      // This builds a few maps to be more efficient constructing the lineItems
-      // response property.
-      const lineItemParticipantMap: Record<
-        string,
-        BillResponse['lineItems'][number]['participants']
-      > = {};
-      lineItemParticipants.forEach((lip) => {
-        lineItemParticipantMap[lip.lineItemId] ??= [];
-        lineItemParticipantMap[lip.lineItemId].push({
-          id: lip.id,
-          participantId: lip.participantId,
-          pctOwes: lip.pctOwes,
-        });
-      });
-
       return {
         ...bill,
-        lineItems: lineItems.map((li) => ({
-          id: li.id,
-          name: li.name,
-          price: li.price,
-          participants: lineItemParticipantMap[li.id],
+        lineItems,
+        participants: participants.map((participant) => ({
+          id: participant.id,
+          name: participant.name,
+          lineItems: lineItemParticipants.map((lip) => ({
+            id: lip.id,
+            lineItemId: lip.lineItemId,
+            pctOwes: lip.pctOwes,
+          })),
         })),
-        participants,
       };
     });
 

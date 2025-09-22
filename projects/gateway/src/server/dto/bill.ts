@@ -40,10 +40,10 @@ export type BillRead = {
 } & IdRecord;
 export type BillUpdate = z.infer<typeof BillUpdate>;
 export type BillResponse = BillRead & {
-  lineItems: (Omit<LineItemRead, 'billId'> & {
-    participants: Omit<LineItemParticipantRead, 'lineItemId'>[];
+  lineItems: Omit<LineItemRead, 'billId'>[];
+  participants: (ParticipantRead & {
+    lineItems: Omit<LineItemParticipantRead, 'participantId'>[];
   })[];
-  participants: ParticipantRead[];
 };
 
 export const toBillStorage = (bill: BillCreate | BillUpdate) => ({

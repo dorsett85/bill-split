@@ -135,7 +135,6 @@ export const postLineItemParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
   const participantService = getParticipantService();
   const idRecord = await participantService.createLineItemParticipant(
-    id.parse(+req.params.lineItemId),
     LineItemParticipantCreate.parse(body),
   );
   return writeToJson({ data: idRecord }, res);
@@ -148,7 +147,6 @@ export const patchLineItemParticipant: MiddlewareFunction = async (
   const body = await parseJsonBody(req);
   const participantService = getParticipantService();
   const idRecord = await participantService.updateLineItemParticipant(
-    id.parse(+req.params.lineItemId),
     id.parse(+req.params.id),
     LineItemParticipantUpdate.parse(body),
   );
@@ -161,7 +159,6 @@ export const deleteLineItemParticipant: MiddlewareFunction = async (
 ) => {
   const participantService = getParticipantService();
   const idRecord = await participantService.deleteLineItemParticipant(
-    id.parse(+req.params.lineItemId),
     id.parse(+req.params.id),
   );
   return writeToJson({ data: idRecord }, res);

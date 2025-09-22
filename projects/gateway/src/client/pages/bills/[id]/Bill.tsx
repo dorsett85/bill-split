@@ -63,7 +63,7 @@ export const Bill: React.FC<BillProps> = (props) => {
     }));
   };
 
-  const subTotal = bill.lineItems?.reduce(
+  const subTotal = bill.lineItems.reduce(
     (total, item) => item.price + total,
     0,
   );

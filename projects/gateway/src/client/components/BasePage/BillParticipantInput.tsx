@@ -28,7 +28,7 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
 
     try {
       const { data } = await createBillParticipant(billId, name);
-      onChange([...participants, { id: data.id, name }]);
+      onChange([...participants, { id: data.id, name, lineItems: [] }]);
     } catch {
       // no-up
     }
