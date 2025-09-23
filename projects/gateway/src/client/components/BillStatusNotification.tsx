@@ -5,7 +5,7 @@ import {
   Progress,
 } from '@mantine/core';
 import type React from 'react';
-import type { ImageStatus } from '../../pages/bills/[id]/dto.ts';
+import type { ImageStatus } from '../pages/bills/[id]/dto.ts';
 
 type BillStatusNotificationProps = {
   analyzeProgress: number;
@@ -41,7 +41,7 @@ export const BillStatusNotification: React.FC<BillStatusNotificationProps> = ({
         return {
           children: (
             <Box m="sm">
-              Click <a href="/">here</a> to try again
+              Click <a href="/projects/gateway/public">here</a> to try again
             </Box>
           ),
           color: 'red',

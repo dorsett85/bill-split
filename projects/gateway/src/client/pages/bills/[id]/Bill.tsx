@@ -8,10 +8,10 @@ import {
 } from '@mantine/core';
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { BillInfoItem } from '../../../components/BasePage/BillInfoItem.tsx';
-import { BillParticipantInput } from '../../../components/BasePage/BillParticipantInput.tsx';
-import { BillStatusNotification } from '../../../components/BasePage/BillStatusNotification.tsx';
-import { GratuityInput } from '../../../components/BasePage/GratuityInput.tsx';
+import { BillInfoItem } from '../../../components/BillInfoItem.tsx';
+import { BillParticipantInput } from '../../../components/BillParticipantInput.tsx';
+import { BillStatusNotification } from '../../../components/BillStatusNotification.tsx';
+import { GratuityInput } from '../../../components/GratuityInput.tsx';
 import { fetchBill } from '../../../utils/api.ts';
 import { USCurrency } from '../../../utils/UsCurrency.ts';
 import type { BillData, Participants } from './dto.ts';
