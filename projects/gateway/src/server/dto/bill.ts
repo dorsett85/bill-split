@@ -10,6 +10,7 @@ export const BillCreate = z.object({
   businessLocation: z.string().nullish(),
   businessName: z.string().nullish(),
   gratuity: z.number().nullish(),
+  tip: z.number().nullish(),
   imagePath: z.string(),
   imageStatus: ImageStatus,
   name: z.string().nullish(),
@@ -22,6 +23,7 @@ export const BillReadStorage = z
     business_location: BillCreate.shape.businessLocation.nullable(),
     business_name: BillCreate.shape.businessName.nullable(),
     gratuity: BillCreate.shape.gratuity.nullable(),
+    tip: BillCreate.shape.tip.nullable(),
     image_path: BillCreate.shape.imagePath,
     image_status: BillCreate.shape.imageStatus,
     name: BillCreate.shape.name.nullable(),
@@ -29,9 +31,8 @@ export const BillReadStorage = z
   })
   .strict();
 
-export const BillUpdate = BillCreate.omit({
-  imagePath: true,
-  imageStatus: true,
+export const BillUpdate = z.object({
+  tip: z.number().nullable(),
 });
 
 export type BillCreate = z.infer<typeof BillCreate>;
@@ -47,13 +48,15 @@ export type BillResponse = BillRead & {
 };
 
 export const toBillStorage = (bill: BillCreate | BillUpdate) => ({
-  business_location: bill.businessLocation,
-  business_name: bill.businessName,
-  gratuity: bill.gratuity,
+  business_location:
+    'businessLocation' in bill ? bill.businessLocation : undefined,
+  business_name: 'businessName' in bill ? bill.businessName : undefined,
+  gratuity: 'gratuity' in bill ? bill.gratuity : undefined,
+  tip: bill.tip,
   image_path: 'imagePath' in bill ? bill.imagePath : undefined,
   image_status: 'imageStatus' in bill ? bill.imageStatus : undefined,
-  name: bill.name,
-  tax: bill.tax,
+  name: 'name' in bill ? bill.name : undefined,
+  tax: 'tax' in bill ? bill.tax : undefined,
 });
 
 export const toBillRead = (
@@ -63,6 +66,7 @@ export const toBillRead = (
   businessLocation: bill.business_location ?? undefined,
   businessName: bill.business_name ?? undefined,
   gratuity: bill.gratuity ?? undefined,
+  tip: bill.tip ?? undefined,
   imagePath: bill.image_path,
   imageStatus: bill.image_status,
   name: bill.name ?? undefined,

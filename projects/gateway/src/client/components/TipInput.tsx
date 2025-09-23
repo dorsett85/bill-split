@@ -3,27 +3,27 @@ import type React from 'react';
 import { useRef, useState } from 'react';
 import { updateBill } from '../utils/api.ts';
 
-interface GratuityInputProps {
+interface TipInputProps {
   billId: number;
-  gratuity?: number;
-  onChange: (gratuity: number) => void;
+  tip?: number;
+  onChange: (tip: number) => void;
 }
 
-export const GratuityInput: React.FC<GratuityInputProps> = ({
+export const TipInput: React.FC<TipInputProps> = ({
   billId,
-  gratuity,
+  tip,
   onChange,
 }) => {
-  const [inputGratuity, setInputGratuity] = useState(gratuity ?? 0);
+  const [inputTip, setInputTip] = useState(tip ?? 0);
   const timeoutRef = useRef<NodeJS.Timeout>(undefined);
   const abortRef = useRef<AbortController>(new AbortController());
 
-  const handleOnChange = (gratuity: number | string) => {
-    const newGratuity = typeof gratuity === 'string' ? 0 : gratuity;
+  const handleOnChange = (value: number | string) => {
+    const newTip = typeof value === 'string' ? 0 : value;
 
-    // Set the gratuity on every change for responsiveness, but throttle the
+    // Set the tip on every change for responsiveness, but throttle the
     // onChange handler to not spam the api.
-    setInputGratuity(() => newGratuity);
+    setInputTip(() => newTip);
 
     clearTimeout(timeoutRef.current);
 
@@ -32,12 +32,8 @@ export const GratuityInput: React.FC<GratuityInputProps> = ({
       abortRef.current = new AbortController();
 
       try {
-        await updateBill(
-          billId,
-          { gratuity: newGratuity },
-          abortRef.current.signal,
-        );
-        onChange(newGratuity);
+        await updateBill(billId, { tip: newTip }, abortRef.current.signal);
+        onChange(newTip);
       } catch (e) {
         // Most likely signal was aborted
         console.log(e);
@@ -51,13 +47,13 @@ export const GratuityInput: React.FC<GratuityInputProps> = ({
       styles={{
         input: { width: '75px' },
       }}
-      id="gratuity-input"
-      aria-label="gratuity percent"
+      id="tip-input"
+      aria-label="tip percent"
       max={100}
       min={0}
       suffix="%"
       stepHoldInterval={100}
-      value={inputGratuity}
+      value={inputTip}
       onChange={handleOnChange}
     />
   );

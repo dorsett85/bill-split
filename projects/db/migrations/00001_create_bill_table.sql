@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS bill (
     business_name VARCHAR,
     business_location VARCHAR,
     gratuity NUMERIC,
+    tip NUMERIC,
     image_path VARCHAR,
     image_status VARCHAR CHECK (image_status IN ('parsing', 'ready', 'error')),
     name VARCHAR,
@@ -11,7 +12,8 @@ CREATE TABLE IF NOT EXISTS bill (
 
 COMMENT ON COLUMN bill.business_name IS 'Name of the business';
 COMMENT ON COLUMN bill.business_location IS 'Location of the business, may split up or make it a geolocation';
-COMMENT ON COLUMN bill.gratuity IS 'Gratuity expressed as a percent';
+COMMENT ON COLUMN bill.gratuity IS 'Gratuity expressed as a total amount';
+COMMENT ON COLUMN bill.tip IS 'Tip expressed as a percent';
 COMMENT ON COLUMN bill.image_path IS 'Storage path of the receipt';
 COMMENT ON COLUMN bill.name IS 'Name of the bill';
 COMMENT ON COLUMN bill.image_status IS 'State of extracting and parsing image text data';

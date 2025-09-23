@@ -6,7 +6,7 @@ export const fetchBill = async (billId: number): Promise<BillResponse> => {
 };
 
 type UpdateBillBody = {
-  gratuity: number;
+  tip: number;
 };
 
 export const updateBill = async (
@@ -43,5 +43,26 @@ export const deleteParticipant = async (
       method: 'DELETE',
     },
   );
+  return IdResponse.parse(await res.json());
+};
+
+export const createLineItemParticipant = async (
+  lineItemId: number,
+  participantId: number,
+  pctOwes: number,
+): Promise<IdResponse> => {
+  const res = await fetch(`/api/line-item-participants`, {
+    method: 'POST',
+    body: JSON.stringify({ lineItemId, participantId, pctOwes }),
+  });
+  return IdResponse.parse(await res.json());
+};
+
+export const deleteLineItemParticipant = async (
+  id: number,
+): Promise<IdResponse> => {
+  const res = await fetch(`/api/line-item-participants/${id}`, {
+    method: 'DELETE',
+  });
   return IdResponse.parse(await res.json());
 };

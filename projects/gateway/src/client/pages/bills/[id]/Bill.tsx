@@ -2,6 +2,7 @@ import {
   Center,
   Container,
   Divider,
+  Group,
   Skeleton,
   Stack,
   Title,
@@ -10,11 +11,12 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { BillInfoItem } from '../../../components/BillInfoItem.tsx';
 import { BillParticipantInput } from '../../../components/BillParticipantInput.tsx';
+import { BillParticipantSection } from '../../../components/BillParticipantSection.tsx';
 import { BillStatusNotification } from '../../../components/BillStatusNotification.tsx';
-import { GratuityInput } from '../../../components/GratuityInput.tsx';
+import { TipInput } from '../../../components/TipInput.tsx';
 import { fetchBill } from '../../../utils/api.ts';
 import { USCurrency } from '../../../utils/UsCurrency.ts';
-import type { BillData, Participants } from './dto.ts';
+import type { BillData, Participant } from './dto.ts';
 
 interface BillProps {
   bill: BillData;
@@ -56,7 +58,7 @@ export const Bill: React.FC<BillProps> = (props) => {
     void pollBill();
   }, [props.bill.imageStatus]);
 
-  const handleOnChangeParticipant = (newParticipants: Participants) => {
+  const handleOnChangeParticipant = (newParticipants: Participant[]) => {
     setBill((bill) => ({
       ...bill,
       participants: newParticipants,
@@ -68,7 +70,29 @@ export const Bill: React.FC<BillProps> = (props) => {
     0,
   );
 
+  const handleOnCalculateOwes = (
+    lineItemsParticipants: Participant['lineItems'],
+  ) => {
+    const individualSubTotal =
+      lineItemsParticipants.reduce((total, lip) => lip.pctOwes + total, 0) ?? 0;
+    const tax = bill.tax ?? 0;
+    const gratuity = bill.gratuity ?? 0;
+    const tip = bill.tip ?? 0;
+
+    const individualTaxShare = (individualSubTotal / subTotal) * tax;
+    const individualTipShare = (individualSubTotal / subTotal) * gratuity;
+
+    const withoutTip =
+      individualSubTotal + individualTaxShare + individualTipShare;
+
+    return {
+      withoutTip,
+      withTip: withoutTip * (tip / 100) + withoutTip,
+    };
+  };
+
   const total = (subTotal ?? 0) + (bill.gratuity ?? 0) + (bill.tax ?? 0);
+  const totalWithTip = total * ((bill.tip ?? 0) / 100) + total;
 
   const renderBillItemValue = (value?: number) => {
     return bill.imageStatus === 'ready' ? (
@@ -79,7 +103,7 @@ export const Bill: React.FC<BillProps> = (props) => {
   };
 
   return (
-    <Container mt={32}>
+    <Container mt={32} mb={32}>
       <Title size={56} order={1} ta="center" mb="xl">
         {props.bill.businessName
           ? `"${props.bill.businessName}" Bill`
@@ -106,19 +130,31 @@ export const Bill: React.FC<BillProps> = (props) => {
         </BillInfoItem>
         <BillInfoItem label="Tax">{renderBillItemValue(bill.tax)}</BillInfoItem>
         <BillInfoItem label="Gratuity">
-          <GratuityInput
-            billId={bill.id}
-            gratuity={bill.gratuity}
-            onChange={(gratuity) => setBill({ ...bill, gratuity })}
-          />
+          {renderBillItemValue(bill.gratuity)}
         </BillInfoItem>
         <Divider />
         <BillInfoItem label="Total">{renderBillItemValue(total)}</BillInfoItem>
+        <BillInfoItem label="Total with tip">
+          <Group gap={8}>
+            <TipInput
+              billId={bill.id}
+              tip={bill.tip}
+              onChange={(tip) => setBill({ ...bill, tip })}
+            />
+            {renderBillItemValue(totalWithTip)}
+          </Group>
+        </BillInfoItem>
       </Stack>
       <BillParticipantInput
         billId={bill.id}
         onChange={handleOnChangeParticipant}
         participants={bill.participants}
+      />
+      <BillParticipantSection
+        participants={bill.participants}
+        lineItems={bill.lineItems}
+        onChange={handleOnChangeParticipant}
+        onCalculateParticipantOwes={handleOnCalculateOwes}
       />
     </Container>
   );

@@ -25,6 +25,7 @@ export const BillData = z.object({
   businessLocation: z.string().optional(),
   businessName: z.string().optional(),
   gratuity: z.number().optional(),
+  tip: z.number().optional(),
   imagePath: z.string(),
   imageStatus: ImageStatus,
   name: z.string().optional(),
@@ -44,7 +45,7 @@ export const IdResponse = z.object({
 });
 
 export type BillData = z.infer<typeof BillData>;
-export type Participants = z.infer<typeof Participant>[];
+export type Participant = z.infer<typeof Participant>;
 export type LineItems = z.infer<typeof LineItem>[];
 export type BillResponse = z.infer<typeof BillResponse>;
 export type IdResponse = z.infer<typeof IdResponse>;

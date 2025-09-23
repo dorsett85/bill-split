@@ -1,13 +1,13 @@
 import { Loader, TagsInput } from '@mantine/core';
 import type React from 'react';
 import { useState } from 'react';
-import type { Participants } from '../pages/bills/[id]/dto.ts';
+import type { Participant } from '../pages/bills/[id]/dto.ts';
 import { createBillParticipant, deleteParticipant } from '../utils/api.ts';
 
 export interface BillParticipantInputProps {
   billId: number;
-  onChange: (newParticipants: Participants) => void;
-  participants: Participants;
+  onChange: (newParticipants: Participant[]) => void;
+  participants: Participant[];
 }
 
 export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
