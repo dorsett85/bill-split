@@ -90,11 +90,13 @@ export class BillService {
         participants: participants.map((participant) => ({
           id: participant.id,
           name: participant.name,
-          lineItems: lineItemParticipants.map((lip) => ({
-            id: lip.id,
-            lineItemId: lip.lineItemId,
-            pctOwes: lip.pctOwes,
-          })),
+          lineItems: lineItemParticipants
+            .filter((lip) => lip.participantId === participant.id)
+            .map((lip) => ({
+              id: lip.id,
+              lineItemId: lip.lineItemId,
+              pctOwes: lip.pctOwes,
+            })),
         })),
       };
     });

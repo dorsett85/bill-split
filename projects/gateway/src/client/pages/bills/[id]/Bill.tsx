@@ -73,15 +73,21 @@ export const Bill: React.FC<BillProps> = (props) => {
   const handleOnCalculateOwes = (
     lineItemsParticipants: Participant['lineItems'],
   ) => {
-    const individualSubTotal =
-      lineItemsParticipants.reduce((total, lip) => lip.pctOwes + total, 0) ?? 0;
+    const lineItemMap = Object.fromEntries(
+      bill.lineItems.map((li) => [li.id, li.price]),
+    );
+
+    const individualSubTotal = lineItemsParticipants.reduce(
+      (total, lip) => lineItemMap[lip.lineItemId] * (lip.pctOwes / 100) + total,
+      0,
+    );
+
     const tax = bill.tax ?? 0;
     const gratuity = bill.gratuity ?? 0;
     const tip = bill.tip ?? 0;
 
     const individualTaxShare = (individualSubTotal / subTotal) * tax;
     const individualTipShare = (individualSubTotal / subTotal) * gratuity;
-
     const withoutTip =
       individualSubTotal + individualTaxShare + individualTipShare;
 
@@ -151,6 +157,7 @@ export const Bill: React.FC<BillProps> = (props) => {
         participants={bill.participants}
       />
       <BillParticipantSection
+        billId={bill.id}
         participants={bill.participants}
         lineItems={bill.lineItems}
         onChange={handleOnChangeParticipant}

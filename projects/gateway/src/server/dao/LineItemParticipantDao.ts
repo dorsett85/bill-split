@@ -34,13 +34,9 @@ export class LineItemParticipantDao extends BaseDao<
     throw new Error('Not implemented');
   }
 
-  public async update(
-    id: number,
-    updates: LineItemParticipantUpdate,
-    client?: PoolClient,
-  ): Promise<IdRecord> {
-    const itemsToInsert = toLineItemParticipantStorage(updates);
-    return await this.updateRecord(id, itemsToInsert, client);
+  public async update(): Promise<IdRecord> {
+    // TODO
+    throw new Error('Not implemented');
   }
 
   public async search(
@@ -89,9 +85,9 @@ export class LineItemParticipantDao extends BaseDao<
   ): Promise<LineItemParticipantRead[]> {
     const { rows } = await (client ?? this.db).query(
       `
-      SELECT lip.*
+      SELECT lip2.*
       FROM ${this.tableName} lip
-      LEFT JOIN line_item li ON lip.line_item_id = li.id
+      JOIN line_item_participant lip2 ON lip.line_item_id = lip2.line_item_id
       WHERE lip.id = $1
       `,
       [pk],
@@ -108,7 +104,7 @@ export class LineItemParticipantDao extends BaseDao<
    * Use this method to add a split amount to each record for a given list of
    * ids.
    */
-  public async addOwesAcrossIds(
+  public async addOwesByIds(
     pct: number,
     ids: number[],
     client?: PoolClient,
@@ -118,7 +114,7 @@ export class LineItemParticipantDao extends BaseDao<
     const { rowCount } = await (client ?? this.db).query(
       `
       UPDATE line_item_participant lip SET pct_owes = pct_owes + $1
-      WHERE lip.id in $2
+      WHERE lip.id = ANY ($2)
       `,
       [splitPct, ids],
     );
@@ -126,6 +122,29 @@ export class LineItemParticipantDao extends BaseDao<
     return { count: rowCount ?? 0 };
   }
 
+  /**
+   * Update pct_owes for a given list of ids
+   */
+  public async updateOwesByIds(
+    pct: number,
+    ids: number[],
+    client?: PoolClient,
+  ): Promise<CountRecord> {
+    const { rowCount } = await (client ?? this.db).query(
+      `
+        UPDATE line_item_participant lip SET pct_owes = $1
+        WHERE lip.id = ANY ($2)
+      `,
+      [pct, ids],
+    );
+
+    return { count: rowCount ?? 0 };
+  }
+
+  /**
+   * For a given bill id and participant id, find all the records of a line item
+   * id that was matched by the bill and participant ids.
+   */
   public async searchByLineItemIdUsingBillAndParticipant(
     billId: number,
     participantId: number,
@@ -133,9 +152,10 @@ export class LineItemParticipantDao extends BaseDao<
   ): Promise<LineItemParticipantRead[]> {
     const { rows } = await (client ?? this.db).query(
       `
-      SELECT lip.* 
-      FROM line_item_participant lip
-      LEFT JOIN line_item li ON lip.line_item_id = li.id 
+      SELECT lip2.* 
+      FROM ${this.tableName} lip
+      JOIN line_item_participant lip2 ON lip.line_item_id = lip2.line_item_id
+      JOIN line_item li ON lip.line_item_id = li.id 
       JOIN bill b ON li.bill_id = b.id
       WHERE lip.participant_id = $1 AND b.id = $2
       `,

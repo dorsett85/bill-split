@@ -24,6 +24,11 @@ export const LineItemParticipantSearch = z.object({
   lineItemId: z.number(),
 });
 
+export const LineItemParticipantCreateRequest = z.object({
+  lineItemId: z.number(),
+  participantId: z.number(),
+});
+
 export type LineItemParticipantCreate = z.infer<
   typeof LineItemParticipantCreate
 >;
@@ -38,6 +43,9 @@ export type LineItemParticipantUpdate = z.infer<
 >;
 export type LineItemParticipantSearch = z.infer<
   typeof LineItemParticipantSearch
+>;
+export type LineItemParticipantCreateRequest = z.infer<
+  typeof LineItemParticipantCreateRequest
 >;
 
 export const toLineItemParticipantStorage = (

@@ -2,7 +2,11 @@ import { Loader, TagsInput } from '@mantine/core';
 import type React from 'react';
 import { useState } from 'react';
 import type { Participant } from '../pages/bills/[id]/dto.ts';
-import { createBillParticipant, deleteParticipant } from '../utils/api.ts';
+import {
+  createBillParticipant,
+  deleteBillParticipant,
+  fetchBillParticipants,
+} from '../utils/api.ts';
 
 export interface BillParticipantInputProps {
   billId: number;
@@ -50,10 +54,9 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
       try {
         // TODO we probably want to create a modal here to warn users of the
         //  consequences of deleting a participant.
-        const { data } = await deleteParticipant(billId, deleteId);
-        onChange(
-          participants.filter((participant) => participant.id !== data.id),
-        );
+        await deleteBillParticipant(billId, deleteId);
+        const { data } = await fetchBillParticipants(billId);
+        onChange(data);
       } catch {
         // no-op
       }

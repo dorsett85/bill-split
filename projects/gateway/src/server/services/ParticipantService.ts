@@ -2,11 +2,11 @@ import type { BillParticipantDao } from '../dao/BillParticipantDao.ts';
 import type { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
 import type { IdRecord } from '../dto/id.ts';
+import type { LineItemParticipantCreateRequest } from '../dto/lineItemParticipant.ts';
 import type {
-  LineItemParticipantCreate,
-  LineItemParticipantUpdate,
-} from '../dto/lineItemParticipant.ts';
-import type { ParticipantCreate } from '../dto/participant.ts';
+  ParticipantCreate,
+  ParticipantResponse,
+} from '../dto/participant.ts';
 import { calculateRemainingPctOwes } from '../utils/calculateRemainingPctOwes.ts';
 
 interface ParticipantServiceConstructor {
@@ -42,6 +42,7 @@ export class ParticipantService {
       const exists = await this.participantDao.nameAlreadyExistsByBillId(
         billId,
         participant.name,
+        client,
       );
 
       if (exists) {
@@ -61,6 +62,31 @@ export class ParticipantService {
     });
   }
 
+  public async readBillParticipants(
+    billId: number,
+  ): Promise<ParticipantResponse> {
+    return await this.participantDao.tx(async (client) => {
+      const lineItemParticipants =
+        await this.lineItemParticipantDao.searchByBillId(billId, client);
+      const participants = await this.participantDao.searchByBillId(
+        billId,
+        client,
+      );
+
+      return participants.map((participant) => ({
+        id: participant.id,
+        name: participant.name,
+        lineItems: lineItemParticipants
+          .filter((lip) => lip.participantId === participant.id)
+          .map((lip) => ({
+            id: lip.id,
+            lineItemId: lip.lineItemId,
+            pctOwes: lip.pctOwes,
+          })),
+      }));
+    });
+  }
+
   /**
    * Deletes a participant and recalculates participant payments for that bill
    */
@@ -73,6 +99,7 @@ export class ParticipantService {
         await this.lineItemParticipantDao.searchByLineItemIdUsingBillAndParticipant(
           billId,
           participantId,
+          client,
         );
 
       const result = calculateRemainingPctOwes(
@@ -81,7 +108,7 @@ export class ParticipantService {
       );
 
       for (const { owes, ids } of result) {
-        await this.lineItemParticipantDao.addOwesAcrossIds(owes, ids, client);
+        await this.lineItemParticipantDao.addOwesByIds(owes, ids, client);
       }
 
       // Now that we've balanced what the remaining participants owe we can
@@ -95,7 +122,7 @@ export class ParticipantService {
   }
 
   public async createLineItemParticipant(
-    lineItemParticipant: LineItemParticipantCreate,
+    lineItemParticipant: LineItemParticipantCreateRequest,
   ): Promise<IdRecord> {
     return await this.lineItemParticipantDao.tx(async (client) => {
       const lineItemParticipants = await this.lineItemParticipantDao.search(
@@ -104,44 +131,21 @@ export class ParticipantService {
         },
         client,
       );
-      const total = lineItemParticipants.reduce(
-        (total, item) => item.pctOwes + total,
-        lineItemParticipant.pctOwes,
-      );
+      // Evenly split the percent owes across all line item participants
+      const newPctOwes = 100 / (lineItemParticipants.length + 1);
 
-      if (total > 100) {
-        throw new Error('Total percentage owed cannot be greater than 100');
+      if (lineItemParticipants.length > 0) {
+        await this.lineItemParticipantDao.updateOwesByIds(
+          newPctOwes,
+          lineItemParticipants.map((lip) => lip.id),
+          client,
+        );
       }
 
       return await this.lineItemParticipantDao.create(
-        lineItemParticipant,
+        { ...lineItemParticipant, pctOwes: newPctOwes },
         client,
       );
-    });
-  }
-
-  public async updateLineItemParticipant(
-    id: number,
-    update: LineItemParticipantUpdate,
-  ): Promise<IdRecord> {
-    return await this.lineItemParticipantDao.tx(async (client) => {
-      const lineItemParticipants =
-        await this.lineItemParticipantDao.searchByLineItemIdAssociatedWithPk(
-          id,
-          client,
-        );
-
-      // Add up the other line item participants with the new pct owes amount
-      const total = lineItemParticipants.reduce(
-        (total, item) => (item.id !== id ? item : update).pctOwes + total,
-        0,
-      );
-
-      if (total > 100) {
-        throw new Error('Total percentage owed cannot be greater than 100');
-      }
-
-      return await this.lineItemParticipantDao.update(id, update, client);
     });
   }
 
@@ -159,7 +163,7 @@ export class ParticipantService {
       );
 
       for (const { owes, ids } of result) {
-        await this.lineItemParticipantDao.addOwesAcrossIds(owes, ids, client);
+        await this.lineItemParticipantDao.addOwesByIds(owes, ids, client);
       }
 
       return await this.lineItemParticipantDao.delete(id, client);

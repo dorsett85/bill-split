@@ -5,10 +5,12 @@ import type { LineItems, Participant } from '../pages/bills/[id]/dto.ts';
 import {
   createLineItemParticipant,
   deleteLineItemParticipant,
+  fetchBillParticipants,
 } from '../utils/api.ts';
 import { USCurrency } from '../utils/UsCurrency.ts';
 
 interface BillParticipantSectionsProps {
+  billId: number;
   lineItems: LineItems;
   participants: Participant[];
   /**
@@ -23,6 +25,7 @@ interface BillParticipantSectionsProps {
 }
 
 export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
+  billId,
   lineItems,
   participants,
   onChange,
@@ -67,38 +70,17 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
     checked: boolean,
     lineItemId: number,
     participantId: number,
-    pctOwes: number,
   ) => {
     try {
-      let newParticipants: Participant[];
       if (checked) {
-        // Count how many
-        const { data } = await createLineItemParticipant(
-          lineItemId,
-          participantId,
-          pctOwes,
-        );
-        newParticipants = participants.map((participant) => ({
-          ...participant,
-          lineItems: participant.lineItems.concat({
-            id: data.id,
-            lineItemId,
-            pctOwes,
-          }),
-        }));
+        await createLineItemParticipant(lineItemId, participantId);
       } else {
         const id = participantLineItemLookup[participantId][lineItemId].id;
-        const { data } = await deleteLineItemParticipant(id);
-
-        newParticipants = participants.map((participant) => ({
-          ...participant,
-          lineItems: participant.lineItems.filter(
-            (lineItem) => lineItem.id !== data.id,
-          ),
-        }));
+        await deleteLineItemParticipant(id);
       }
 
-      onChange(newParticipants);
+      const { data } = await fetchBillParticipants(billId);
+      onChange(data);
     } catch (e) {
       console.log(e);
     }
@@ -133,12 +115,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                     !!participantLineItemLookup[participant.id][lineItem.id]
                   }
                   onChange={(checked) =>
-                    handleOnItemClick(
-                      checked,
-                      lineItem.id,
-                      participant.id,
-                      lineItem.price,
-                    )
+                    handleOnItemClick(checked, lineItem.id, participant.id)
                   }
                 >
                   {lineItem.name}: {USCurrency.format(lineItem.price)}

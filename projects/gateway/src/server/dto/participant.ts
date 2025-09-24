@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { type IdRecord, id } from './id.ts';
+import type { LineItemParticipantRead } from './lineItemParticipant.ts';
 
 export const ParticipantCreate = z.object({
   name: z.string(),
@@ -17,6 +18,9 @@ export type ParticipantRead = {
   [K in keyof ParticipantCreate]: Exclude<ParticipantCreate[K], null>;
 } & IdRecord;
 export type ParticipantReadStorage = z.infer<typeof ParticipantReadStorage>;
+export type ParticipantResponse = (ParticipantRead & {
+  lineItems: Omit<LineItemParticipantRead, 'participantId'>[];
+})[];
 
 export const toParticipantStorage = (participant: ParticipantCreate) => ({
   name: participant.name,

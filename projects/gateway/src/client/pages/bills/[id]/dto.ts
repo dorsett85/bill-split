@@ -38,6 +38,10 @@ export const BillResponse = z.object({
   data: BillData,
 });
 
+export const ParticipantResponse = z.object({
+  data: z.array(Participant),
+});
+
 export const IdResponse = z.object({
   data: z.object({
     id: z.number(),
@@ -48,5 +52,6 @@ export type BillData = z.infer<typeof BillData>;
 export type Participant = z.infer<typeof Participant>;
 export type LineItems = z.infer<typeof LineItem>[];
 export type BillResponse = z.infer<typeof BillResponse>;
+export type ParticipantResponse = z.infer<typeof ParticipantResponse>;
 export type IdResponse = z.infer<typeof IdResponse>;
 export type ImageStatus = z.infer<typeof ImageStatus>;

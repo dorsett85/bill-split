@@ -1,4 +1,8 @@
-import { BillResponse, IdResponse } from '../pages/bills/[id]/dto.ts';
+import {
+  BillResponse,
+  IdResponse,
+  ParticipantResponse,
+} from '../pages/bills/[id]/dto.ts';
 
 export const fetchBill = async (billId: number): Promise<BillResponse> => {
   const res = await fetch(`/api/bills/${billId}`);
@@ -33,7 +37,14 @@ export const createBillParticipant = async (
   return IdResponse.parse(await res.json());
 };
 
-export const deleteParticipant = async (
+export const fetchBillParticipants = async (
+  billId: number,
+): Promise<ParticipantResponse> => {
+  const res = await fetch(`/api/bills/${billId}/participants`);
+  return ParticipantResponse.parse(await res.json());
+};
+
+export const deleteBillParticipant = async (
   billId: number,
   participantId: number,
 ): Promise<IdResponse> => {
@@ -49,11 +60,10 @@ export const deleteParticipant = async (
 export const createLineItemParticipant = async (
   lineItemId: number,
   participantId: number,
-  pctOwes: number,
 ): Promise<IdResponse> => {
   const res = await fetch(`/api/line-item-participants`, {
     method: 'POST',
-    body: JSON.stringify({ lineItemId, participantId, pctOwes }),
+    body: JSON.stringify({ lineItemId, participantId }),
   });
   return IdResponse.parse(await res.json());
 };

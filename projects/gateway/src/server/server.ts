@@ -6,10 +6,10 @@ import {
   deleteLineItemParticipant,
   getBill,
   getBillPage,
+  getBillParticipants,
   getHomePage,
   patchBill,
   patchLineItem,
-  patchLineItemParticipant,
   postBill,
   postBillParticipant,
   postLineItem,
@@ -84,6 +84,7 @@ const startServer = async () => {
   app.post('/api/bills', postBill);
   app.patch('/api/bills/:id', patchBill);
   app.get('/api/bills/:id', getBill);
+  app.get('/api/bills/:billId/participants', getBillParticipants);
   app.post('/api/bills/:billId/participants', postBillParticipant);
   app.delete('/api/bills/:billId/participants/:id', deleteBillParticipant);
 
@@ -91,7 +92,6 @@ const startServer = async () => {
   app.post('/api/line-items', postLineItem);
 
   app.post('/api/line-item-participants', postLineItemParticipant);
-  app.patch('/api/line-item-participants/:id', patchLineItemParticipant);
   app.delete('/api/line-item-participants/:id', deleteLineItemParticipant);
 
   app.listen(port, () => {

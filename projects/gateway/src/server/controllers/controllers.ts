@@ -8,10 +8,7 @@ import { getDb } from '../db/getDb.ts';
 import { BillUpdate } from '../dto/bill.ts';
 import { id } from '../dto/id.ts';
 import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
-import {
-  LineItemParticipantCreate,
-  LineItemParticipantUpdate,
-} from '../dto/lineItemParticipant.ts';
+import { LineItemParticipantCreateRequest } from '../dto/lineItemParticipant.ts';
 import { ParticipantCreate } from '../dto/participant.ts';
 import { BillService } from '../services/BillService.ts';
 import type { HtmlService } from '../services/HtmlService.ts';
@@ -92,6 +89,14 @@ export const postBill: MiddlewareFunction = async (req, res) => {
   return writeToJson({ data: idRecord }, res);
 };
 
+export const getBillParticipants: MiddlewareFunction = async (req, res) => {
+  const participantService = getParticipantService();
+  const participants = await participantService.readBillParticipants(
+    id.parse(+req.params.billId),
+  );
+  return writeToJson({ data: participants }, res);
+};
+
 export const postBillParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
   const participantService = getParticipantService();
@@ -135,20 +140,7 @@ export const postLineItemParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
   const participantService = getParticipantService();
   const idRecord = await participantService.createLineItemParticipant(
-    LineItemParticipantCreate.parse(body),
-  );
-  return writeToJson({ data: idRecord }, res);
-};
-
-export const patchLineItemParticipant: MiddlewareFunction = async (
-  req,
-  res,
-) => {
-  const body = await parseJsonBody(req);
-  const participantService = getParticipantService();
-  const idRecord = await participantService.updateLineItemParticipant(
-    id.parse(+req.params.id),
-    LineItemParticipantUpdate.parse(body),
+    LineItemParticipantCreateRequest.parse(body),
   );
   return writeToJson({ data: idRecord }, res);
 };
