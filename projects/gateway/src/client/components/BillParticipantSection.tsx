@@ -1,4 +1,12 @@
-import { Accordion, Chip, Group, Text, Title } from '@mantine/core';
+import {
+  Accordion,
+  Checkbox,
+  Group,
+  ScrollArea,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
 import type React from 'react';
 import { useMemo } from 'react';
 import type { LineItems, Participant } from '../pages/bills/[id]/dto.ts';
@@ -8,6 +16,7 @@ import {
   fetchBillParticipants,
 } from '../utils/api.ts';
 import { USCurrency } from '../utils/UsCurrency.ts';
+import styles from './BillParticipantSection.module.css';
 
 interface BillParticipantSectionsProps {
   billId: number;
@@ -52,16 +61,18 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
       style: 'percent',
     }).format((withTip - withoutTip) / withoutTip || 0);
 
+    // TODO add tooltip for explaining the amount (pass in tax/tip share)
     return (
       <>
+        Owes{' '}
         <Text span fw={700}>
-          With
+          {USCurrency.format(withoutTip)}
         </Text>{' '}
-        {tipAmount} tip: {USCurrency.format(withTip)}.{' '}
-        <Text span fw={700}>
-          Without
+        (
+        <Text span fs="italic">
+          {USCurrency.format(withTip)}
         </Text>{' '}
-        tip: {USCurrency.format(withoutTip)}
+        with {tipAmount} tip)
       </>
     );
   };
@@ -98,19 +109,18 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
             <Title tt="capitalize" order={2} mb="xs">
               {participant.name}
             </Title>
-            <Text>Owes: {renderOwes(participant.lineItems)}</Text>
+            <Text>{renderOwes(participant.lineItems)}</Text>
           </Accordion.Control>
           <Accordion.Panel>
             <Text size="lg" mb="sm">
               Assign Items
             </Text>
-            <Group gap={8}>
+            <ScrollArea h={250}>
               {lineItems.map((lineItem) => (
-                <Chip
+                <Checkbox.Card
                   key={lineItem.id}
-                  id={`participant-${participant.id}-item-${lineItem.id}`}
-                  size="lg"
-                  radius="md"
+                  p={8}
+                  className={styles.root}
                   checked={
                     !!participantLineItemLookup[participant.id][lineItem.id]
                   }
@@ -118,10 +128,16 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                     handleOnItemClick(checked, lineItem.id, participant.id)
                   }
                 >
-                  {lineItem.name}: {USCurrency.format(lineItem.price)}
-                </Chip>
+                  <Group align="start" wrap="nowrap">
+                    <Checkbox.Indicator />
+                    <Stack gap={0}>
+                      <Text fw={700}>{lineItem.name}</Text>
+                      <Text>{USCurrency.format(lineItem.price)}</Text>
+                    </Stack>
+                  </Group>
+                </Checkbox.Card>
               ))}
-            </Group>
+            </ScrollArea>
           </Accordion.Panel>
         </Accordion.Item>
       ))}

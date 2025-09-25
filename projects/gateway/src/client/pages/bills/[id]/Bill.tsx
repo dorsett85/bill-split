@@ -71,13 +71,13 @@ export const Bill: React.FC<BillProps> = (props) => {
   );
 
   const handleOnCalculateOwes = (
-    lineItemsParticipants: Participant['lineItems'],
+    participantLineItems: Participant['lineItems'],
   ) => {
     const lineItemMap = Object.fromEntries(
       bill.lineItems.map((li) => [li.id, li.price]),
     );
 
-    const individualSubTotal = lineItemsParticipants.reduce(
+    const individualSubTotal = participantLineItems.reduce(
       (total, lip) => lineItemMap[lip.lineItemId] * (lip.pctOwes / 100) + total,
       0,
     );

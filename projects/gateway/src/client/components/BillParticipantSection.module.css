@@ -1,0 +1,17 @@
+.root {
+  transition: border-color 150ms ease;
+
+  &[data-checked] {
+    border-color: var(--mantine-primary-color-filled);
+  }
+
+  &:hover {
+    @media (prefers-color-scheme: light) {
+      background-color: var(--mantine-color-gray-0);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      background-color: var(--mantine-color-dark-6);
+    }
+  }
+}
