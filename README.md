@@ -10,10 +10,16 @@ TODO
    1. Endpoint for manual item creation
    2. Admin endpoint
    3. Auth middleware
-2. Add UI pages
-   1. Individual bill page
-      1. Change bill name
-      2. Tip input
-      3. Display line items
-      4. Assign participants to items
-      5. Auto calculate what participants owe
+2. UI
+   1. Home page
+      1. Add how many party members should be added. Defaults to 2, can't be
+         less than 2.
+   2. Bill page
+      1. Change bill name (shows edit modal)
+      2. Change participant name (shows edit modal)
+      3. Add bill info item for unassigned amount. This will include a tooltip
+         show the actually items that aren't assigned. This should go above the
+         tip info item.
+      4. Add tooltip explaining what participants owe
+      5. Add image magnifying glass or let users view a larger bill image to
+         double-check the receipt.
