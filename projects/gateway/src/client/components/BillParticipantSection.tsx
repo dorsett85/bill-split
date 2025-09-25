@@ -28,8 +28,10 @@ interface BillParticipantSectionsProps {
    */
   onChange: (newParticipants: Participant[]) => void;
   onCalculateParticipantOwes: (lineItems: Participant['lineItems']) => {
-    withTip: number;
-    withoutTip: number;
+    taxShare: number;
+    tipShare: number;
+    totalShare: number;
+    totalShareWithTip: number;
   };
 }
 
@@ -55,28 +57,6 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
     return records;
   }, [participants]);
 
-  const renderOwes = (lineItems: Participant['lineItems']) => {
-    const { withTip, withoutTip } = onCalculateParticipantOwes(lineItems);
-    const tipAmount = new Intl.NumberFormat('en-US', {
-      style: 'percent',
-    }).format((withTip - withoutTip) / withoutTip || 0);
-
-    // TODO add tooltip for explaining the amount (pass in tax/tip share)
-    return (
-      <>
-        Owes{' '}
-        <Text span fw={700}>
-          {USCurrency.format(withoutTip)}
-        </Text>{' '}
-        (
-        <Text span fs="italic">
-          {USCurrency.format(withTip)}
-        </Text>{' '}
-        with {tipAmount} tip)
-      </>
-    );
-  };
-
   const handleOnItemClick = async (
     checked: boolean,
     lineItemId: number,
@@ -97,6 +77,29 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
     }
   };
 
+  const renderOwes = (participantLineItems: Participant['lineItems']) => {
+    const { totalShare, totalShareWithTip } =
+      onCalculateParticipantOwes(participantLineItems);
+    const tipAmount = new Intl.NumberFormat('en-US', {
+      style: 'percent',
+    }).format((totalShareWithTip - totalShare) / totalShare || 0);
+
+    // TODO add tooltip for explaining the amount (pass in tax/tip share)
+    return (
+      <>
+        Owes{' '}
+        <Text c="yellow" span fw={700}>
+          {USCurrency.format(totalShare)}
+        </Text>{' '}
+        (
+        <Text c="orange" span fs="italic">
+          {USCurrency.format(totalShareWithTip)}
+        </Text>{' '}
+        with {tipAmount} tip)
+      </>
+    );
+  };
+
   return (
     <Accordion
       id="participant-accordion"
@@ -113,7 +116,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
           </Accordion.Control>
           <Accordion.Panel>
             <Text size="lg" mb="sm">
-              Assign Items
+              Claim Items
             </Text>
             <ScrollArea h={250}>
               {lineItems.map((lineItem) => (
