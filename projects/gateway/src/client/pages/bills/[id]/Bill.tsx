@@ -3,50 +3,24 @@ import {
   Container,
   Divider,
   Group,
-  Popover,
   Skeleton,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
-import { IconInfoCircle } from '@tabler/icons-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { BillInfoItem } from '../../../components/BillInfoItem.tsx';
+import { BillInfoItemUnclaimed } from '../../../components/BillInfoItemUnclaimed.tsx';
 import { BillParticipantInput } from '../../../components/BillParticipantInput.tsx';
+import { BillParticipantOwes } from '../../../components/BillParticipantOwes.tsx';
 import { BillParticipantSection } from '../../../components/BillParticipantSection.tsx';
 import { BillStatusNotification } from '../../../components/BillStatusNotification.tsx';
 import { TipInput } from '../../../components/TipInput.tsx';
 import { fetchBill } from '../../../utils/api.ts';
 import { USCurrency } from '../../../utils/UsCurrency.ts';
 import type { BillData, Participant } from './dto.ts';
-
-const calculateTotals = (
-  bill: BillData,
-): {
-  gratuity: number;
-  tax: number;
-  tip: number;
-  subTotal: number;
-  total: number;
-} => {
-  const gratuity = bill.gratuity ?? 0;
-  const tax = bill.tax ?? 0;
-  const tip = bill.tip ?? 0;
-  const subTotal = bill.lineItems.reduce(
-    (total, item) => item.price + total,
-    0,
-  );
-  const total = gratuity + tax + subTotal;
-
-  return {
-    gratuity,
-    tax,
-    tip,
-    subTotal,
-    total,
-  };
-};
+import { calculateTotals } from './utils.ts';
 
 interface BillProps {
   bill: BillData;
@@ -97,56 +71,15 @@ export const Bill: React.FC<BillProps> = (props) => {
 
   const { gratuity, tax, tip, subTotal, total } = calculateTotals(bill);
 
-  const handleOnCalculateOwes = (
-    participantLineItems: Participant['lineItems'],
-  ) => {
-    const lineItemPriceMap = Object.fromEntries(
-      bill.lineItems.map((li) => [li.id, li.price]),
-    );
-
-    const individualSubTotal = participantLineItems.reduce(
-      (total, pli) =>
-        lineItemPriceMap[pli.lineItemId] * (pli.pctOwes / 100) + total,
-      0,
-    );
-
-    const taxShare = (individualSubTotal / subTotal) * tax;
-    const tipShare = (individualSubTotal / subTotal) * gratuity;
-    const totalShare = individualSubTotal + taxShare + tipShare;
-
-    return {
-      taxShare,
-      tipShare,
-      totalShare,
-      totalShareWithTip: totalShare * (tip / 100) + totalShare,
-    };
-  };
-
   const totalWithTip = total * (tip / 100) + total;
 
-  const renderBillItemValue = (value?: number) => {
+  const renderBillItemValue = (value: number) => {
     return bill.imageStatus === 'ready' ? (
-      USCurrency.format(value ?? 0)
+      USCurrency.format(value)
     ) : (
       <Skeleton height={24} animate width={64} />
     );
   };
-
-  /**
-   * Get a list of all the unclaimed line items
-   */
-  const getUnclaimedItems = () => {
-    const participantLineItemIds = new Set(
-      bill.participants
-        .flatMap((p) => p.lineItems)
-        .map((pli) => pli.lineItemId),
-    );
-
-    return bill.lineItems.filter(
-      (lineItem) => !participantLineItemIds.has(lineItem.id),
-    );
-  };
-  const unclaimedItems = getUnclaimedItems();
 
   return (
     <Container mt={32} mb={32}>
@@ -174,13 +107,15 @@ export const Bill: React.FC<BillProps> = (props) => {
         <BillInfoItem label="Subtotal">
           {renderBillItemValue(subTotal)}
         </BillInfoItem>
-        <BillInfoItem label="Tax">{renderBillItemValue(bill.tax)}</BillInfoItem>
-        <BillInfoItem label="Gratuity">
-          {renderBillItemValue(bill.gratuity)}
-        </BillInfoItem>
+        <BillInfoItem label="Tax">{renderBillItemValue(tax)}</BillInfoItem>
+        {!!gratuity && (
+          <BillInfoItem label="Gratuity">
+            {renderBillItemValue(gratuity)}
+          </BillInfoItem>
+        )}
         <Divider />
         <BillInfoItem labelProps={{ fw: 700, size: 'lg' }} label="Total">
-          <Text fw={700} size="lg">
+          <Text span fw={700} size="lg">
             {renderBillItemValue(total)}
           </Text>
         </BillInfoItem>
@@ -194,38 +129,15 @@ export const Bill: React.FC<BillProps> = (props) => {
               tip={bill.tip}
               onChange={(tip) => setBill({ ...bill, tip })}
             />
-            <Text fs="italic" fw={700} size="lg">
+            <Text span fs="italic" fw={700} size="lg">
               {renderBillItemValue(totalWithTip)}
             </Text>
           </Group>
         </BillInfoItem>
-        <BillInfoItem
-          labelProps={{
-            fw: 700,
-            size: 'lg',
-            c: unclaimedItems.length ? 'yellow' : 'green',
-          }}
-          label="Unclaimed Items"
-        >
-          <Popover id="unclaimed-items-popover">
-            <Popover.Target>
-              <Text
-                fw={700}
-                size="lg"
-                c={unclaimedItems.length ? 'yellow' : 'green'}
-              >
-                {unclaimedItems.length}
-                {<IconInfoCircle size={16} />}
-              </Text>
-            </Popover.Target>
-            <Popover.Dropdown>
-              {/* TODO Make the popover dropdown items look nice! */}
-              {unclaimedItems.map((item) => (
-                <Text key={item.id}>{item.name}</Text>
-              ))}
-            </Popover.Dropdown>
-          </Popover>
-        </BillInfoItem>
+        <BillInfoItemUnclaimed
+          lineItems={bill.lineItems}
+          participants={bill.participants}
+        />
       </Stack>
       <BillParticipantInput
         billId={bill.id}
@@ -237,7 +149,16 @@ export const Bill: React.FC<BillProps> = (props) => {
         participants={bill.participants}
         lineItems={bill.lineItems}
         onChange={handleOnChangeParticipant}
-        onCalculateParticipantOwes={handleOnCalculateOwes}
+        renderParticipantOwes={(participantLineItems) => (
+          <BillParticipantOwes
+            lineItems={bill.lineItems}
+            participantLineItems={participantLineItems}
+            tip={tip}
+            tax={tax}
+            subTotal={subTotal}
+            gratuity={gratuity}
+          />
+        )}
       />
     </Container>
   );

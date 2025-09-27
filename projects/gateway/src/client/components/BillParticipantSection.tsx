@@ -27,12 +27,12 @@ interface BillParticipantSectionsProps {
    * new reference to the participant array with all changes.
    */
   onChange: (newParticipants: Participant[]) => void;
-  onCalculateParticipantOwes: (lineItems: Participant['lineItems']) => {
-    taxShare: number;
-    tipShare: number;
-    totalShare: number;
-    totalShareWithTip: number;
-  };
+  /**
+   * Render the line calculating how much and individual participant owes
+   */
+  renderParticipantOwes: (
+    participantLineItems: Participant['lineItems'],
+  ) => React.ReactElement;
 }
 
 export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
@@ -40,7 +40,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
   lineItems,
   participants,
   onChange,
-  onCalculateParticipantOwes,
+  renderParticipantOwes,
 }) => {
   const participantLineItemLookup = useMemo(() => {
     const records: Record<
@@ -77,29 +77,6 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
     }
   };
 
-  const renderOwes = (participantLineItems: Participant['lineItems']) => {
-    const { totalShare, totalShareWithTip } =
-      onCalculateParticipantOwes(participantLineItems);
-    const tipAmount = new Intl.NumberFormat('en-US', {
-      style: 'percent',
-    }).format((totalShareWithTip - totalShare) / totalShare || 0);
-
-    // TODO add tooltip for explaining the amount (pass in tax/tip share)
-    return (
-      <>
-        Owes{' '}
-        <Text c="yellow" span fw={700}>
-          {USCurrency.format(totalShare)}
-        </Text>{' '}
-        (
-        <Text c="orange" span fs="italic">
-          {USCurrency.format(totalShareWithTip)}
-        </Text>{' '}
-        with {tipAmount} tip)
-      </>
-    );
-  };
-
   return (
     <Accordion
       id="participant-accordion"
@@ -112,7 +89,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
             <Title tt="capitalize" order={2} mb="xs">
               {participant.name}
             </Title>
-            <Text>{renderOwes(participant.lineItems)}</Text>
+            {renderParticipantOwes(participant.lineItems)}
           </Accordion.Control>
           <Accordion.Panel>
             <Text size="lg" mb="sm">

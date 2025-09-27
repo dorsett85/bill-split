@@ -17,9 +17,6 @@ TODO
    2. Bill page
       1. Change bill name (shows edit modal)
       2. Change participant name (shows edit modal)
-      3. Add bill info item for unassigned amount. This will include a tooltip
-         show the actually items that aren't assigned. This should go above the
-         tip info item.
-      4. Add tooltip explaining what participants owe
-      5. Add image magnifying glass or let users view a larger bill image to
+      3. Add tooltip explaining what participants owe
+      4. Add image magnifying glass or let users view a larger bill image to
          double-check the receipt.
