@@ -91,7 +91,7 @@ export const Bill: React.FC<BillProps> = (props) => {
       <Center mb="xl">
         <img
           width="auto"
-          height="300px"
+          height="400px"
           src={bill.imagePath}
           alt="bill image"
         />

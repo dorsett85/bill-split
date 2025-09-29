@@ -11,9 +11,6 @@ TODO
    2. Admin endpoint
    3. Auth middleware
 2. UI
-   1. Home page
-      1. Add how many party members should be added. Defaults to 2, can't be
-         less than 2.
-   2. Bill page
+   1. Bill page
       1. Add image magnifying glass or let users view a larger bill image to
          double-check the receipt.
