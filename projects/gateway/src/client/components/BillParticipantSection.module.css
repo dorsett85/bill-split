@@ -1,4 +1,4 @@
-.root {
+.claimCheckbox {
   transition: border-color 150ms ease;
 
   &[data-checked] {

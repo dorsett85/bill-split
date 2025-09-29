@@ -15,8 +15,5 @@ TODO
       1. Add how many party members should be added. Defaults to 2, can't be
          less than 2.
    2. Bill page
-      1. Change bill name (shows edit modal)
-      2. Change participant name (shows edit modal)
-      3. Add tooltip explaining what participants owe
-      4. Add image magnifying glass or let users view a larger bill image to
+      1. Add image magnifying glass or let users view a larger bill image to
          double-check the receipt.

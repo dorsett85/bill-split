@@ -1,14 +1,19 @@
 import {
-  Accordion,
+  ActionIcon,
+  Box,
   Checkbox,
+  Collapse,
+  Divider,
   Group,
   ScrollArea,
   Stack,
   Text,
   Title,
+  useComputedColorScheme,
 } from '@mantine/core';
+import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import type React from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { LineItems, Participant } from '../pages/bills/[id]/dto.ts';
 import {
   createLineItemParticipant,
@@ -16,6 +21,7 @@ import {
   fetchBillParticipants,
 } from '../utils/api.ts';
 import { USCurrency } from '../utils/UsCurrency.ts';
+import { BillParticipantEditName } from './BillParticipantEditName.tsx';
 import styles from './BillParticipantSection.module.css';
 
 interface BillParticipantSectionsProps {
@@ -42,6 +48,9 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
   onChange,
   renderParticipantOwes,
 }) => {
+  const colorScheme = useComputedColorScheme();
+  const [openSection, setOpenSection] = useState<Set<number>>(new Set());
+
   const participantLineItemLookup = useMemo(() => {
     const records: Record<
       string,
@@ -56,6 +65,26 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
 
     return records;
   }, [participants]);
+
+  const handleOnToggleSection = (id: number) => {
+    if (openSection.has(id)) {
+      openSection.delete(id);
+    } else {
+      openSection.add(id);
+    }
+    setOpenSection(new Set(openSection));
+  };
+
+  const handleOnNameChange = (participantId: number, name: string) => {
+    const updatedParticipants = participants.map((participant) => {
+      return {
+        ...participant,
+        // Update with the new name
+        name: participantId === participant.id ? name : participant.name,
+      };
+    });
+    onChange(updatedParticipants);
+  };
 
   const handleOnItemClick = async (
     checked: boolean,
@@ -78,20 +107,42 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
   };
 
   return (
-    <Accordion
-      id="participant-accordion"
-      multiple
-      defaultValue={participants.map((participant) => participant.name)}
-    >
+    <Stack mb="xl">
       {participants.map((participant) => (
-        <Accordion.Item key={participant.id} value={participant.name}>
-          <Accordion.Control>
-            <Title tt="capitalize" order={2} mb="xs">
-              {participant.name}
-            </Title>
+        <Stack key={participant.id}>
+          <Box>
+            <Group justify="space-between">
+              <Title tt="capitalize" order={2} mb="xs">
+                {participant.name}
+                <sup>
+                  <BillParticipantEditName
+                    participantId={participant.id}
+                    name={participant.name}
+                    onNameChange={(name) =>
+                      handleOnNameChange(participant.id, name)
+                    }
+                  />
+                </sup>
+              </Title>
+              <ActionIcon
+                aria-label="toggle section"
+                size="xl"
+                variant="transparent"
+                title="Toggle claims items"
+                color={colorScheme === 'dark' ? 'white' : 'dark'}
+                onClick={() => handleOnToggleSection(participant.id)}
+              >
+                {openSection.has(participant.id) ? (
+                  <IconChevronUp />
+                ) : (
+                  <IconChevronDown />
+                )}
+              </ActionIcon>
+            </Group>
             {renderParticipantOwes(participant.lineItems)}
-          </Accordion.Control>
-          <Accordion.Panel>
+          </Box>
+          <Divider />
+          <Collapse in={openSection.has(participant.id)} mb="md">
             <Text size="lg" mb="sm">
               Claim Items
             </Text>
@@ -100,7 +151,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                 <Checkbox.Card
                   key={lineItem.id}
                   p={8}
-                  className={styles.root}
+                  className={styles.claimCheckbox}
                   checked={
                     !!participantLineItemLookup[participant.id][lineItem.id]
                   }
@@ -118,9 +169,10 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                 </Checkbox.Card>
               ))}
             </ScrollArea>
-          </Accordion.Panel>
-        </Accordion.Item>
+            <Divider />
+          </Collapse>
+        </Stack>
       ))}
-    </Accordion>
+    </Stack>
   );
 };

@@ -38,6 +38,7 @@ export const BillInfoItemUnclaimed: React.FC<BillInfoItemUnclaimedProps> = ({
             fw={700}
             size="lg"
             c={unclaimedItems.length ? 'yellow' : 'green'}
+            title="See unclaimed items"
           >
             {unclaimedItems.length}
             <sup>
@@ -52,15 +53,15 @@ export const BillInfoItemUnclaimed: React.FC<BillInfoItemUnclaimedProps> = ({
             width: undefined,
           }}
         >
-          <List size="sm" type="ordered">
-            {unclaimedItems.length ? (
-              unclaimedItems.map((item) => (
+          {unclaimedItems.length ? (
+            <List size="sm" type="ordered">
+              {unclaimedItems.map((item) => (
                 <ListItem key={item.id}>{item.name}</ListItem>
-              ))
-            ) : (
-              <ListItem>All items claimed!</ListItem>
-            )}
-          </List>
+              ))}
+            </List>
+          ) : (
+            <Text>All items claimed!</Text>
+          )}
         </Popover.Dropdown>
       </Popover>
     </BillInfoItem>
