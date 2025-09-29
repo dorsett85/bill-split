@@ -35,11 +35,6 @@ export const BillParticipantOwes: React.FC<BillParticipantOwesProps> = ({
   const totalShare = individualSubTotal + taxShare + tipShare;
   const totalShareWithTip = totalShare * (tip / 100) + totalShare;
 
-  const tipAmount = new Intl.NumberFormat('en-US', {
-    style: 'percent',
-  }).format(tip);
-
-  // TODO add tooltip for explaining the amount (pass in tax/tip share)
   return (
     <Text>
       Owes{' '}
@@ -50,7 +45,7 @@ export const BillParticipantOwes: React.FC<BillParticipantOwesProps> = ({
       <Text c="orange" span fs="italic">
         {USCurrency.format(totalShareWithTip)}
       </Text>{' '}
-      with {tipAmount} tip)
+      with {tip}% tip)
     </Text>
   );
 };
