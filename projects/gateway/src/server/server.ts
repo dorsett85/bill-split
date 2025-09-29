@@ -10,6 +10,7 @@ import {
   getHomePage,
   patchBill,
   patchLineItem,
+  patchParticipant,
   postBill,
   postBillParticipant,
   postLineItem,
@@ -93,6 +94,8 @@ const startServer = async () => {
 
   app.post('/api/line-item-participants', postLineItemParticipant);
   app.delete('/api/line-item-participants/:id', deleteLineItemParticipant);
+
+  app.patch('/api/participants/:id', patchParticipant);
 
   app.listen(port, () => {
     handleEnvListen();

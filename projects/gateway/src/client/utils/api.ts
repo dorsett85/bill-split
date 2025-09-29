@@ -76,3 +76,14 @@ export const deleteLineItemParticipant = async (
   });
   return IdResponse.parse(await res.json());
 };
+
+export const updateParticipant = async (
+  participantId: number,
+  name: string,
+): Promise<IdResponse> => {
+  const res = await fetch(`/api/participants/${participantId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  });
+  return IdResponse.parse(await res.json());
+};

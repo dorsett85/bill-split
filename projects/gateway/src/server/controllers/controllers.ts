@@ -9,7 +9,7 @@ import { BillUpdate } from '../dto/bill.ts';
 import { id } from '../dto/id.ts';
 import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import { LineItemParticipantCreateRequest } from '../dto/lineItemParticipant.ts';
-import { ParticipantCreate } from '../dto/participant.ts';
+import { ParticipantCreate, ParticipantUpdate } from '../dto/participant.ts';
 import { BillService } from '../services/BillService.ts';
 import type { HtmlService } from '../services/HtmlService.ts';
 import { KafkaService } from '../services/KafkaService.ts';
@@ -65,6 +65,12 @@ export const getBillPage =
     return writeToHtml(html, res);
   };
 
+export const postBill: MiddlewareFunction = async (req, res) => {
+  const billService = getBillService();
+  const idRecord = await billService.create(req);
+  return writeToJson({ data: idRecord }, res);
+};
+
 export const getBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
   const bill = await billService.read(id.parse(+req.params.id));
@@ -83,20 +89,6 @@ export const patchBill: MiddlewareFunction = async (req, res) => {
   return writeToJson({ data: idRecord }, res);
 };
 
-export const postBill: MiddlewareFunction = async (req, res) => {
-  const billService = getBillService();
-  const idRecord = await billService.create(req);
-  return writeToJson({ data: idRecord }, res);
-};
-
-export const getBillParticipants: MiddlewareFunction = async (req, res) => {
-  const participantService = getParticipantService();
-  const participants = await participantService.readBillParticipants(
-    id.parse(+req.params.billId),
-  );
-  return writeToJson({ data: participants }, res);
-};
-
 export const postBillParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
   const participantService = getParticipantService();
@@ -105,6 +97,14 @@ export const postBillParticipant: MiddlewareFunction = async (req, res) => {
     ParticipantCreate.parse(body),
   );
   return writeToJson({ data: participant }, res);
+};
+
+export const getBillParticipants: MiddlewareFunction = async (req, res) => {
+  const participantService = getParticipantService();
+  const participants = await participantService.readBillParticipants(
+    id.parse(+req.params.billId),
+  );
+  return writeToJson({ data: participants }, res);
 };
 
 export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
@@ -153,5 +153,16 @@ export const deleteLineItemParticipant: MiddlewareFunction = async (
   const idRecord = await participantService.deleteLineItemParticipant(
     id.parse(+req.params.id),
   );
+  return writeToJson({ data: idRecord }, res);
+};
+
+export const patchParticipant: MiddlewareFunction = async (req, res) => {
+  const body = await parseJsonBody(req);
+  const participantService = getParticipantService();
+  const idRecord = await participantService.updateBillParticipant(
+    id.parse(+req.params.id),
+    ParticipantUpdate.parse(body),
+  );
+
   return writeToJson({ data: idRecord }, res);
 };

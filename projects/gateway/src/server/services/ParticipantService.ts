@@ -6,6 +6,7 @@ import type { LineItemParticipantCreateRequest } from '../dto/lineItemParticipan
 import type {
   ParticipantCreate,
   ParticipantResponse,
+  ParticipantUpdate,
 } from '../dto/participant.ts';
 import { calculateRemainingPctOwes } from '../utils/calculateRemainingPctOwes.ts';
 
@@ -85,6 +86,13 @@ export class ParticipantService {
           })),
       }));
     });
+  }
+
+  public async updateBillParticipant(
+    participantId: number,
+    update: ParticipantUpdate,
+  ): Promise<IdRecord> {
+    return await this.participantDao.update(participantId, update);
   }
 
   /**

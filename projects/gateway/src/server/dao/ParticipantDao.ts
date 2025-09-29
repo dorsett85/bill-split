@@ -4,6 +4,7 @@ import {
   type ParticipantCreate,
   type ParticipantRead,
   ParticipantReadStorage,
+  type ParticipantUpdate,
   toParticipantRead,
   toParticipantStorage,
 } from '../dto/participant.ts';
@@ -31,9 +32,12 @@ export class ParticipantDao extends BaseDao<
     throw new Error('Not implemented');
   }
 
-  public async update(): Promise<IdRecord> {
-    // TODO
-    throw new Error('Not implemented');
+  public async update(
+    id: number,
+    update: ParticipantUpdate,
+  ): Promise<IdRecord> {
+    const dbUpdates = toParticipantStorage(update);
+    return this.updateRecord(id, dbUpdates);
   }
 
   public async search(): Promise<ParticipantRead[]> {
