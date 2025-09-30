@@ -4,6 +4,7 @@ import { App } from './App.ts';
 import {
   deleteBillParticipant,
   deleteLineItemParticipant,
+  getAdminPage,
   getBill,
   getBillPage,
   getBillParticipants,
@@ -11,6 +12,7 @@ import {
   patchBill,
   patchLineItem,
   patchParticipant,
+  postAdminPage,
   postBill,
   postBillParticipant,
   postLineItem,
@@ -76,6 +78,10 @@ const startServer = async () => {
   }
 
   app.use(envMiddleware);
+
+  // Admin routes
+  app.get('/admin', getAdminPage({ htmlService }));
+  app.post('/admin', postAdminPage({ htmlService }));
 
   // Html routes
   app.get('/', getHomePage({ htmlService }));

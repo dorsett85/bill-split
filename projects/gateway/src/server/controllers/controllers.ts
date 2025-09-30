@@ -5,19 +5,27 @@ import { LineItemDao } from '../dao/LineItemDao.ts';
 import { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import { ParticipantDao } from '../dao/ParticipantDao.ts';
 import { getDb } from '../db/getDb.ts';
+import { AdminRequest } from '../dto/admin.ts';
 import { BillUpdate } from '../dto/bill.ts';
 import { id } from '../dto/id.ts';
 import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import { LineItemParticipantCreateRequest } from '../dto/lineItemParticipant.ts';
 import { ParticipantCreate, ParticipantUpdate } from '../dto/participant.ts';
+import { AuthService } from '../services/AuthService.ts';
 import { BillService } from '../services/BillService.ts';
 import type { HtmlService } from '../services/HtmlService.ts';
 import { KafkaService } from '../services/KafkaService.ts';
 import { ParticipantService } from '../services/ParticipantService.ts';
 import { S3FileStorageService } from '../services/S3FileStorageService.ts';
 import type { MiddlewareFunction } from '../types/serverRequest.ts';
+import { parseCookies } from '../utils/parseCookies.ts';
 import { parseJsonBody } from '../utils/parseJsonBody.ts';
+import { parseUrlEncodedForm } from '../utils/parseUrlEncodedForm.ts';
 import { writeToHtml, writeToJson } from '../utils/responseHelpers.ts';
+
+const getAuthService = () => {
+  return new AuthService();
+};
 
 const getBillService = () => {
   return new BillService({
@@ -46,6 +54,53 @@ const getParticipantService = () => {
     lineItemParticipantDao: new LineItemParticipantDao(getDb()),
   });
 };
+
+export const getAdminPage =
+  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
+  async (req, res) => {
+    const { authToken } = parseCookies(req);
+
+    const authService = getAuthService();
+
+    let authorized = false;
+    if (authToken) {
+      authorized = authService.verify(authToken);
+    }
+
+    const html = await htmlService.render(req.route, { authorized });
+    return writeToHtml(html, res);
+  };
+
+export const postAdminPage =
+  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
+  async (req, res) => {
+    const authService = getAuthService();
+    const { authenticationCode, pin } = AdminRequest.parse(
+      await parseUrlEncodedForm(req),
+    );
+
+    const { authToken } = parseCookies(req);
+
+    let authenticationError: string | undefined = undefined;
+    let pinGenerated = false;
+    if (!authToken && authenticationCode) {
+      const success = await authService.signCookie(authenticationCode, res);
+      if (!success) {
+        authenticationError = 'We could not verify your code';
+      }
+    } else if (pin && authToken && authService.verify(authToken)) {
+      pinGenerated = authService.generatePin(pin);
+    }
+
+    const html = await htmlService.render(req.route, {
+      authorized: !authenticationError,
+      authenticationCode,
+      authenticationError,
+      pin,
+      pinGenerated,
+    });
+    return writeToHtml(html, res);
+  };
 
 export const getHomePage =
   ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
