@@ -17,7 +17,7 @@ export const Admin: React.FC<AdminProps> = ({ admin }) => {
   const renderContent = () => {
     if (admin.authorized) {
       return (
-        <form action="/admin" method="POST">
+        <form method="POST">
           <Stack align="start">
             <TextInput
               id="generate-pin-input"

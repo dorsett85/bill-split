@@ -9,6 +9,7 @@ import {
   getBillPage,
   getBillParticipants,
   getHomePage,
+  getVerifyAccess,
   patchBill,
   patchLineItem,
   patchParticipant,
@@ -17,10 +18,12 @@ import {
   postBillParticipant,
   postLineItem,
   postLineItemParticipant,
+  postVerifyAccess,
 } from './controllers/controllers.ts';
 import { HtmlService } from './services/HtmlService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import type { MiddlewareFunction } from './types/serverRequest.ts';
+import { authMiddleware } from './utils/authMiddleware.ts';
 import { writeToHtml } from './utils/responseHelpers.ts';
 import { staticMiddleware } from './utils/staticMiddleware.ts';
 
@@ -79,9 +82,14 @@ const startServer = async () => {
 
   app.use(envMiddleware);
 
-  // Admin routes
+  // VerifyAccess routes
   app.get('/admin', getAdminPage({ htmlService }));
   app.post('/admin', postAdminPage({ htmlService }));
+  app.get('/verify-access', getVerifyAccess({ htmlService }));
+  app.post('/verify-access', postVerifyAccess({ htmlService }));
+
+  // Auth middleware goes before all other routes
+  app.use(authMiddleware);
 
   // Html routes
   app.get('/', getHomePage({ htmlService }));

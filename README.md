@@ -8,8 +8,7 @@ TODO
 
 1. Add api endpoints
    1. Endpoint for manual item creation
-   2. Admin endpoint
-   3. Auth middleware
+   2. Add persistent storage for access pins
 2. UI
    1. Bill page
       1. Add image magnifying glass or let users view a larger bill image to

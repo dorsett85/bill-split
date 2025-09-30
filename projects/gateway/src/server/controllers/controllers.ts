@@ -6,6 +6,7 @@ import { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import { ParticipantDao } from '../dao/ParticipantDao.ts';
 import { getDb } from '../db/getDb.ts';
 import { AdminRequest } from '../dto/admin.ts';
+import { VerifyAccessRequest } from '../dto/auth.ts';
 import { BillUpdate } from '../dto/bill.ts';
 import { id } from '../dto/id.ts';
 import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
@@ -58,13 +59,13 @@ const getParticipantService = () => {
 export const getAdminPage =
   ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
   async (req, res) => {
-    const { authToken } = parseCookies(req);
+    const { adminToken } = parseCookies(req);
 
     const authService = getAuthService();
 
     let authorized = false;
-    if (authToken) {
-      authorized = authService.verify(authToken);
+    if (adminToken) {
+      authorized = authService.verifyAdminToken(adminToken);
     }
 
     const html = await htmlService.render(req.route, { authorized });
@@ -79,16 +80,16 @@ export const postAdminPage =
       await parseUrlEncodedForm(req),
     );
 
-    const { authToken } = parseCookies(req);
+    const { adminToken } = parseCookies(req);
 
     let authenticationError: string | undefined = undefined;
     let pinGenerated = false;
-    if (!authToken && authenticationCode) {
+    if (!adminToken && authenticationCode) {
       const success = await authService.signCookie(authenticationCode, res);
       if (!success) {
         authenticationError = 'We could not verify your code';
       }
-    } else if (pin && authToken && authService.verify(authToken)) {
+    } else if (pin && adminToken && authService.verifyAdminToken(adminToken)) {
       pinGenerated = authService.generatePin(pin);
     }
 
@@ -100,6 +101,49 @@ export const postAdminPage =
       pinGenerated,
     });
     return writeToHtml(html, res);
+  };
+
+export const postVerifyAccess =
+  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
+  async (req, res) => {
+    const { redirect } = req.queryParams;
+    const { accessPin } = VerifyAccessRequest.parse(
+      await parseUrlEncodedForm(req),
+    );
+    const authService = getAuthService();
+
+    const success = authService.signAccessPin(accessPin, res);
+    if (success) {
+      res
+        .writeHead(302, {
+          Location: redirect ? decodeURIComponent(redirect) : '/',
+        })
+        .end();
+    } else {
+      const html = await htmlService.render(req.route, {
+        error: 'Could not verify access',
+      });
+      writeToHtml(html, res);
+    }
+  };
+
+export const getVerifyAccess =
+  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
+  async (req, res) => {
+    const { redirect } = req.queryParams;
+    const { accessPin } = parseCookies(req);
+    const authService = getAuthService();
+
+    if (accessPin && authService.verifyAccessPin(accessPin)) {
+      res
+        .writeHead(302, {
+          Location: redirect ? decodeURIComponent(redirect) : '/',
+        })
+        .end();
+    } else {
+      const html = await htmlService.render(req.route, {});
+      writeToHtml(html, res);
+    }
   };
 
 export const getHomePage =
