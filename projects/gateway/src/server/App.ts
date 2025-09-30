@@ -66,10 +66,12 @@ export class App {
           .filter((url) => url !== undefined),
       );
 
+      const pathname = req.url.split('?')[0];
+
       const serverRequest: ServerRequest = Object.assign(req, {
-        params: resolveRouteParams(req.url, route ?? ''),
+        params: resolveRouteParams(pathname, route ?? ''),
         queryParams: Object.fromEntries(new URLSearchParams(req.url)),
-        route: route ?? req.url.split('?')[0],
+        route: route ?? pathname,
         url: req.url,
       });
 
