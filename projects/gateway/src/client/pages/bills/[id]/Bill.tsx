@@ -149,9 +149,9 @@ export const Bill: React.FC<BillProps> = (props) => {
         participants={bill.participants}
         lineItems={bill.lineItems}
         onChange={handleOnChangeParticipant}
-        renderParticipantOwes={(participantLineItems) => (
+        renderParticipantOwes={(participantLineItems, lineItemPriceLookup) => (
           <BillParticipantOwes
-            lineItems={bill.lineItems}
+            lineItemPriceLookup={lineItemPriceLookup}
             participantLineItems={participantLineItems}
             tip={tip}
             tax={tax}

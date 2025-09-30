@@ -38,6 +38,7 @@ interface BillParticipantSectionsProps {
    */
   renderParticipantOwes: (
     participantLineItems: Participant['lineItems'],
+    lineItemPriceLookup: Record<string, number>,
   ) => React.ReactElement;
 }
 
@@ -50,6 +51,10 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
 }) => {
   const colorScheme = useComputedColorScheme();
   const [openSection, setOpenSection] = useState<Set<number>>(new Set());
+
+  const lineItemPriceLookup = Object.fromEntries(
+    lineItems.map((li) => [li.id, li.price]),
+  );
 
   const participantLineItemLookup = useMemo(() => {
     const records: Record<
@@ -139,7 +144,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                 )}
               </ActionIcon>
             </Group>
-            {renderParticipantOwes(participant.lineItems)}
+            {renderParticipantOwes(participant.lineItems, lineItemPriceLookup)}
           </Box>
           <Divider />
           <Collapse in={openSection.has(participant.id)} mb="md">

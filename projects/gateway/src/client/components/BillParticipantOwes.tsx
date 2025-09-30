@@ -1,6 +1,6 @@
 import { Text } from '@mantine/core';
 import type React from 'react';
-import type { LineItems, Participant } from '../pages/bills/[id]/dto.ts';
+import type { Participant } from '../pages/bills/[id]/dto.ts';
 import { USCurrency } from '../utils/UsCurrency.ts';
 
 interface BillParticipantOwesProps {
@@ -8,7 +8,10 @@ interface BillParticipantOwesProps {
   tax: number;
   tip: number;
   subTotal: number;
-  lineItems: LineItems;
+  /**
+   * Map with keys as line item ids and values as its price
+   */
+  lineItemPriceLookup: Record<string, number>;
   participantLineItems: Participant['lineItems'];
 }
 
@@ -18,15 +21,11 @@ export const BillParticipantOwes: React.FC<BillParticipantOwesProps> = ({
   tip,
   subTotal,
   participantLineItems,
-  lineItems,
+  lineItemPriceLookup,
 }) => {
-  const lineItemPriceMap = Object.fromEntries(
-    lineItems.map((li) => [li.id, li.price]),
-  );
-
   const individualSubTotal = participantLineItems.reduce(
     (total, pli) =>
-      lineItemPriceMap[pli.lineItemId] * (pli.pctOwes / 100) + total,
+      lineItemPriceLookup[pli.lineItemId] * (pli.pctOwes / 100) + total,
     0,
   );
 
