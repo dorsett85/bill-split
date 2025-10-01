@@ -7,7 +7,6 @@ export const Home = () => {
   const [filename, setFilename] = useState<string>();
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [error, setError] = useState<unknown>();
 
   const handleOnFileClick = async (capture: boolean) => {
     if (!fileInputRef.current) return;
@@ -42,14 +41,13 @@ export const Home = () => {
         method: 'POST',
         body: new FormData(formRef.current),
       });
-      setError(await res.text());
       const { data } = CreateBillResponse.parse(await res.json());
 
       // Redirect to the specific bills page
       // TODO Should we flash a success message before redirecting?
       window.location.assign(`bills/${data.id}`);
     } catch (e) {
-      // setError(e);
+      console.log(e);
       // TODO add error handler
     }
   };
@@ -97,11 +95,6 @@ export const Home = () => {
         <Text size="xl" display="block" component="strong" ta="center" mt="lg">
           {filename}
         </Text>
-      )}
-      {!!error && (
-        <pre style={{ color: 'red', textAlign: 'left' }}>
-          {JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}
-        </pre>
       )}
     </Container>
   );
