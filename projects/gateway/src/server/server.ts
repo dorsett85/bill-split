@@ -43,7 +43,7 @@ const startServer = async () => {
   let envMiddleware: MiddlewareFunction;
   let htmlService: HtmlService;
   let handleEnvListen = () => undefined;
-  let port: number;
+  let port: number | string;
 
   if (process.env.NODE_ENV === 'development') {
     // Init Rsbuild
@@ -76,7 +76,7 @@ const startServer = async () => {
       staticFileService,
     });
 
-    port = 3001;
+    port = process.env.GATEWAY_PORT ?? 3002;
     envMiddleware = staticMiddleware(staticPath);
   }
 
