@@ -82,7 +82,7 @@ export const Bill: React.FC<BillProps> = (props) => {
   };
 
   return (
-    <Container mt={32} mb={32}>
+    <Container mt={32} mb={256}>
       <Title size={48} order={1} ta="center" mb="xl">
         {props.bill.businessName
           ? `"${props.bill.businessName}" Bill`
