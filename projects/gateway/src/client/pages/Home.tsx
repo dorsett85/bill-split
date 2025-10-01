@@ -42,13 +42,14 @@ export const Home = () => {
         method: 'POST',
         body: new FormData(formRef.current),
       });
+      setError(await res.text());
       const { data } = CreateBillResponse.parse(await res.json());
 
       // Redirect to the specific bills page
       // TODO Should we flash a success message before redirecting?
       window.location.assign(`bills/${data.id}`);
     } catch (e) {
-      setError(e);
+      // setError(e);
       // TODO add error handler
     }
   };
