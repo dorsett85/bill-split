@@ -51,7 +51,7 @@ export const transformTextractToProcessedBill = (
           processedExpense.tax = parseAmount(strippedValue);
           break;
         case 'GRATUITY':
-          processedExpense.gratuity = Number(strippedValue);
+          processedExpense.gratuity = parseAmount(strippedValue);
       }
     });
 
