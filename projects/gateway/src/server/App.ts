@@ -70,7 +70,9 @@ export class App {
 
       const serverRequest: ServerRequest = Object.assign(req, {
         params: resolveRouteParams(pathname, route ?? ''),
-        queryParams: Object.fromEntries(new URLSearchParams(queryString)),
+        queryParams: Object.fromEntries<string | undefined>(
+          new URLSearchParams(queryString),
+        ),
         route: route ?? pathname,
         url: req.url,
       });

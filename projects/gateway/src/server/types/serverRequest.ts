@@ -8,7 +8,7 @@ export interface ServerRequest extends Omit<IncomingMessage, 'url'> {
   /**
    * Query params of the request
    */
-  queryParams: Record<string, string>;
+  queryParams: Record<string, string | undefined>;
   /**
    * A url pattern resolved from the request url that matches our available
    * routes (e.g., /book/:id)
