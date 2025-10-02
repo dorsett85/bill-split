@@ -14,12 +14,12 @@ import {
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import type React from 'react';
 import { useMemo, useState } from 'react';
-import type { LineItems, Participant } from '../pages/bills/[id]/dto.ts';
 import {
   createLineItemParticipant,
   deleteLineItemParticipant,
   fetchBillParticipants,
-} from '../utils/api.ts';
+} from '../api/api.ts';
+import type { LineItems, Participant } from '../pages/bills/[id]/dto.ts';
 import { USCurrency } from '../utils/UsCurrency.ts';
 import { BillParticipantEditName } from './BillParticipantEditName.tsx';
 import styles from './BillParticipantSection.module.css';

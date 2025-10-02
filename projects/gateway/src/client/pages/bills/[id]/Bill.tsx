@@ -10,6 +10,7 @@ import {
 } from '@mantine/core';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { fetchBill } from '../../../api/api.ts';
 import { BillInfoItem } from '../../../components/BillInfoItem.tsx';
 import { BillInfoItemUnclaimed } from '../../../components/BillInfoItemUnclaimed.tsx';
 import { BillParticipantInput } from '../../../components/BillParticipantInput.tsx';
@@ -17,7 +18,6 @@ import { BillParticipantOwes } from '../../../components/BillParticipantOwes.tsx
 import { BillParticipantSection } from '../../../components/BillParticipantSection.tsx';
 import { BillStatusNotification } from '../../../components/BillStatusNotification.tsx';
 import { TipInput } from '../../../components/TipInput.tsx';
-import { fetchBill } from '../../../utils/api.ts';
 import { USCurrency } from '../../../utils/UsCurrency.ts';
 import type { BillData, Participant } from './dto.ts';
 import { calculateTotals } from './utils.ts';

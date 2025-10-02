@@ -1,5 +1,7 @@
 import type { ServerResponse } from 'node:http';
+import { logger } from '@rsbuild/core';
 import http from 'http';
+import path from 'path';
 import type {
   MiddlewareFunction,
   ServerRequest,
@@ -57,6 +59,11 @@ export class App {
       if (!req.url) {
         res.statusCode = 400;
         return writeToHtml('You need to specify a url in your request', res);
+      }
+
+      // Log a request if it doesn't have a file extension
+      if (!path.extname(req.url)) {
+        logger.info(`${req.method} ${req.url}`);
       }
 
       const route = resolveRoute(

@@ -1,12 +1,12 @@
 import { Loader, TagsInput } from '@mantine/core';
 import type React from 'react';
 import { useState } from 'react';
-import type { Participant } from '../pages/bills/[id]/dto.ts';
 import {
   createBillParticipant,
   deleteBillParticipant,
   fetchBillParticipants,
-} from '../utils/api.ts';
+} from '../api/api.ts';
+import type { Participant } from '../pages/bills/[id]/dto.ts';
 
 export interface BillParticipantInputProps {
   billId: number;

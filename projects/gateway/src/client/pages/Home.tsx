@@ -1,12 +1,24 @@
-import { Button, Container, Group, Text, Title } from '@mantine/core';
+import {
+  Button,
+  Center,
+  Container,
+  Group,
+  Loader,
+  Text,
+  Title,
+} from '@mantine/core';
 import { IconCamera, IconFile } from '@tabler/icons-react';
 import { type ChangeEvent, useRef, useState } from 'react';
-import { CreateBillResponse } from './dto.ts';
+import { createBill } from '../api/api.ts';
+import { IdResponse } from '../api/dto.ts';
+import { VerifyAccessModal } from '../components/VerifyAccess.tsx';
 
 export const Home = () => {
   const [filename, setFilename] = useState<string>();
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [openVerifyModal, setOpenVerifyModal] = useState(false);
 
   const handleOnFileClick = async (capture: boolean) => {
     if (!fileInputRef.current) return;
@@ -26,6 +38,27 @@ export const Home = () => {
     fileInputRef.current.click();
   };
 
+  const requestCreateBill = async (form: HTMLFormElement) => {
+    setUploading(true);
+    try {
+      const res = await createBill(form);
+
+      if (res.status === 403) {
+        setOpenVerifyModal(true);
+        return setUploading(false);
+      }
+
+      const { data } = IdResponse.parse(await res.json());
+
+      // Redirect to the specific bills page
+      window.location.assign(`/bills/${data.id}`);
+    } catch (e) {
+      console.log(e);
+      setUploading(false);
+      // TODO add error handler
+    }
+  };
+
   const handleOnFileInputChange = async (
     event: ChangeEvent<HTMLInputElement>,
   ) => {
@@ -34,22 +67,7 @@ export const Home = () => {
     setFilename(event.target.files?.[0].name);
 
     // Validate here if needed
-
-    // Automatically submit the form when the user uploads a file
-    try {
-      const res = await fetch('/api/bills', {
-        method: 'POST',
-        body: new FormData(formRef.current),
-      });
-      const { data } = CreateBillResponse.parse(await res.json());
-
-      // Redirect to the specific bills page
-      // TODO Should we flash a success message before redirecting?
-      window.location.assign(`bills/${data.id}`);
-    } catch (e) {
-      console.log(e);
-      // TODO add error handler
-    }
+    void requestCreateBill(formRef.current);
   };
 
   return (
@@ -68,7 +86,7 @@ export const Home = () => {
           <Button
             size="lg"
             onClick={() => handleOnFileClick(false)}
-            disabled={!!filename}
+            disabled={uploading}
             leftSection={<IconFile />}
           >
             Upload File
@@ -76,7 +94,7 @@ export const Home = () => {
           <Button
             size="lg"
             onClick={() => handleOnFileClick(true)}
-            disabled={!!filename}
+            disabled={uploading}
             leftSection={<IconCamera />}
           >
             Scan Photo
@@ -96,6 +114,21 @@ export const Home = () => {
           {filename}
         </Text>
       )}
+      {uploading && (
+        <Center>
+          <Loader color="yellow" type="bars" size="xl" mt="lg" />
+        </Center>
+      )}
+      <VerifyAccessModal
+        open={openVerifyModal}
+        onClose={(accessVerified) => {
+          setUploading(false);
+          setOpenVerifyModal(false);
+          if (formRef.current && accessVerified) {
+            void requestCreateBill(formRef.current);
+          }
+        }}
+      />
     </Container>
   );
 };

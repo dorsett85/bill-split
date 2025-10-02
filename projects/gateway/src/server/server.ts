@@ -9,7 +9,6 @@ import {
   getBillPage,
   getBillParticipants,
   getHomePage,
-  getVerifyAccess,
   patchBill,
   patchLineItem,
   patchParticipant,
@@ -23,7 +22,10 @@ import {
 import { HtmlService } from './services/HtmlService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import type { MiddlewareFunction } from './types/serverRequest.ts';
-import { authMiddleware } from './utils/authMiddleware.ts';
+import {
+  authApiMiddleware,
+  authHtmlMiddleware,
+} from './utils/authMiddleware.ts';
 import { writeToHtml } from './utils/responseHelpers.ts';
 import { staticMiddleware } from './utils/staticMiddleware.ts';
 
@@ -82,26 +84,32 @@ const startServer = async () => {
 
   app.use(envMiddleware);
 
-  // VerifyAccess routes
+  // Admin routes
   app.get('/admin', getAdminPage({ htmlService }));
   app.post('/admin', postAdminPage({ htmlService }));
-  app.get('/verify-access', getVerifyAccess({ htmlService }));
-  app.post('/verify-access', postVerifyAccess({ htmlService }));
-
-  // Auth middleware goes before all other routes
-  app.use(authMiddleware);
 
   // Html routes
   app.get('/', getHomePage({ htmlService }));
-  app.get('/bills/:id', getBillPage({ htmlService }));
+  app.get('/bills/:id', authHtmlMiddleware(getBillPage({ htmlService })));
 
   // Api routes
-  app.post('/api/bills', postBill);
-  app.patch('/api/bills/:id', patchBill);
-  app.get('/api/bills/:id', getBill);
-  app.get('/api/bills/:billId/participants', getBillParticipants);
-  app.post('/api/bills/:billId/participants', postBillParticipant);
-  app.delete('/api/bills/:billId/participants/:id', deleteBillParticipant);
+  app.post('/api/verify-access', postVerifyAccess);
+
+  app.post('/api/bills', authApiMiddleware(postBill));
+  app.patch('/api/bills/:id', authApiMiddleware(patchBill));
+  app.get('/api/bills/:id', authApiMiddleware(getBill));
+  app.get(
+    '/api/bills/:billId/participants',
+    authApiMiddleware(getBillParticipants),
+  );
+  app.post(
+    '/api/bills/:billId/participants',
+    authApiMiddleware(postBillParticipant),
+  );
+  app.delete(
+    '/api/bills/:billId/participants/:id',
+    authApiMiddleware(deleteBillParticipant),
+  );
 
   app.patch('/api/line-items/:id', patchLineItem);
   app.post('/api/line-items', postLineItem);

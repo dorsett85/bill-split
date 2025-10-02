@@ -1,4 +1,5 @@
 import {
+  Anchor,
   Button,
   Container,
   Notification,
@@ -7,6 +8,7 @@ import {
   Title,
 } from '@mantine/core';
 import type React from 'react';
+import { useState } from 'react';
 import type { AdminData } from './dto.ts';
 
 export interface AdminProps {
@@ -14,6 +16,10 @@ export interface AdminProps {
 }
 
 export const Admin: React.FC<AdminProps> = ({ admin }) => {
+  const [showPinNotification, setShowPinNotification] = useState(
+    !!admin.pinGenerated,
+  );
+
   const renderContent = () => {
     if (admin.authorized) {
       return (
@@ -30,11 +36,10 @@ export const Admin: React.FC<AdminProps> = ({ admin }) => {
               required
             />
             <Button type="submit">Submit</Button>
-            {admin.pinGenerated && admin.pin && (
+            {showPinNotification && admin.pin && (
               <Notification
-                color="green"
-                withCloseButton={false}
                 title="Pin Successfully Generated"
+                onClose={() => setShowPinNotification(false)}
               >
                 The pin "{admin.pin}" will be valid for 10 minutes.
               </Notification>
@@ -65,6 +70,9 @@ export const Admin: React.FC<AdminProps> = ({ admin }) => {
       <Title order={1} mb="xl">
         Admin
       </Title>
+      <Anchor href="/" display="block" mb={32}>
+        Return to homepage
+      </Anchor>
       {renderContent()}
     </Container>
   );

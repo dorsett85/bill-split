@@ -1,7 +1,7 @@
 import { NumberInput } from '@mantine/core';
 import type React from 'react';
 import { useRef, useState } from 'react';
-import { updateBill } from '../utils/api.ts';
+import { updateBill } from '../api/api.ts';
 
 interface TipInputProps {
   billId: number;

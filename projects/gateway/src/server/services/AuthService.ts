@@ -7,7 +7,11 @@ export class AuthService {
    * TODO create persistent storage for these.
    */
   private static accessPins: Record<string, Date> = {};
-  public async signCookie(code: string, res: ServerResponse): Promise<boolean> {
+
+  public async signAdminToken(
+    code: string,
+    res: ServerResponse,
+  ): Promise<boolean> {
     if (code !== process.env.ADMIN_PASSWORD) {
       return false;
     }
@@ -21,9 +25,9 @@ export class AuthService {
     return true;
   }
 
-  public verifyAdminToken(token: string): boolean {
+  public verifyToken(token: string): boolean {
     try {
-      return !!jwt.sign(token, process.env.ADMIN_SECRET_KEY ?? '');
+      return !!jwt.verify(token, process.env.ADMIN_SECRET_KEY ?? '');
     } catch {
       return false;
     }
@@ -39,17 +43,17 @@ export class AuthService {
     return true;
   }
 
-  public verifyAccessPin(pin: string): boolean {
-    return new Date() < AuthService.accessPins[pin];
-  }
-
-  public signAccessPin(pin: string, res: ServerResponse): boolean {
-    const verified = this.verifyAccessPin(pin);
-    if (!verified) {
+  public signAccessToken(pin: string, res: ServerResponse): boolean {
+    // Check if the access pin has expired
+    if (new Date() > AuthService.accessPins[pin]) {
       return false;
     }
 
-    const cookieString = `accessPin=${pin}; HttpOnly; Secure; SameSite=Lax`;
+    const accessToken = jwt.sign({}, process.env.ADMIN_SECRET_KEY ?? '', {
+      expiresIn: '10m',
+    });
+
+    const cookieString = `accessToken=${accessToken}; HttpOnly; Secure; SameSite=Lax; Path=/`;
     res.setHeader('Set-Cookie', cookieString);
 
     return true;

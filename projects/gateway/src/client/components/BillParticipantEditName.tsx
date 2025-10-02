@@ -7,7 +7,7 @@ import {
 import { IconCheck, IconEdit } from '@tabler/icons-react';
 import type React from 'react';
 import { type FormEvent, useState } from 'react';
-import { updateParticipant } from '../utils/api.ts';
+import { updateParticipant } from '../api/api.ts';
 
 interface BillParticipantEditNameProps {
   name: string;

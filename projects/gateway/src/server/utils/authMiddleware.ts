@@ -1,23 +1,44 @@
 import { AuthService } from '../services/AuthService.ts';
-import type { MiddlewareFunction } from '../types/serverRequest.ts';
+import type {
+  MiddlewareFunction,
+  ServerRequest,
+} from '../types/serverRequest.ts';
 import { parseCookies } from './parseCookies.ts';
+import { jsonErrorResponse, writeRedirect } from './responseHelpers.ts';
+
+const hasAccess = (req: ServerRequest): boolean => {
+  const { accessToken, adminToken } = parseCookies(req);
+  const authService = new AuthService();
+  return (
+    (!!accessToken && authService.verifyToken(accessToken)) ||
+    (!!adminToken && authService.verifyToken(adminToken))
+  );
+};
 
 /**
- * Check access pin before proceeding. Redirect them to the verify access page.
+ * Check access for html requests. On failure Redirect to home page and flash
+ * message.
  */
-export const authMiddleware: MiddlewareFunction = async (req, res, next) => {
-  const { accessPin, adminToken } = parseCookies(req);
-  const authService = new AuthService();
-  if (
-    (adminToken && authService.verifyAdminToken(adminToken)) ||
-    (accessPin && authService.verifyAccessPin(accessPin))
-  ) {
-    next();
-  } else {
-    res
-      .writeHead(302, {
-        Location: `/verify-access?redirect=${encodeURIComponent(req.url)}`,
-      })
-      .end();
-  }
-};
+export const authHtmlMiddleware =
+  (middleWareFun: MiddlewareFunction): MiddlewareFunction =>
+  (req, res, next) => {
+    if (hasAccess(req)) {
+      return middleWareFun(req, res, next);
+    }
+    writeRedirect(
+      `/?alert=${encodeURIComponent('We were unable to access the page you requested')}`,
+      res,
+    );
+  };
+
+/**
+ * Check access for ajax requests. Return 403
+ */
+export const authApiMiddleware =
+  (middlewareFunction: MiddlewareFunction): MiddlewareFunction =>
+  (req, res, next) => {
+    if (hasAccess(req)) {
+      return middlewareFunction(req, res, next);
+    }
+    jsonErrorResponse('You are not authorized', res, 403);
+  };

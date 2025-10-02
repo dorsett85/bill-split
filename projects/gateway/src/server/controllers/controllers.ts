@@ -22,7 +22,11 @@ import type { MiddlewareFunction } from '../types/serverRequest.ts';
 import { parseCookies } from '../utils/parseCookies.ts';
 import { parseJsonBody } from '../utils/parseJsonBody.ts';
 import { parseUrlEncodedForm } from '../utils/parseUrlEncodedForm.ts';
-import { writeToHtml, writeToJson } from '../utils/responseHelpers.ts';
+import {
+  jsonErrorResponse,
+  jsonSuccessResponse,
+  writeToHtml,
+} from '../utils/responseHelpers.ts';
 
 const getAuthService = () => {
   return new AuthService();
@@ -65,7 +69,7 @@ export const getAdminPage =
 
     let authorized = false;
     if (adminToken) {
-      authorized = authService.verifyAdminToken(adminToken);
+      authorized = authService.verifyToken(adminToken);
     }
 
     const html = await htmlService.render(req.route, { authorized });
@@ -84,13 +88,19 @@ export const postAdminPage =
 
     let authenticationError: string | undefined = undefined;
     let pinGenerated = false;
-    if (!adminToken && authenticationCode) {
-      const success = await authService.signCookie(authenticationCode, res);
-      if (!success) {
-        authenticationError = 'We could not verify your code';
-      }
-    } else if (pin && adminToken && authService.verifyAdminToken(adminToken)) {
+    let success = false;
+
+    if (authenticationCode && !adminToken) {
+      // User makes a request to gain admin access
+      success = await authService.signAdminToken(authenticationCode, res);
+    } else if (pin && adminToken && authService.verifyToken(adminToken)) {
+      // Admin user requests to generate an access pin
       pinGenerated = authService.generatePin(pin);
+      success = true;
+    }
+
+    if (!success) {
+      authenticationError = 'We could not verify your code';
     }
 
     const html = await htmlService.render(req.route, {
@@ -103,48 +113,16 @@ export const postAdminPage =
     return writeToHtml(html, res);
   };
 
-export const postVerifyAccess =
-  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
-  async (req, res) => {
-    const { redirect } = req.queryParams;
-    const { accessPin } = VerifyAccessRequest.parse(
-      await parseUrlEncodedForm(req),
-    );
-    const authService = getAuthService();
+export const postVerifyAccess: MiddlewareFunction = async (req, res) => {
+  const { accessPin } = VerifyAccessRequest.parse(await parseJsonBody(req));
+  const authService = getAuthService();
 
-    const success = authService.signAccessPin(accessPin, res);
-    if (success) {
-      res
-        .writeHead(302, {
-          Location: redirect ? decodeURIComponent(redirect) : '/',
-        })
-        .end();
-    } else {
-      const html = await htmlService.render(req.route, {
-        error: 'Could not verify access',
-      });
-      writeToHtml(html, res);
-    }
-  };
-
-export const getVerifyAccess =
-  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
-  async (req, res) => {
-    const { redirect } = req.queryParams;
-    const { accessPin } = parseCookies(req);
-    const authService = getAuthService();
-
-    if (accessPin && authService.verifyAccessPin(accessPin)) {
-      res
-        .writeHead(302, {
-          Location: redirect ? decodeURIComponent(redirect) : '/',
-        })
-        .end();
-    } else {
-      const html = await htmlService.render(req.route, {});
-      writeToHtml(html, res);
-    }
-  };
+  const success = authService.signAccessToken(accessPin, res);
+  if (success) {
+    return jsonSuccessResponse({ success: true }, res);
+  }
+  jsonErrorResponse('Could not verify access', res, 400);
+};
 
 export const getHomePage =
   ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
@@ -167,13 +145,13 @@ export const getBillPage =
 export const postBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
   const idRecord = await billService.create(req);
-  return writeToJson({ data: idRecord }, res);
+  return jsonSuccessResponse(idRecord, res);
 };
 
 export const getBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
   const bill = await billService.read(id.parse(+req.params.id));
-  return writeToJson({ data: bill }, res);
+  return jsonSuccessResponse(bill, res);
 };
 
 export const patchBill: MiddlewareFunction = async (req, res) => {
@@ -185,7 +163,7 @@ export const patchBill: MiddlewareFunction = async (req, res) => {
     id.parse(+req.params.id),
     BillUpdate.parse(body),
   );
-  return writeToJson({ data: idRecord }, res);
+  return jsonSuccessResponse(idRecord, res);
 };
 
 export const postBillParticipant: MiddlewareFunction = async (req, res) => {
@@ -195,7 +173,7 @@ export const postBillParticipant: MiddlewareFunction = async (req, res) => {
     id.parse(+req.params.billId),
     ParticipantCreate.parse(body),
   );
-  return writeToJson({ data: participant }, res);
+  return jsonSuccessResponse(participant, res);
 };
 
 export const getBillParticipants: MiddlewareFunction = async (req, res) => {
@@ -203,7 +181,7 @@ export const getBillParticipants: MiddlewareFunction = async (req, res) => {
   const participants = await participantService.readBillParticipants(
     id.parse(+req.params.billId),
   );
-  return writeToJson({ data: participants }, res);
+  return jsonSuccessResponse(participants, res);
 };
 
 export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
@@ -213,7 +191,7 @@ export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
     id.parse(+req.params.id),
   );
 
-  return writeToJson({ data: idRecord }, res);
+  return jsonSuccessResponse(idRecord, res);
 };
 
 export const patchLineItem: MiddlewareFunction = async (req, res) => {
@@ -224,7 +202,7 @@ export const patchLineItem: MiddlewareFunction = async (req, res) => {
     id.parse(+req.params.id),
     LineItemUpdate.parse(body),
   );
-  return writeToJson({ data: idRecord }, res);
+  return jsonSuccessResponse(idRecord, res);
 };
 
 export const postLineItem: MiddlewareFunction = async (req, res) => {
@@ -232,7 +210,7 @@ export const postLineItem: MiddlewareFunction = async (req, res) => {
 
   const billService = getBillService();
   const idRecord = await billService.createLineItem(LineItemCreate.parse(body));
-  return writeToJson({ data: idRecord }, res);
+  return jsonSuccessResponse(idRecord, res);
 };
 
 export const postLineItemParticipant: MiddlewareFunction = async (req, res) => {
@@ -241,7 +219,7 @@ export const postLineItemParticipant: MiddlewareFunction = async (req, res) => {
   const idRecord = await participantService.createLineItemParticipant(
     LineItemParticipantCreateRequest.parse(body),
   );
-  return writeToJson({ data: idRecord }, res);
+  return jsonSuccessResponse(idRecord, res);
 };
 
 export const deleteLineItemParticipant: MiddlewareFunction = async (
@@ -252,7 +230,7 @@ export const deleteLineItemParticipant: MiddlewareFunction = async (
   const idRecord = await participantService.deleteLineItemParticipant(
     id.parse(+req.params.id),
   );
-  return writeToJson({ data: idRecord }, res);
+  return jsonSuccessResponse(idRecord, res);
 };
 
 export const patchParticipant: MiddlewareFunction = async (req, res) => {
@@ -263,5 +241,5 @@ export const patchParticipant: MiddlewareFunction = async (req, res) => {
     ParticipantUpdate.parse(body),
   );
 
-  return writeToJson({ data: idRecord }, res);
+  return jsonSuccessResponse(idRecord, res);
 };

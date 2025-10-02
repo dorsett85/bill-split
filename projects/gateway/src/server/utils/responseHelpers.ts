@@ -1,8 +1,10 @@
 import type { ServerResponse } from 'node:http';
 import path from 'path';
 
-export interface JsonDataResponse<
-  TData extends Record<never, never> = Record<never, never>,
+type UnknownRecord = Record<never, never>;
+
+export interface JsonSuccessResponse<
+  TData extends UnknownRecord = UnknownRecord,
 > {
   data: TData;
 }
@@ -13,7 +15,7 @@ interface JsonErrorResponse {
   };
 }
 
-type JsonResponse = JsonDataResponse | JsonErrorResponse;
+type JsonResponse = JsonSuccessResponse | JsonErrorResponse;
 
 /**
  * One year in milliseconds
@@ -50,13 +52,35 @@ export const writeToText = (
 /**
  * Takes an object and serializes it as a json response
  */
-export const writeToJson = <JResponse extends JsonResponse>(
+const writeToJson = <JResponse extends JsonResponse>(
   response: JResponse,
   res: ServerResponse,
 ): ServerResponse => {
   return res
     .setHeader('Content-type', 'application/json')
     .end(JSON.stringify(response));
+};
+
+/**
+ * Standardized json success response
+ */
+export const jsonSuccessResponse = <TData extends UnknownRecord>(
+  response: TData,
+  res: ServerResponse,
+) => {
+  return writeToJson({ data: response }, res);
+};
+
+/**
+ * Standardized json error response
+ */
+export const jsonErrorResponse = (
+  message: string,
+  res: ServerResponse,
+  statusCode = 404,
+) => {
+  res.statusCode = statusCode;
+  return writeToJson({ error: { message } }, res);
 };
 
 /**
@@ -69,4 +93,18 @@ export const writeToHtml = (
   return res
     .setHeader('Content-Type', 'text/html')
     .end('<!DOCTYPE html>\n' + html);
+};
+
+/**
+ * Write a redirect response
+ */
+export const writeRedirect = (
+  location: string,
+  res: ServerResponse,
+): ServerResponse => {
+  return res
+    .writeHead(302, {
+      Location: location,
+    })
+    .end();
 };

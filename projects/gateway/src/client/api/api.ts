@@ -1,8 +1,21 @@
-import {
-  BillResponse,
-  IdResponse,
-  ParticipantResponse,
-} from '../pages/bills/[id]/dto.ts';
+import { BillResponse, ParticipantResponse } from '../pages/bills/[id]/dto.ts';
+import { IdResponse } from './dto.ts';
+
+export const postVerifyAccess = async (
+  accessPin: string,
+): Promise<Response> => {
+  return await fetch(`/api/verify-access`, {
+    method: 'POST',
+    body: JSON.stringify({ accessPin }),
+  });
+};
+
+export const createBill = async (form: HTMLFormElement): Promise<Response> => {
+  return await fetch('/api/bills', {
+    method: 'POST',
+    body: new FormData(form),
+  });
+};
 
 export const fetchBill = async (billId: number): Promise<BillResponse> => {
   const res = await fetch(`/api/bills/${billId}`);
