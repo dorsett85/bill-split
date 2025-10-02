@@ -115,12 +115,19 @@ export class ParticipantService {
         lineItemParticipants,
       );
 
+      // Balance what the remaining participants owe
       for (const { owes, ids } of result) {
         await this.lineItemParticipantDao.addOwesByIds(owes, ids, client);
       }
 
-      // Now that we've balanced what the remaining participants owe we can
-      // finally delete the selected bill participant.
+      // Delete the line items associated with the participant
+      for (const lineItem of lineItemParticipants) {
+        if (lineItem.participantId === participantId) {
+          await this.lineItemParticipantDao.delete(lineItem.id);
+        }
+      }
+
+      // And finally delete the bill participant
       const [billParticipant] = await this.billParticipantDao.search(
         { billId, participantId },
         client,
