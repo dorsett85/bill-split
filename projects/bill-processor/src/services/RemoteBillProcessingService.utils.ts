@@ -61,6 +61,7 @@ export const transformTextractToProcessedBill = (
         const item: ProcessedExpenseItem = {
           name: '',
           price: 0,
+          unitPrice: 0,
           quantity: 1,
         };
 
@@ -78,6 +79,9 @@ export const transformTextractToProcessedBill = (
               break;
             case 'PRICE':
               item.price = parseAmount(strippedValue);
+              break;
+            case 'UNIT_PRICE':
+              item.unitPrice = parseAmount(strippedValue);
               break;
             case 'QUANTITY':
               item.quantity = Number(strippedValue);
@@ -155,7 +159,9 @@ export const createBillItems = async (
       itemsToInsert.push({
         bill_id: billId,
         name: item.name,
-        price: item.price,
+        // Use the unit price for anything that has quantities greater than one
+        price:
+          item.quantity > 1 && item.unitPrice ? item.unitPrice : item.price,
       });
     }
   });

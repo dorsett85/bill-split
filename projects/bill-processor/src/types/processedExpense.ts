@@ -1,6 +1,7 @@
 export interface ProcessedExpenseItem {
   name: string;
   price: number;
+  unitPrice: number;
   quantity: number;
 }
 

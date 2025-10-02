@@ -6,11 +6,13 @@ Easily upload a bill/receipt and split it between friends and family
 
 TODO
 
-1. Add api endpoints
+1. Api
    1. Endpoint for manual item creation
    2. Add persistent storage for access pins
    3. Get presigned url for uploading image directly to s3 from browser
 2. UI
-   1. Bill page
+   1. Home page
+      1. move verify access page to modal on home page when a bill is submitted
+   2. Bill page
       1. Add image magnifying glass or let users view a larger bill image to
          double-check the receipt.
