@@ -18,4 +18,4 @@ TODO
       1. Add image magnifying glass or let users view a larger bill image to
          double-check the receipt.
 3. CI/CD
-   1. Automated deployed
+   1. Automated deployment

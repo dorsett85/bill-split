@@ -44,8 +44,9 @@ export class AuthService {
   }
 
   public signAccessToken(pin: string, res: ServerResponse): boolean {
-    // Check if the access pin has expired
-    if (new Date() > AuthService.accessPins[pin]) {
+    // Check if there's an access pin or if it has expired
+    const existingPin = AuthService.accessPins[pin];
+    if (!existingPin || new Date() > existingPin) {
       return false;
     }
 
