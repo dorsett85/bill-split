@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { stubbedAnalyzeOutput } from '../data/analyzeExpenseCommandOutput.ts';
+import { jaliscoCantinaBillOutput } from '../data/jalisco-cantina-bill.ts';
+import { stubbedAnalyzeOutput } from '../data/whole-foods-receipt.ts';
 import type { ProcessedExpense } from '../types/processedExpense.ts';
 import { transformTextractToProcessedBill } from './RemoteBillProcessingService.utils.ts';
 
-describe('transformTextractToProcessedBill', () => {
+describe('Whole foods bill transform and process', () => {
   it('transforms output to processed bill', () => {
     const actualOutput = transformTextractToProcessedBill(stubbedAnalyzeOutput);
 
@@ -39,6 +40,109 @@ describe('transformTextractToProcessedBill', () => {
       business_location: 'Bryant Park BPK 1095 6th Ave New York, NY 10036',
       business_name: 'WHOLE FOODS MARKET',
     };
+    expect(actualOutput).toStrictEqual(expectedOutput);
+  });
+});
+
+describe('Jalisco Cantina bill transform and process', () => {
+  it('transforms output to processed bill', () => {
+    const actualOutput = transformTextractToProcessedBill(
+      jaliscoCantinaBillOutput,
+    );
+    const expectedOutput: ProcessedExpense = {
+      business_location:
+        'Jalisco Cantina Whitefish 510 Wisconsin Ave Whitefish, MT 59037',
+      business_name: 'Jalisco Cantina',
+      gratuity: 46.5,
+      items: [
+        {
+          name: 'SALSA',
+          price: 6.5,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'GUACAMOLE',
+          price: 10,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'HOUSE MEX LAGER',
+          price: 18,
+          quantity: 3,
+          unitPrice: 6,
+        },
+        {
+          name: 'YELLOW JACKET',
+          price: 34,
+          quantity: 2,
+          unitPrice: 17,
+        },
+        {
+          name: 'HIBISCUS TEA',
+          price: 4,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'HALF ESQUITES',
+          price: 17,
+          quantity: 2,
+          unitPrice: 8.5,
+        },
+        {
+          name: 'CARNITAS',
+          price: 17,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'BURRITO',
+          price: 17.5,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'BARBACOA',
+          price: 7,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'SPECIAL ENTREE',
+          price: 43,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'CARNITAS',
+          price: 17,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'BURRITO',
+          price: 17.5,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'CARNITAS',
+          price: 17,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'CRANKY SAM',
+          price: 7,
+          quantity: 1,
+          unitPrice: 0,
+        },
+      ],
+      tax: 6.99,
+    };
+
     expect(actualOutput).toStrictEqual(expectedOutput);
   });
 });

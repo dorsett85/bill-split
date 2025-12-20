@@ -84,9 +84,15 @@ export const transformTextractToProcessedBill = (
               item.unitPrice = parseAmount(strippedValue);
               break;
             case 'QUANTITY':
-              item.quantity = Number(strippedValue);
+              // If the quantity can't be detected then default to 1
+              item.quantity = parseAmount(strippedValue) || 1;
           }
         });
+
+        // If a unit price wasn't detected, then manually calculate it
+        if (item.quantity > 1 && item.unitPrice === 0) {
+          item.unitPrice = item.price / item.quantity;
+        }
 
         processedExpense.items.push(item);
       });

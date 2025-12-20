@@ -3,7 +3,7 @@ import {
   type TextractClientResolvedConfig,
 } from '@aws-sdk/client-textract';
 import type { SelfManagedKafkaHandler } from 'aws-lambda';
-import { stubbedAnalyzeOutput } from './data/analyzeExpenseCommandOutput.ts';
+import { stubbedAnalyzeOutput } from './data/whole-foods-receipt.ts';
 import { RemoteBillProcessingService } from './services/RemoteBillProcessingService.ts';
 import type { BillProcessingService } from './types/billProcessingService.ts';
 
