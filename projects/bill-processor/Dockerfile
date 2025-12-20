@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/nodejs:22 AS builder
+FROM public.ecr.aws/lambda/nodejs:24 AS builder
 WORKDIR /usr/app
 
 RUN corepack enable
@@ -18,7 +18,7 @@ COPY . .
 
 RUN pnpm run build
 
-FROM public.ecr.aws/lambda/nodejs:22
+FROM public.ecr.aws/lambda/nodejs:24
 WORKDIR ${LAMBDA_TASK_ROOT}
 COPY --from=builder /usr/app/dist/* ./
 CMD ["index.handler"]

@@ -1,4 +1,4 @@
-FROM node:22.19.0-slim AS base
+FROM node:24.12.0-slim AS base
 WORKDIR /app
 RUN corepack enable
 RUN corepack use pnpm@10.20.0
