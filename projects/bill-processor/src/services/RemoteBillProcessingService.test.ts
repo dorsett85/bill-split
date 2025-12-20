@@ -64,6 +64,7 @@ describe('Test RemoteBillProcessingService', () => {
       business_name: undefined,
       gratuity: undefined,
       tax: undefined,
+      discount: undefined,
     });
     expect(createBillItemsMock).toHaveBeenCalledOnce();
     expect(createBillItemsMock).toHaveBeenCalledWith(12435, []);

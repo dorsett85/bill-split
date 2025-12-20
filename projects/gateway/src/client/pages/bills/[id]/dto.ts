@@ -26,6 +26,7 @@ export const BillData = z.object({
   businessName: z.string().optional(),
   gratuity: z.number().optional(),
   tip: z.number().optional(),
+  discount: z.number().optional(),
   imagePath: z.string(),
   imageStatus: ImageStatus,
   name: z.string().optional(),

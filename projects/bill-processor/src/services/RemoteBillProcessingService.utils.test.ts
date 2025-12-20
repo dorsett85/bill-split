@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ciaoMamboBillOutput } from '../data/ciao-mambo-bill.ts';
 import { jaliscoCantinaBillOutput } from '../data/jalisco-cantina-bill.ts';
 import { stubbedAnalyzeOutput } from '../data/whole-foods-receipt.ts';
 import type { ProcessedExpense } from '../types/processedExpense.ts';
@@ -141,6 +142,72 @@ describe('Jalisco Cantina bill transform and process', () => {
         },
       ],
       tax: 6.99,
+    };
+
+    expect(actualOutput).toStrictEqual(expectedOutput);
+  });
+});
+
+describe('Ciao Mambo bill transform and process', () => {
+  it('transforms output to processed bill', () => {
+    const actualOutput = transformTextractToProcessedBill(ciaoMamboBillOutput);
+
+    const expectedOutput: ProcessedExpense = {
+      business_location:
+        '** CIAO MAMBO ** 234 2nd Street East Whitefish, MT 59937',
+      business_name: 'CIAO MAMBO',
+      discount: 11,
+      items: [
+        {
+          name: 'Italian Tootsie Rolls',
+          price: 14,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'Cup Creamy Tomato Basil',
+          price: 5,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'Build Pasta',
+          price: 17,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'Prim Veggies Marinara',
+          price: 6,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: "Kid's Mac & Cheese",
+          price: 8,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'Brick Oven Pizza Pizza Classica',
+          price: 15,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'Fettuccine Alla Rustica',
+          price: 23,
+          quantity: 1,
+          unitPrice: 0,
+        },
+        {
+          name: 'Italian Cheesecake w/ Ras',
+          price: 11,
+          quantity: 1,
+          unitPrice: 0,
+        },
+      ],
+      tax: 3.52,
     };
 
     expect(actualOutput).toStrictEqual(expectedOutput);

@@ -69,9 +69,16 @@ export const Bill: React.FC<BillProps> = (props) => {
     }));
   };
 
-  const { gratuity, tax, tip, subTotal, total } = calculateTotals(bill);
-
-  const totalWithTip = total * (tip / 100) + total;
+  const {
+    gratuity,
+    tax,
+    tip,
+    discount,
+    discountPct,
+    subTotal,
+    total,
+    totalWithTip,
+  } = calculateTotals(bill);
 
   const renderBillItemValue = (value: number) => {
     return bill.imageStatus === 'ready' ? (
@@ -104,6 +111,11 @@ export const Bill: React.FC<BillProps> = (props) => {
         />
       )}
       <Stack gap="sm" mb="xl">
+        {!!discount && (
+          <BillInfoItem label="Discount">
+            {renderBillItemValue(-discount)}
+          </BillInfoItem>
+        )}
         <BillInfoItem label="Subtotal">
           {renderBillItemValue(subTotal)}
         </BillInfoItem>
@@ -155,6 +167,7 @@ export const Bill: React.FC<BillProps> = (props) => {
             participantLineItems={participantLineItems}
             tip={tip}
             tax={tax}
+            discountPct={discountPct}
             subTotal={subTotal}
             gratuity={gratuity}
           />

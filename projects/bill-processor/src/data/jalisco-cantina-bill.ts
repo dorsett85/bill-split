@@ -1,6 +1,7 @@
 import type { AnalyzeExpenseCommandOutput } from '@aws-sdk/client-textract';
 
 export const jaliscoCantinaBillOutput: AnalyzeExpenseCommandOutput = {
+  $metadata: {},
   DocumentMetadata: {
     Pages: 1,
   },

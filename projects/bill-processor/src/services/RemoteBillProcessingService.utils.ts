@@ -47,11 +47,24 @@ export const transformTextractToProcessedBill = (
         case 'VENDOR_ADDRESS':
           processedExpense.business_location = strippedValue;
           break;
-        case 'TAX':
-          processedExpense.tax = parseAmount(strippedValue);
+        case 'TAX': {
+          // May be more than one tax item, so add the current total to the
+          // newest item.
+          const currentTax = processedExpense.tax ?? 0;
+          processedExpense.tax = currentTax + parseAmount(strippedValue);
           break;
+        }
         case 'GRATUITY':
           processedExpense.gratuity = parseAmount(strippedValue);
+          break;
+        case 'DISCOUNT': {
+          // Could be more than one discount, so add the current total to the
+          // newest line item.
+          const currentDiscount = processedExpense.discount ?? 0;
+          processedExpense.discount = Math.abs(
+            currentDiscount + parseAmount(strippedValue),
+          );
+        }
       }
     });
 
@@ -59,7 +72,7 @@ export const transformTextractToProcessedBill = (
     document.LineItemGroups?.forEach((lineItemGroup) => {
       lineItemGroup.LineItems?.forEach((lineItem) => {
         const item: ProcessedExpenseItem = {
-          name: '',
+          name: 'UNDETERMINED',
           price: 0,
           unitPrice: 0,
           quantity: 1,
@@ -112,8 +125,8 @@ export const updateBill = async (
   const db = getDb();
   const res = await db.query(
     `
-    UPDATE bill SET business_location = $1, business_name = $2, image_status = $3, tax = $4, gratuity = $5
-    WHERE id = $6;
+    UPDATE bill SET business_location = $1, business_name = $2, image_status = $3, tax = $4, gratuity = $5, discount = $6
+    WHERE id = $7;
   `,
     [
       expense.business_location,
@@ -121,6 +134,7 @@ export const updateBill = async (
       'ready',
       expense.tax,
       expense.gratuity,
+      expense.discount,
       billId,
     ],
   );

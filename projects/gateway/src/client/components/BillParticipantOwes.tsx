@@ -7,6 +7,7 @@ interface BillParticipantOwesProps {
   gratuity: number;
   tax: number;
   tip: number;
+  discountPct: number;
   subTotal: number;
   /**
    * Map with keys as line item ids and values as its price
@@ -19,15 +20,18 @@ export const BillParticipantOwes: React.FC<BillParticipantOwesProps> = ({
   gratuity,
   tax,
   tip,
+  discountPct,
   subTotal,
   participantLineItems,
   lineItemPriceLookup,
 }) => {
-  const individualSubTotal = participantLineItems.reduce(
-    (total, pli) =>
-      lineItemPriceLookup[pli.lineItemId] * (pli.pctOwes / 100) + total,
-    0,
-  );
+  const individualSubTotal =
+    participantLineItems.reduce(
+      (total, pli) =>
+        lineItemPriceLookup[pli.lineItemId] * (pli.pctOwes / 100) + total,
+      0,
+    ) *
+    (1 - discountPct);
 
   const taxShare = (individualSubTotal / subTotal) * tax;
   const tipShare = (individualSubTotal / subTotal) * gratuity;

@@ -56,6 +56,7 @@ export class RemoteBillProcessingService implements BillProcessingService {
         business_name: processedExpense.business_name,
         tax: processedExpense.tax,
         gratuity: processedExpense.gratuity,
+        discount: processedExpense.discount,
       });
       await createBillItems(billId, processedExpense.items);
     } catch (error) {

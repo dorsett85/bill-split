@@ -13,5 +13,6 @@ export interface ProcessedExpense {
   business_location?: string;
   gratuity?: number;
   tax?: number;
+  discount?: number;
   items: ProcessedExpenseItem[];
 }

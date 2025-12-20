@@ -14,6 +14,7 @@ export const BillCreate = z.object({
   imageStatus: ImageStatus,
   name: z.string().nullish(),
   tax: z.number().nullish(),
+  discount: z.number().nullish(),
 });
 
 export const BillReadStorage = z
@@ -27,6 +28,7 @@ export const BillReadStorage = z
     image_status: BillCreate.shape.imageStatus,
     name: BillCreate.shape.name.nullable(),
     tax: BillCreate.shape.tax.nullable(),
+    discount: BillCreate.shape.discount.nullable(),
   })
   .strict();
 
@@ -54,6 +56,7 @@ export const toBillStorage = (bill: BillCreate | BillUpdate) => ({
   image_status: 'imageStatus' in bill ? bill.imageStatus : undefined,
   name: 'name' in bill ? bill.name : undefined,
   tax: 'tax' in bill ? bill.tax : undefined,
+  discount: 'discount' in bill ? bill.discount : undefined,
 });
 
 export const toBillRead = (
@@ -68,4 +71,5 @@ export const toBillRead = (
   imageStatus: bill.image_status,
   name: bill.name ?? undefined,
   tax: bill.tax ?? undefined,
+  discount: bill.discount ?? undefined,
 });
