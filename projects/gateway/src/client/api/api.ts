@@ -71,10 +71,11 @@ export const deleteBillParticipant = async (
 };
 
 export const createLineItemParticipant = async (
+  billId: number,
   lineItemId: number,
   participantId: number,
 ): Promise<IdResponse> => {
-  const res = await fetch(`/api/line-item-participants`, {
+  const res = await fetch(`/api/bills/${billId}/line-item-participants`, {
     method: 'POST',
     body: JSON.stringify({ lineItemId, participantId }),
   });
@@ -82,21 +83,26 @@ export const createLineItemParticipant = async (
 };
 
 export const deleteLineItemParticipant = async (
+  billId: number,
   id: number,
 ): Promise<IdResponse> => {
-  const res = await fetch(`/api/line-item-participants/${id}`, {
+  const res = await fetch(`/api/bills/${billId}/line-item-participants/${id}`, {
     method: 'DELETE',
   });
   return IdResponse.parse(await res.json());
 };
 
 export const updateParticipant = async (
+  billId: number,
   participantId: number,
   name: string,
 ): Promise<IdResponse> => {
-  const res = await fetch(`/api/participants/${participantId}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ name }),
-  });
+  const res = await fetch(
+    `/api/bills/${billId}/participants/${participantId}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ name }),
+    },
+  );
   return IdResponse.parse(await res.json());
 };

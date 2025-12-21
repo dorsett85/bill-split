@@ -84,6 +84,13 @@ export const jsonErrorResponse = (
 };
 
 /**
+ * Standardized json 403 response
+ */
+export const jsonForbiddenResponse = (res: ServerResponse) => {
+  return jsonErrorResponse('You are not authorized', res, 403);
+};
+
+/**
  * Take a html string and write it to the response.
  */
 export const writeToHtml = (
@@ -107,4 +114,9 @@ export const writeRedirect = (
       Location: location,
     })
     .end();
+};
+
+export const setSessionCookie = (token: string, res: ServerResponse): void => {
+  const cookieString = `sessionToken=${token}; HttpOnly; Secure; SameSite=Lax; Path=/`;
+  res.setHeader('Set-Cookie', cookieString);
 };

@@ -8,6 +8,7 @@ import type { IdRecord } from '../dto/id.ts';
 import type { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import type { FileStorageService } from '../types/fileStorageService.ts';
 import type { ServerRequest } from '../types/serverRequest.ts';
+import type { AuthService } from './AuthService.ts';
 import type { KafkaService } from './KafkaService.ts';
 import { S3FileStorageService } from './S3FileStorageService.ts';
 
@@ -16,6 +17,7 @@ interface BillServiceConstructor {
   lineItemDao: LineItemDao;
   lineItemParticipantDao: LineItemParticipantDao;
   participantDao: ParticipantDao;
+  authService: AuthService;
   fileStorageService: FileStorageService;
   kafkaService: KafkaService;
 }
@@ -25,6 +27,7 @@ export class BillService {
   private lineItemDao: LineItemDao;
   private lineItemParticipantDao: LineItemParticipantDao;
   private participantDao: ParticipantDao;
+  private readonly authService: AuthService;
   private readonly fileStorageService: FileStorageService;
   private kafkaService: KafkaService;
 
@@ -33,6 +36,7 @@ export class BillService {
     lineItemDao,
     lineItemParticipantDao,
     participantDao,
+    authService,
     fileStorageService,
     kafkaService,
   }: BillServiceConstructor) {
@@ -40,6 +44,7 @@ export class BillService {
     this.lineItemDao = lineItemDao;
     this.lineItemParticipantDao = lineItemParticipantDao;
     this.participantDao = participantDao;
+    this.authService = authService;
     this.fileStorageService = fileStorageService;
     this.kafkaService = kafkaService;
   }
@@ -50,24 +55,26 @@ export class BillService {
    * we're both storing the bills image here and creating a new bills record in
    * our db.
    */
-  public async create(req: ServerRequest): Promise<IdRecord> {
+  public async create(
+    req: ServerRequest,
+  ): Promise<IdRecord & { signature: string }> {
     const storedFiles = await this.fileStorageService.store(req);
-    const idRecord = await this.billDao.create(
+    const { id } = await this.billDao.create(
       BillCreate.parse({
         imagePath: storedFiles[0].path,
         imageStatus: 'parsing',
       }),
     );
 
-    await this.kafkaService.publish(
-      process.env.KAFKA_BILL_PROCESSING_TOPIC ?? '',
-      {
-        billId: idRecord.id,
-        imageName: path.basename(storedFiles[0].path),
-      },
-    );
+    await this.kafkaService.publishBill({
+      billId: id,
+      imageName: path.basename(storedFiles[0].path),
+    });
 
-    return idRecord;
+    // Create a hmac signature to allow sharing of the new bill url
+    const signature = this.authService.signBillAccessHmac(id);
+
+    return { id, signature };
   }
 
   public async read(id: number): Promise<BillResponse> {

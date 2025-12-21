@@ -96,10 +96,10 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
   ) => {
     try {
       if (checked) {
-        await createLineItemParticipant(lineItemId, participantId);
+        await createLineItemParticipant(billId, lineItemId, participantId);
       } else {
         const id = participantLineItemLookup[participantId][lineItemId].id;
-        await deleteLineItemParticipant(id);
+        await deleteLineItemParticipant(billId, id);
       }
 
       const { data } = await fetchBillParticipants(billId);
@@ -119,6 +119,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                 {participant.name}
                 <sup>
                   <BillParticipantEditName
+                    billId={billId}
                     participantId={participant.id}
                     name={participant.name}
                     onNameChange={(name) =>

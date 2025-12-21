@@ -1,15 +1,14 @@
 import * as z from 'zod';
+import { IdRecord } from '../../../api/dto.ts';
 
 const ImageStatus = z.literal(['parsing', 'ready', 'error']);
 
-const LineItem = z.object({
-  id: z.number(),
+const LineItem = IdRecord.extend({
   name: z.string(),
   price: z.number(),
 });
 
-const Participant = z.object({
-  id: z.number(),
+const Participant = IdRecord.extend({
   name: z.string(),
   lineItems: z.array(
     z.object({
@@ -20,8 +19,7 @@ const Participant = z.object({
   ),
 });
 
-export const BillData = z.object({
-  id: z.number(),
+export const BillData = IdRecord.extend({
   businessLocation: z.string().optional(),
   businessName: z.string().optional(),
   gratuity: z.number().optional(),

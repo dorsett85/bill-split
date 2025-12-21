@@ -24,13 +24,18 @@ import { parseJsonBody } from '../utils/parseJsonBody.ts';
 import { parseUrlEncodedForm } from '../utils/parseUrlEncodedForm.ts';
 import {
   jsonErrorResponse,
+  jsonForbiddenResponse,
   jsonSuccessResponse,
+  setSessionCookie,
   writeRedirect,
   writeToHtml,
 } from '../utils/responseHelpers.ts';
 
-const getAuthService = () => {
-  return new AuthService();
+export const getAuthService = () => {
+  return new AuthService({
+    adminPassword: process.env.ADMIN_PASSWORD ?? '',
+    secretKey: process.env.ADMIN_SECRET_KEY ?? '',
+  });
 };
 
 const getBillService = () => {
@@ -39,6 +44,7 @@ const getBillService = () => {
     lineItemDao: new LineItemDao(getDb()),
     lineItemParticipantDao: new LineItemParticipantDao(getDb()),
     participantDao: new ParticipantDao(getDb()),
+    authService: getAuthService(),
     fileStorageService: new S3FileStorageService({
       bucketName: process.env.AWS_BILL_IMAGE_S3_BUCKET ?? '',
       s3Client: new S3Client({
@@ -49,7 +55,10 @@ const getBillService = () => {
         region: process.env.AWS_REGION ?? '',
       }),
     }),
-    kafkaService: new KafkaService(),
+    kafkaService: new KafkaService({
+      billTopic: process.env.KAFKA_BILL_PROCESSING_TOPIC ?? '',
+      connectionString: `${process.env.KAFKA_HOST}:${process.env.KAFKA_PORT}`,
+    }),
   });
 };
 
@@ -61,34 +70,15 @@ const getParticipantService = () => {
   });
 };
 
-export const getAccessPage =
-  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
-  async (req, res) => {
-    const { accessToken } = parseCookies(req);
-    const { redirectUrl } = req.queryParams;
-
-    // If they already have an access pin then redirect
-    const authService = getAuthService();
-    if (accessToken && authService.verifyToken(accessToken)) {
-      return writeRedirect(redirectUrl || '/', res);
-    }
-
-    const html = await htmlService.render(req.route);
-
-    return writeToHtml(html, res);
-  };
-
 export const getAdminPage =
   ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
   async (req, res) => {
-    const { adminToken } = parseCookies(req);
+    const { sessionToken } = parseCookies(req);
 
     const authService = getAuthService();
 
-    let authorized = false;
-    if (adminToken) {
-      authorized = authService.verifyToken(adminToken);
-    }
+    const authorized =
+      !!sessionToken && authService.verifyAdminToken(sessionToken);
 
     const html = await htmlService.render(req.route, { authorized });
     return writeToHtml(html, res);
@@ -102,23 +92,32 @@ export const postAdminPage =
       await parseUrlEncodedForm(req),
     );
 
-    const { adminToken } = parseCookies(req);
+    const { sessionToken } = parseCookies(req);
 
     let authenticationError: string | undefined = undefined;
     let pinGenerated = false;
-    let success = false;
 
-    if (authenticationCode && !adminToken) {
+    if (
+      authenticationCode &&
+      (!sessionToken ||
+        (sessionToken && !authService.verifyAdminToken(sessionToken)))
+    ) {
       // User makes a request to gain admin access
-      success = await authService.signAdminToken(authenticationCode, res);
-    } else if (pin && adminToken && authService.verifyToken(adminToken)) {
+      const token = authService.signAdminToken(
+        authenticationCode,
+        sessionToken,
+      );
+      if (token) {
+        setSessionCookie(token, res);
+      } else {
+        authenticationError = 'We could not verify your code';
+      }
+    } else if (pin) {
       // Admin user requests to generate an access pin
-      pinGenerated = authService.generatePin(pin);
-      success = true;
-    }
-
-    if (!success) {
-      authenticationError = 'We could not verify your code';
+      pinGenerated = authService.generatePin(pin, sessionToken);
+      if (!pinGenerated) {
+        authenticationError = "You're not authorized to generate pins";
+      }
     }
 
     const html = await htmlService.render(req.route, {
@@ -133,10 +132,12 @@ export const postAdminPage =
 
 export const postVerifyAccess: MiddlewareFunction = async (req, res) => {
   const { accessPin } = VerifyAccessRequest.parse(await parseJsonBody(req));
+  const { sessionToken } = parseCookies(req);
   const authService = getAuthService();
 
-  const success = authService.signAccessToken(accessPin, res);
-  if (success) {
+  const token = authService.signCreateBillToken(accessPin, sessionToken);
+  if (token) {
+    setSessionCookie(token, res);
     return jsonSuccessResponse({ success: true }, res);
   }
   jsonErrorResponse('Could not verify access', res, 400);
@@ -149,10 +150,40 @@ export const getHomePage =
     return writeToHtml(html, res);
   };
 
+/**
+ * A more complicated controller. Accessing this page either requires a
+ * sessionToken with admin or bill access permission, or a hmac signature query
+ * param. This allows the page to be shareable with people that don't have a
+ * session token.
+ *
+ * Once The page is accessed with a signature hmac, the response will then set
+ * the sessionToken with bill access permission.
+ */
 export const getBillPage =
   ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
   async (req, res) => {
     const billService = getBillService();
+    const authService = getAuthService();
+    const billId = id.parse(+req.params.id);
+    const { sessionToken } = parseCookies(req);
+    const { signature } = req.queryParams;
+
+    const hasBillTokenAccess =
+      !!sessionToken && authService.verifyBillAccessToken(sessionToken, billId);
+
+    const addBillTokenAccess =
+      !hasBillTokenAccess &&
+      !!signature &&
+      authService.verifyBillAccessHmac(signature, billId);
+
+    if (!hasBillTokenAccess && !addBillTokenAccess) {
+      return writeRedirect('/', res);
+    }
+
+    if (addBillTokenAccess) {
+      const token = authService.signBillAccessToken(billId, sessionToken);
+      setSessionCookie(token, res);
+    }
 
     const bill = await billService.read(id.parse(+req.params.id));
 
@@ -162,13 +193,22 @@ export const getBillPage =
 
 export const postBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
-  const idRecord = await billService.create(req);
-  return jsonSuccessResponse(idRecord, res);
+  const authService = getAuthService();
+  const { sessionToken } = parseCookies(req);
+
+  const verified =
+    !!sessionToken && authService.verifyCreateBillToken(sessionToken);
+  if (!verified) {
+    return jsonForbiddenResponse(res);
+  }
+
+  const billCreateRecord = await billService.create(req);
+  return jsonSuccessResponse(billCreateRecord, res);
 };
 
 export const getBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
-  const bill = await billService.read(id.parse(+req.params.id));
+  const bill = await billService.read(id.parse(+req.params.billId));
   return jsonSuccessResponse(bill, res);
 };
 
@@ -178,7 +218,7 @@ export const patchBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
 
   const idRecord = await billService.update(
-    id.parse(+req.params.id),
+    id.parse(+req.params.billId),
     BillUpdate.parse(body),
   );
   return jsonSuccessResponse(idRecord, res);

@@ -10,6 +10,7 @@ import { type FormEvent, useState } from 'react';
 import { updateParticipant } from '../api/api.ts';
 
 interface BillParticipantEditNameProps {
+  billId: number;
   name: string;
   onNameChange: (name: string) => void;
   participantId: number;
@@ -17,7 +18,7 @@ interface BillParticipantEditNameProps {
 
 export const BillParticipantEditName: React.FC<
   BillParticipantEditNameProps
-> = ({ name, onNameChange, participantId }) => {
+> = ({ billId, name, onNameChange, participantId }) => {
   const colorScheme = useComputedColorScheme();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,7 +39,7 @@ export const BillParticipantEditName: React.FC<
     setError(undefined);
 
     try {
-      await updateParticipant(participantId, newName);
+      await updateParticipant(billId, participantId, newName);
       onNameChange(newName);
     } catch (e) {
       console.log(e);

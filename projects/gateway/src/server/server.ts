@@ -4,7 +4,6 @@ import { App } from './App.ts';
 import {
   deleteBillParticipant,
   deleteLineItemParticipant,
-  getAccessPage,
   getAdminPage,
   getBill,
   getBillPage,
@@ -23,10 +22,7 @@ import {
 import { HtmlService } from './services/HtmlService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import type { MiddlewareFunction } from './types/serverRequest.ts';
-import {
-  authApiMiddleware,
-  authHtmlMiddleware,
-} from './utils/authMiddleware.ts';
+import { billApiAccessMiddleware } from './utils/billApiAccessMiddleware.ts';
 import { writeToHtml } from './utils/responseHelpers.ts';
 import { staticMiddleware } from './utils/staticMiddleware.ts';
 
@@ -100,35 +96,47 @@ const startServer = async () => {
 
   // Html routes
   app.get('/', getHomePage({ htmlService }));
-  app.get('/access', getAccessPage({ htmlService }));
-  app.get('/bills/:id', authHtmlMiddleware(getBillPage({ htmlService })));
+  app.get('/bills/:id', getBillPage({ htmlService }));
 
   // Api routes
   app.post('/api/verify-access', postVerifyAccess);
 
-  app.post('/api/bills', authApiMiddleware(postBill));
-  app.patch('/api/bills/:id', authApiMiddleware(patchBill));
-  app.get('/api/bills/:id', authApiMiddleware(getBill));
+  const billApiPath = '/api/bills';
+  app.post(billApiPath, postBill);
+  app.patch(`${billApiPath}/:billId`, billApiAccessMiddleware(patchBill));
+  app.get(`${billApiPath}/:billId`, billApiAccessMiddleware(getBill));
+
   app.get(
-    '/api/bills/:billId/participants',
-    authApiMiddleware(getBillParticipants),
+    `${billApiPath}/:billId/participants`,
+    billApiAccessMiddleware(getBillParticipants),
   );
   app.post(
-    '/api/bills/:billId/participants',
-    authApiMiddleware(postBillParticipant),
+    `${billApiPath}/:billId/participants`,
+    billApiAccessMiddleware(postBillParticipant),
   );
   app.delete(
-    '/api/bills/:billId/participants/:id',
-    authApiMiddleware(deleteBillParticipant),
+    `${billApiPath}/:billId/participants/:id`,
+    billApiAccessMiddleware(deleteBillParticipant),
+  );
+  app.patch(`${billApiPath}/:billId/participants/:id`, patchParticipant);
+
+  app.patch(
+    `${billApiPath}/:billId/line-items/:id`,
+    billApiAccessMiddleware(patchLineItem),
+  );
+  app.post(
+    `${billApiPath}/:billId/line-items`,
+    billApiAccessMiddleware(postLineItem),
   );
 
-  app.patch('/api/line-items/:id', patchLineItem);
-  app.post('/api/line-items', postLineItem);
-
-  app.post('/api/line-item-participants', postLineItemParticipant);
-  app.delete('/api/line-item-participants/:id', deleteLineItemParticipant);
-
-  app.patch('/api/participants/:id', patchParticipant);
+  app.post(
+    `${billApiPath}/:billId/line-item-participants`,
+    postLineItemParticipant,
+  );
+  app.delete(
+    `${billApiPath}/:billId/line-item-participants/:id`,
+    deleteLineItemParticipant,
+  );
 
   app.listen(port, () => {
     handleEnvListen();

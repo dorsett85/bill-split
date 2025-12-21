@@ -1,9 +1,11 @@
 import { z } from 'zod';
 
+export const IdRecord = z.object({
+  id: z.number(),
+});
+
 export const IdResponse = z.object({
-  data: z.object({
-    id: z.number(),
-  }),
+  data: IdRecord,
 });
 
 export const SuccessResponse = z.object({

@@ -10,8 +10,8 @@ import {
 import { IconCamera, IconFile } from '@tabler/icons-react';
 import { type ChangeEvent, useRef, useState } from 'react';
 import { createBill } from '../api/api.ts';
-import { IdResponse } from '../api/dto.ts';
 import { VerifyAccessModal } from '../components/VerifyAccessModal.tsx';
+import { BillCreateResponse } from './dto.ts';
 
 export const Home = () => {
   const [filename, setFilename] = useState<string>();
@@ -48,10 +48,13 @@ export const Home = () => {
         return setUploading(false);
       }
 
-      const { data } = IdResponse.parse(await res.json());
+      const json = await res.json();
+      console.log(json);
+
+      const { data } = BillCreateResponse.parse(json);
 
       // Redirect to the specific bills page
-      window.location.assign(`/bills/${data.id}`);
+      window.location.assign(`/bills/${data.id}?signature=${data.signature}`);
     } catch (e) {
       console.log(e);
       setUploading(false);
