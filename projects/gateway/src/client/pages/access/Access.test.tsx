@@ -11,7 +11,7 @@ describe('test Access', () => {
       </MantineProvider>,
     );
     expect(
-      screen.getByRole('heading', { name: 'Welcome to Bill Split!' }),
+      screen.getByRole('heading', { name: 'Verify Access' }),
     ).toBeVisible();
   });
 });
