@@ -22,7 +22,11 @@ export class App {
    * like EADDRINUSE if the server can't start.
    */
   private handleRequestError:
-    | ((req: ServerRequest, res: ServerResponse, err: unknown) => void)
+    | ((
+        req: ServerRequest,
+        res: ServerResponse,
+        err: unknown,
+      ) => ServerResponse)
     | undefined = undefined;
 
   public constructor() {
@@ -115,7 +119,7 @@ export class App {
           await middleware.handle(serverRequest, res, next);
         } catch (err) {
           // TODO maybe add a fallback handler in case one is not defined
-          this.handleRequestError?.(serverRequest, res, err);
+          return this.handleRequestError?.(serverRequest, res, err);
         }
       };
       await dispatch(0);
@@ -127,7 +131,7 @@ export class App {
       req: ServerRequest,
       res: ServerResponse,
       err: unknown,
-    ) => void,
+    ) => ServerResponse,
   ) {
     this.handleRequestError = onRequestError;
   }
