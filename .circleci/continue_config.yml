@@ -22,8 +22,13 @@ orbs:
 
 executors:
   node:
-    name: node/default
-    tag: 24.12.0
+    parameters:
+      name:
+        type: string
+        default: node/default
+      tag:
+        type: string
+        default: 24.12.0
 
 commands:
   lint:
