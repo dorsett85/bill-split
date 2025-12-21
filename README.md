@@ -7,9 +7,11 @@ Easily upload a bill/receipt and split it between friends and family
 TODO
 
 1. Api
-   1. Endpoint for manual item creation
-   2. Add persistent storage for access pins
-   3. Encode bill page url
+   1. Create shareable link to bill page
+      1. Users with link don't need an access token
+   2. Endpoint for manual item creation
+   3. Add persistent storage for access pins
+   4. Encode bill page url
 2. UI
    1. Homes page
    2. Bill page
