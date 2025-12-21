@@ -48,10 +48,7 @@ export const Home = () => {
         return setUploading(false);
       }
 
-      const json = await res.json();
-      console.log(json);
-
-      const { data } = BillCreateResponse.parse(json);
+      const { data } = BillCreateResponse.parse(await res.json());
 
       // Redirect to the specific bills page
       window.location.assign(`/bills/${data.id}?signature=${data.signature}`);
