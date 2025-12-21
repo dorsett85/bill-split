@@ -1,5 +1,5 @@
 import { Container } from '@mantine/core';
-import { VerifyAccessModal } from '../../components/VerifyAccess.tsx';
+import { VerifyAccessModal } from '../../components/VerifyAccessModal.tsx';
 
 export const Access = () => {
   const handleOnModalClose = (accessVerified: boolean | undefined) => {

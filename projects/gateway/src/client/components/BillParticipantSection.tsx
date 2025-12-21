@@ -1,7 +1,6 @@
 import {
   ActionIcon,
   Box,
-  Checkbox,
   Collapse,
   Divider,
   Group,
@@ -20,9 +19,8 @@ import {
   fetchBillParticipants,
 } from '../api/api.ts';
 import type { LineItems, Participant } from '../pages/bills/[id]/dto.ts';
-import { USCurrency } from '../utils/UsCurrency.ts';
+import { BillParticipantCheckBoxCard } from './BillParticipantCheckBoxCard.tsx';
 import { BillParticipantEditName } from './BillParticipantEditName.tsx';
-import styles from './BillParticipantSection.module.css';
 
 interface BillParticipantSectionsProps {
   billId: number;
@@ -153,25 +151,28 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
             </Text>
             <ScrollArea h={250}>
               {lineItems.map((lineItem) => (
-                <Checkbox.Card
+                <BillParticipantCheckBoxCard
                   key={lineItem.id}
-                  p={8}
-                  className={styles.claimCheckbox}
-                  checked={
+                  claimed={
                     !!participantLineItemLookup[participant.id][lineItem.id]
+                  }
+                  othersClaimed={
+                    // See if anyone else has claimed the item
+                    Object.entries(participantLineItemLookup).some(
+                      ([participantId, items]) => {
+                        return (
+                          +participantId !== participant.id &&
+                          !!items[lineItem.id]
+                        );
+                      },
+                    )
                   }
                   onChange={(checked) =>
                     handleOnItemClick(checked, lineItem.id, participant.id)
                   }
-                >
-                  <Group align="start" wrap="nowrap">
-                    <Checkbox.Indicator />
-                    <Stack gap={0}>
-                      <Text fw={700}>{lineItem.name}</Text>
-                      <Text>{USCurrency.format(lineItem.price)}</Text>
-                    </Stack>
-                  </Group>
-                </Checkbox.Card>
+                  name={lineItem.name}
+                  price={lineItem.price}
+                />
               ))}
             </ScrollArea>
             <Divider />

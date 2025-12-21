@@ -68,7 +68,8 @@ export const getAccessPage =
     const { redirectUrl } = req.queryParams;
 
     // If they already have an access pin then redirect
-    if (accessToken) {
+    const authService = getAuthService();
+    if (accessToken && authService.verifyToken(accessToken)) {
       return writeRedirect(redirectUrl || '/', res);
     }
 

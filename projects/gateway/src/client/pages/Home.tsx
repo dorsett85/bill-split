@@ -11,7 +11,7 @@ import { IconCamera, IconFile } from '@tabler/icons-react';
 import { type ChangeEvent, useRef, useState } from 'react';
 import { createBill } from '../api/api.ts';
 import { IdResponse } from '../api/dto.ts';
-import { VerifyAccessModal } from '../components/VerifyAccess.tsx';
+import { VerifyAccessModal } from '../components/VerifyAccessModal.tsx';
 
 export const Home = () => {
   const [filename, setFilename] = useState<string>();
