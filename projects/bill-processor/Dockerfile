@@ -2,7 +2,7 @@ FROM public.ecr.aws/lambda/nodejs:24 AS builder
 WORKDIR /usr/app
 
 RUN corepack enable
-RUN corepack use pnpm@10.20.0
+RUN corepack use pnpm@10.26.1
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.pnpm to speed up subsequent builds.
