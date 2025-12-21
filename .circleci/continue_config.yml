@@ -20,12 +20,8 @@ parameters:
 orbs:
   node: circleci/node@6.3.0
 
-executors:
-  node:
-    parameters:
-      tag:
-        type: string
-        default: 24.12.0
+references:
+  node_version: &node_version "24.12.0"
 
 commands:
   lint:
@@ -36,7 +32,9 @@ commands:
 
 jobs:
   test-bill-processor:
-    executor: node
+    executor:
+      name: node/default
+      tag: *node_version
     working_directory: ~/project/projects/bill-processor
     steps:
       - checkout:
@@ -59,7 +57,9 @@ jobs:
           name: Run tests
           command: pnpm test
   test-bill-consumer:
-    executor: node
+    executor:
+      name: node/default
+      tag: *node_version
     working_directory: ~/project/projects/bill-processor
     steps:
       - checkout:
@@ -79,7 +79,9 @@ jobs:
           command: pnpm tsc
       - lint
   test-gateway:
-    executor: node
+    executor:
+      name: node/default
+      tag: *node_version
     working_directory: ~/project/projects/gateway
     steps:
       - checkout:
@@ -102,7 +104,9 @@ jobs:
           name: Run tests
           command: pnpm test
   test-db:
-    executor: node
+    executor:
+      name: node/default
+      tag: *node_version
     working_directory: ~/project/projects/db
     steps:
       - checkout:
@@ -117,9 +121,13 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
-      - lint
+      - run:
+          name: Linting
+          command: pnpm biome ci
   test-kafka:
-    executor: node
+    executor:
+      name: node/default
+      tag: *node_version
     working_directory: ~/project/projects/kafka
     steps:
       - checkout:
@@ -134,7 +142,9 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
-      - lint
+      - run:
+          name: Linting
+          command: pnpm biome ci
   deploy:
     # This is an example deploy job, not actually used by the workflow
     docker:
