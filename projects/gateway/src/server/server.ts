@@ -4,6 +4,7 @@ import { App } from './App.ts';
 import {
   deleteBillParticipant,
   deleteLineItemParticipant,
+  getAccessPage,
   getAdminPage,
   getBill,
   getBillPage,
@@ -90,6 +91,7 @@ const startServer = async () => {
 
   // Html routes
   app.get('/', getHomePage({ htmlService }));
+  app.get('/access', getAccessPage({ htmlService }));
   app.get('/bills/:id', authHtmlMiddleware(getBillPage({ htmlService })));
 
   // Api routes

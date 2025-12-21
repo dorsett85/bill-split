@@ -10,11 +10,13 @@ import { ErrorResponse, SuccessResponse } from '../api/dto.ts';
 export interface VerifyAccessProps {
   open: boolean;
   onClose: (accessVerified?: boolean) => void;
+  closeButton?: boolean;
 }
 
 export const VerifyAccessModal: React.FC<VerifyAccessProps> = ({
   open,
   onClose,
+  closeButton = true,
 }) => {
   const [error, setError] = useState<string | undefined>(undefined);
   const PIN_INPUT_NAME = 'accessPin';
@@ -45,7 +47,13 @@ export const VerifyAccessModal: React.FC<VerifyAccessProps> = ({
   };
 
   return (
-    <Modal opened={open} onClose={onClose} title="Verify Access" centered>
+    <Modal
+      opened={open}
+      withCloseButton={closeButton}
+      onClose={onClose}
+      title="Verify Access"
+      centered
+    >
       <form onSubmit={handleOnSubmit}>
         <Stack align="start">
           <Input.Wrapper

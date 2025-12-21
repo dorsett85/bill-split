@@ -25,6 +25,7 @@ import { parseUrlEncodedForm } from '../utils/parseUrlEncodedForm.ts';
 import {
   jsonErrorResponse,
   jsonSuccessResponse,
+  writeRedirect,
   writeToHtml,
 } from '../utils/responseHelpers.ts';
 
@@ -59,6 +60,22 @@ const getParticipantService = () => {
     lineItemParticipantDao: new LineItemParticipantDao(getDb()),
   });
 };
+
+export const getAccessPage =
+  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
+  async (req, res) => {
+    const { accessToken } = parseCookies(req);
+    const { redirectUrl } = req.queryParams;
+
+    // If they already have an access pin then redirect
+    if (accessToken) {
+      return writeRedirect(redirectUrl || '/', res);
+    }
+
+    const html = await htmlService.render(req.route);
+
+    return writeToHtml(html, res);
+  };
 
 export const getAdminPage =
   ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>

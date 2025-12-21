@@ -25,10 +25,7 @@ export const authHtmlMiddleware =
     if (hasAccess(req)) {
       return middleWareFun(req, res, next);
     }
-    writeRedirect(
-      `/?alert=${encodeURIComponent('We were unable to access the page you requested')}`,
-      res,
-    );
+    writeRedirect(`/access?redirectUrl=${encodeURIComponent(req.url)}`, res);
   };
 
 /**
