@@ -24,11 +24,26 @@ references:
   node_version: &node_version "24.12.0"
 
 commands:
+  pnpm-install:
+    steps:
+      - run:
+          name: Install dependencies
+          command: pnpm install
+  type-check:
+    steps:
+      - run:
+          name: Type checking
+          command: pnpm tsc
   lint:
     steps:
       - run:
           name: Linting
           command: pnpm biome ci
+  test:
+    steps:
+      - run:
+          name: Run tests
+          command: pnpm test
 
 jobs:
   test-bill-processor:
@@ -42,20 +57,14 @@ jobs:
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "package.json" }}
-      - run:
-          name: Install dependencies
-          command: pnpm install
+      - pnpm-install
       - save_cache:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
-      - run:
-          name: Type checking
-          command: pnpm tsc
-      - run: lint
-      - run:
-          name: Run tests
-          command: pnpm test
+      - type-check
+      - lint
+      - test
   test-bill-consumer:
     executor:
       name: node/default
@@ -67,16 +76,12 @@ jobs:
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "package.json" }}
-      - run:
-          name: Install dependencies
-          command: pnpm install
+      - pnpm-install
       - save_cache:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
-      - run:
-          name: Type checking
-          command: pnpm tsc
+      - type-check
       - lint
   test-gateway:
     executor:
@@ -89,20 +94,14 @@ jobs:
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "package.json" }}
-      - run:
-          name: Install dependencies
-          command: pnpm install
+      - pnpm-install
       - save_cache:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
-      - run:
-          name: Type checking
-          command: pnpm tsc
+      - type-check
       - lint
-      - run:
-          name: Run tests
-          command: pnpm test
+      - test
   test-db:
     executor:
       name: node/default
@@ -114,16 +113,12 @@ jobs:
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "package.json" }}
-      - run:
-          name: Install dependencies
-          command: pnpm install
+      - pnpm-install
       - save_cache:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
-      - run:
-          name: Linting
-          command: pnpm biome ci
+      - lint
   test-kafka:
     executor:
       name: node/default
@@ -135,16 +130,12 @@ jobs:
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "package.json" }}
-      - run:
-          name: Install dependencies
-          command: pnpm install
+      - pnpm-install
       - save_cache:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
-      - run:
-          name: Linting
-          command: pnpm biome ci
+      - lint
   deploy:
     # This is an example deploy job, not actually used by the workflow
     docker:

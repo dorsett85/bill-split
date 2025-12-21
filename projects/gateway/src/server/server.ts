@@ -45,7 +45,6 @@ const startServer = async () => {
     }
     return 'dist/server';
   })(content.environments?.node.output?.distPath);
-  console.log('TESTING CIRCLE CI');
 
   const staticFileService = new LocalStaticFileService({
     path: staticPath,
