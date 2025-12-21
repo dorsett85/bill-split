@@ -23,9 +23,6 @@ orbs:
 executors:
   node:
     parameters:
-      name:
-        type: string
-        default: node/default
       tag:
         type: string
         default: 24.12.0
