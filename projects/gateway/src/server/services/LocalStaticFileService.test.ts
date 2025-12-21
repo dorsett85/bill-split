@@ -28,6 +28,7 @@ const stubServerManifest: ManifestData = {
       },
     },
   },
+  integrity: {},
 };
 
 const stubClientManifest: ManifestData = {
@@ -79,6 +80,7 @@ const stubClientManifest: ManifestData = {
       },
     },
   },
+  integrity: {},
 };
 
 describe('test LocalStaticFileService', () => {

@@ -33,9 +33,18 @@ import { staticMiddleware } from './utils/staticMiddleware.ts';
 const startServer = async () => {
   const { content } = await loadConfig({});
   const app = new App();
-  const staticPath = content.environments?.web.output?.distPath?.root ?? 'dist';
-  const staticServerPath =
-    content.environments?.node.output?.distPath?.root ?? 'dist/server';
+  const staticPath = ((distPath) => {
+    if (distPath && typeof distPath !== 'string' && distPath.root) {
+      return distPath.root;
+    }
+    return 'dist';
+  })(content.environments?.web.output?.distPath);
+  const staticServerPath = ((distPath) => {
+    if (distPath && typeof distPath !== 'string' && distPath.root) {
+      return distPath.root;
+    }
+    return 'dist/server';
+  })(content.environments?.node.output?.distPath);
 
   const staticFileService = new LocalStaticFileService({
     path: staticPath,

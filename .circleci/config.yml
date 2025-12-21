@@ -14,4 +14,6 @@ workflows:
           mapping: |
             projects/bill-processor/.* bill_processor_is_changed true
             projects/bill-consumer/.* bill_consumer_is_changed true
-            projects/gateway/.* gateway_is_changed true      
+            projects/gateway/.* gateway_is_changed true
+            projects/db/.* db_is_changed true
+            projects/kafka/.* kafka_is_changed true

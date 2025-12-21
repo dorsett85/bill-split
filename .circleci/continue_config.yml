@@ -10,15 +10,31 @@ parameters:
   gateway_is_changed:
     type: boolean
     default: false
+  db_is_changed:
+    type: boolean
+    default: false
+  kafka_is_changed:
+    type: boolean
+    default: false
 
 orbs:
   node: circleci/node@6.3.0
 
+executors:
+  node:
+    name: node/default
+    tag: 24.12.0
+
+commands:
+  lint:
+    steps:
+      - run:
+          name: Linting
+          command: pnpm biome ci
+
 jobs:
   test-bill-processor:
-    executor:
-      name: node/default
-      tag: 22.19.0
+    executor: node
     working_directory: ~/project/projects/bill-processor
     steps:
       - checkout:
@@ -36,16 +52,12 @@ jobs:
       - run:
           name: Type checking
           command: pnpm tsc
-      - run:
-          name: Linting
-          command: pnpm biome ci
+      - run: lint
       - run:
           name: Run tests
           command: pnpm test
   test-bill-consumer:
-    executor:
-      name: node/default
-      tag: 22.19.0
+    executor: node
     working_directory: ~/project/projects/bill-processor
     steps:
       - checkout:
@@ -63,13 +75,9 @@ jobs:
       - run:
           name: Type checking
           command: pnpm tsc
-      - run:
-          name: Linting
-          command: pnpm biome ci
+      - lint
   test-gateway:
-    executor:
-      name: node/default
-      tag: 22.19.0
+    executor: node
     working_directory: ~/project/projects/gateway
     steps:
       - checkout:
@@ -87,12 +95,44 @@ jobs:
       - run:
           name: Type checking
           command: pnpm tsc
-      - run:
-          name: Linting
-          command: pnpm biome ci
+      - lint
       - run:
           name: Run tests
           command: pnpm test
+  test-db:
+    executor: node
+    working_directory: ~/project/projects/db
+    steps:
+      - checkout:
+          path: ~/project
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+      - run:
+          name: Install dependencies
+          command: pnpm install
+      - save_cache:
+          key: v1-dependencies-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+      - lint
+  test-kafka:
+    executor: node
+    working_directory: ~/project/projects/kafka
+    steps:
+      - checkout:
+          path: ~/project
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+      - run:
+          name: Install dependencies
+          command: pnpm install
+      - save_cache:
+          key: v1-dependencies-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+      - lint
   deploy:
     # This is an example deploy job, not actually used by the workflow
     docker:
@@ -119,3 +159,11 @@ workflows:
     # - deploy:
     #     requires:
     #       - test-node
+  db:
+    when: << pipeline.parameters.db_is_changed >>
+    jobs:
+      - test-db
+  kafka:
+    when: << pipeline.parameters.kafka_is_changed >>
+    jobs:
+      - test-kafka

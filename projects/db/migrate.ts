@@ -63,7 +63,7 @@ const runMigrations = async () => {
         [basename],
       );
 
-      console.log('Successfully migrated script:', file)
+      console.log('Successfully migrated script:', file);
     }
   }
 };
