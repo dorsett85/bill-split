@@ -1,10 +1,12 @@
 import { S3Client } from '@aws-sdk/client-s3';
+import { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import { BillDao } from '../dao/BillDao.ts';
 import { BillParticipantDao } from '../dao/BillParticipantDao.ts';
 import { LineItemDao } from '../dao/LineItemDao.ts';
 import { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import { ParticipantDao } from '../dao/ParticipantDao.ts';
 import { getDb } from '../db/getDb.ts';
+import { AccessTokenCreateRequest } from '../dto/accessToken.ts';
 import { AdminRequest } from '../dto/admin.ts';
 import { VerifyAccessRequest } from '../dto/auth.ts';
 import { BillUpdate } from '../dto/bill.ts';
@@ -33,6 +35,7 @@ import {
 
 export const getAuthService = () => {
   return new AuthService({
+    accessTokenDao: new AccessTokenDao(getDb()),
     adminPassword: process.env.ADMIN_PASSWORD ?? '',
     secretKey: process.env.ADMIN_SECRET_KEY ?? '',
   });
@@ -77,10 +80,11 @@ export const getAdminPage =
 
     const authService = getAuthService();
 
-    const authorized =
-      !!sessionToken && authService.verifyAdminToken(sessionToken);
+    const accessTokens = sessionToken
+      ? await authService.readAllAccessTokens(sessionToken)
+      : undefined;
 
-    const html = await htmlService.render(req.route, { authorized });
+    const html = await htmlService.render(req.route, { accessTokens });
     return writeToHtml(html, res);
   };
 
@@ -88,19 +92,17 @@ export const postAdminPage =
   ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
   async (req, res) => {
     const authService = getAuthService();
-    const { authenticationCode, pin } = AdminRequest.parse(
+    const { authenticationCode } = AdminRequest.parse(
       await parseUrlEncodedForm(req),
     );
 
     const { sessionToken } = parseCookies(req);
 
     let authenticationError: string | undefined = undefined;
-    let pinGenerated = false;
 
     if (
-      authenticationCode &&
-      (!sessionToken ||
-        (sessionToken && !authService.verifyAdminToken(sessionToken)))
+      !sessionToken ||
+      (sessionToken && !authService.verifyAdminToken(sessionToken))
     ) {
       // User makes a request to gain admin access
       const token = authService.signAdminToken(
@@ -112,30 +114,50 @@ export const postAdminPage =
       } else {
         authenticationError = 'We could not verify your code';
       }
-    } else if (pin) {
-      // Admin user requests to generate an access pin
-      pinGenerated = authService.generatePin(pin, sessionToken);
-      if (!pinGenerated) {
-        authenticationError = "You're not authorized to generate pins";
-      }
     }
 
+    const accessTokens =
+      !authenticationError && sessionToken
+        ? await authService.readAllAccessTokens(sessionToken)
+        : undefined;
+
     const html = await htmlService.render(req.route, {
-      authorized: !authenticationError,
+      accessTokens: accessTokens,
       authenticationCode,
       authenticationError,
-      pin,
-      pinGenerated,
     });
     return writeToHtml(html, res);
   };
 
-export const postVerifyAccess: MiddlewareFunction = async (req, res) => {
-  const { accessPin } = VerifyAccessRequest.parse(await parseJsonBody(req));
+export const postAccessToken: MiddlewareFunction = async (req, res) => {
+  const { sessionToken } = parseCookies(req);
+  const { pin } = AccessTokenCreateRequest.parse(await parseJsonBody(req));
+  const authService = getAuthService();
+
+  const idRecord = await authService.createAccessToken(pin, sessionToken);
+
+  return idRecord
+    ? jsonSuccessResponse(idRecord, res)
+    : jsonErrorResponse('Unabled to create access token', res);
+};
+
+export const getAccessTokens: MiddlewareFunction = async (req, res) => {
   const { sessionToken } = parseCookies(req);
   const authService = getAuthService();
 
-  const token = authService.signCreateBillToken(accessPin, sessionToken);
+  const accessTokens = sessionToken
+    ? await authService.readAllAccessTokens(sessionToken)
+    : undefined;
+
+  jsonSuccessResponse({ accessTokens }, res);
+};
+
+export const postVerifyAccess: MiddlewareFunction = async (req, res) => {
+  const { pin } = VerifyAccessRequest.parse(await parseJsonBody(req));
+  const { sessionToken } = parseCookies(req);
+  const authService = getAuthService();
+
+  const token = await authService.signCreateBillToken(pin, sessionToken);
   if (token) {
     setSessionCookie(token, res);
     return jsonSuccessResponse({ success: true }, res);

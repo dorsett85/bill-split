@@ -1,12 +1,23 @@
+import { AccessTokenResponse } from '../pages/admin/dto.ts';
 import { BillResponse, ParticipantResponse } from '../pages/bills/[id]/dto.ts';
 import { IdResponse } from './dto.ts';
 
-export const postVerifyAccess = async (
-  accessPin: string,
-): Promise<Response> => {
+export const getAccessTokens = async (): Promise<AccessTokenResponse> => {
+  const res = await fetch(`/admin/access-tokens`);
+  return AccessTokenResponse.parse(await res.json());
+};
+
+export const postAccessToken = async (pin: string): Promise<Response> => {
+  return await fetch(`/admin/access-tokens`, {
+    method: 'POST',
+    body: JSON.stringify({ pin }),
+  });
+};
+
+export const postVerifyAccess = async (pin: string): Promise<Response> => {
   return await fetch(`/api/verify-access`, {
     method: 'POST',
-    body: JSON.stringify({ accessPin }),
+    body: JSON.stringify({ pin }),
   });
 };
 

@@ -1,6 +1,18 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHmac,
+  randomBytes,
+  timingSafeEqual,
+} from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import type { AccessTokenDao } from '../dao/AccessTokenDao.ts';
+import {
+  AccessTokenCreate,
+  type AccessTokenResponse,
+} from '../dto/accessToken.ts';
+import type { IdRecord } from '../dto/id.ts';
 
 const AuthTokenPayload = z.object({
   admin: z.boolean().optional(),
@@ -17,6 +29,7 @@ const AuthTokenPayload = z.object({
 type AuthTokenPayload = z.infer<typeof AuthTokenPayload>;
 
 export interface AuthServiceConstructor {
+  accessTokenDao: AccessTokenDao;
   /** Password required to gain admin access */
   adminPassword: string;
   /** Secret key to sign tokens */
@@ -24,11 +37,7 @@ export interface AuthServiceConstructor {
 }
 
 export class AuthService {
-  /**
-   * Key/value pairs with keys as the pin and values as the expiration
-   * TODO create persistent storage for these.
-   */
-  private static accessPins: Record<string, Date> = {};
+  private readonly accessTokenDao: AccessTokenDao;
   private readonly adminPassword: string;
   private readonly secretKey: string;
   /**
@@ -36,12 +45,81 @@ export class AuthService {
    */
   private accessExpiration = 24 * 60 * 60 * 1000;
 
-  public constructor({ adminPassword, secretKey }: AuthServiceConstructor) {
+  public constructor({
+    accessTokenDao,
+    adminPassword,
+    secretKey,
+  }: AuthServiceConstructor) {
     if (!secretKey) {
       throw new Error('Secret key must not be empty');
     }
+    this.accessTokenDao = accessTokenDao;
     this.adminPassword = adminPassword;
     this.secretKey = secretKey;
+  }
+
+  /**
+   * Only admins can create pins
+   */
+  public async createAccessToken(
+    pin: string,
+    sessionToken?: string,
+  ): Promise<IdRecord | undefined> {
+    if (!sessionToken || !this.verifyAdminToken(sessionToken)) {
+      return undefined;
+    }
+
+    // Create encrypted hash
+    const hashedToken = this.signHmac(pin);
+    const iv = randomBytes(16); // Directly use Buffer returned by randomBytes
+    const cipher = createCipheriv(
+      'aes-256-cbc',
+      // key must be 32 characters
+      Buffer.from(hashedToken.substring(0, 32)),
+      iv,
+    );
+    const encrypted = Buffer.concat([
+      cipher.update(pin, 'utf8'),
+      cipher.final(),
+    ]);
+
+    return this.accessTokenDao.create(
+      AccessTokenCreate.parse({
+        hashedToken,
+        encryptedToken: encrypted.toString('hex'),
+        initializationVector: iv.toString('hex'),
+        active: true,
+        noOfUses: 0,
+      }),
+    );
+  }
+
+  public async readAllAccessTokens(
+    sessionToken: string,
+  ): Promise<AccessTokenResponse[] | undefined> {
+    if (!this.verifyAdminToken(sessionToken)) {
+      return undefined;
+    }
+    const accessTokens = await this.accessTokenDao.search({});
+
+    return accessTokens.map((token) => {
+      const encryptedText = Buffer.from(token.encryptedToken, 'hex');
+      const decipher = createDecipheriv(
+        'aes-256-cbc',
+        Buffer.from(token.hashedToken.substring(0, 32)),
+        Buffer.from(token.initializationVector, 'hex'),
+      );
+      const decrypted = Buffer.concat([
+        decipher.update(encryptedText),
+        decipher.final(),
+      ]);
+
+      return {
+        pin: decrypted.toString(),
+        active: token.active,
+        noOfUses: token.noOfUses,
+      };
+    });
   }
 
   private signToken<K extends keyof AuthTokenPayload>(
@@ -84,23 +162,6 @@ export class AuthService {
     return !!payload?.billAccessIds?.includes(billId) || !payload?.admin;
   }
 
-  /**
-   * Only admins can generate pins
-   */
-  public generatePin(pin: string, sessionToken?: string): boolean {
-    if (!sessionToken || !this.verifyAdminToken(sessionToken)) {
-      return false;
-    }
-
-    const pinExpirationDate = new Date();
-    // We'll expire the pin in 10 minutes
-    pinExpirationDate.setMinutes(pinExpirationDate.getMinutes() + 10);
-
-    AuthService.accessPins[pin] = pinExpirationDate;
-
-    return true;
-  }
-
   public signAdminToken(code: string, sessionToken?: string): string | null {
     if (code !== this.adminPassword) {
       return null;
@@ -112,10 +173,29 @@ export class AuthService {
     return this.signToken({ ...payload, admin: true }, 60 * 60 * 24 * 7);
   }
 
-  public signCreateBillToken(pin: string, sessionToken?: string) {
-    // Check if there's an access pin or if it has expired
-    const existingPin = AuthService.accessPins[pin];
-    if (!existingPin || new Date() > existingPin) {
+  public async signCreateBillToken(
+    pin: string,
+    sessionToken?: string,
+  ): Promise<string | null> {
+    const hashedToken = this.signHmac(pin);
+
+    // Check that the pin is active and hasn't gone over its usage limit. If
+    // successful then increase the no of uses.
+    const result = await this.accessTokenDao.tx(async (client) => {
+      const [accessToken] = await this.accessTokenDao.search(
+        { hashedToken },
+        client,
+      );
+      if (!accessToken || accessToken.active || accessToken.noOfUses <= 10) {
+        return null;
+      }
+
+      return this.accessTokenDao.update(accessToken.id, {
+        noOfUses: accessToken.noOfUses + 1,
+      });
+    });
+
+    if (!result) {
       return null;
     }
 

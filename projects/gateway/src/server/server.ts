@@ -4,6 +4,7 @@ import { App } from './App.ts';
 import {
   deleteBillParticipant,
   deleteLineItemParticipant,
+  getAccessTokens,
   getAdminPage,
   getBill,
   getBillPage,
@@ -12,6 +13,7 @@ import {
   patchBill,
   patchLineItem,
   patchParticipant,
+  postAccessToken,
   postAdminPage,
   postBill,
   postBillParticipant,
@@ -22,7 +24,7 @@ import {
 import { HtmlService } from './services/HtmlService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import type { MiddlewareFunction } from './types/serverRequest.ts';
-import { billApiAccessMiddleware } from './utils/billApiAccessMiddleware.ts';
+import { billApiAccessMiddleware } from './utils/authMiddleware.ts';
 import { writeToHtml } from './utils/responseHelpers.ts';
 import { staticMiddleware } from './utils/staticMiddleware.ts';
 
@@ -93,6 +95,8 @@ const startServer = async () => {
   // Admin routes
   app.get('/admin', getAdminPage({ htmlService }));
   app.post('/admin', postAdminPage({ htmlService }));
+  app.post('/admin/access-tokens', postAccessToken);
+  app.get('/admin/access-tokens', getAccessTokens);
 
   // Html routes
   app.get('/', getHomePage({ htmlService }));

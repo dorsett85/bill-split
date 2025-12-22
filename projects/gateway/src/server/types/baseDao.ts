@@ -1,7 +1,7 @@
 import type { Pool, PoolClient, QueryResult } from 'pg';
 import { IdRecord } from '../dto/id.ts';
 
-type StorageValue = string | null | number;
+type StorageValue = string | null | number | boolean;
 
 type StorageRecord = Record<string, StorageValue>;
 
@@ -128,7 +128,7 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
   }
 
   protected async searchRecords(
-    searchParams: Record<string, string | number | undefined>,
+    searchParams: Record<string, string | number | boolean | undefined>,
     cols: string[],
     client?: PoolClient,
   ): Promise<QueryResult> {
@@ -142,7 +142,7 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
       `
       SELECT ${cols.join(',')}
       FROM ${this.tableName}
-      WHERE ${params}
+      ${params.length ? `WHERE ${params}` : ''}
       `,
       values,
     );

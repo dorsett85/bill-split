@@ -1,4 +1,6 @@
+import type { Pool } from 'pg';
 import { describe, expect, it } from 'vitest';
+import { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import { AuthService, type AuthServiceConstructor } from './AuthService.ts';
 
 const getAuthService = <K extends keyof AuthServiceConstructor>(
@@ -6,6 +8,7 @@ const getAuthService = <K extends keyof AuthServiceConstructor>(
 ) => {
   const SECRET_KEY = 'SECRET_KEY';
   return new AuthService({
+    accessTokenDao: new AccessTokenDao({} as Pool),
     adminPassword: '',
     secretKey: SECRET_KEY,
     ...args,
@@ -21,24 +24,14 @@ describe('AuthService', () => {
     expect(authService.verifyAdminToken(token ?? '')).toBe(true);
   });
 
-  it('signs/verifies create bill token', async () => {
-    const ADMIN_PASSWORD = 'password';
-    const PIN = '11111';
-    const authService = getAuthService({ adminPassword: ADMIN_PASSWORD });
-    const token = authService.signAdminToken(ADMIN_PASSWORD);
-    authService.generatePin(PIN, token ?? '');
-    const createBillToken = authService.signCreateBillToken(PIN);
+  it('signs/verifies bill access token', async () => {
+    const BILL_ID = 11111;
+    const authService = getAuthService();
+    const billAccessToken = authService.signBillAccessToken(BILL_ID);
 
-    expect(authService.verifyCreateBillToken(createBillToken ?? '')).toBe(true);
-  });
-
-  it('generates a pin', async () => {
-    const ADMIN_PASSWORD = 'password';
-    const PIN = '11111';
-    const authService = getAuthService({ adminPassword: ADMIN_PASSWORD });
-    const token = authService.signAdminToken(ADMIN_PASSWORD);
-
-    expect(authService.generatePin(PIN, token ?? '')).toBe(true);
+    expect(authService.verifyBillAccessToken(billAccessToken, BILL_ID)).toBe(
+      true,
+    );
   });
 
   it('signs/verifies bill access hmac', () => {

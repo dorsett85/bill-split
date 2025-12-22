@@ -4,11 +4,14 @@ import {
   Container,
   Notification,
   Stack,
+  Table,
   TextInput,
   Title,
 } from '@mantine/core';
 import type React from 'react';
+import type { FormEvent } from 'react';
 import { useState } from 'react';
+import { getAccessTokens, postAccessToken } from '../../api/api.ts';
 import type { AdminData } from './dto.ts';
 
 export interface AdminProps {
@@ -16,36 +19,82 @@ export interface AdminProps {
 }
 
 export const Admin: React.FC<AdminProps> = ({ admin }) => {
-  const [showPinNotification, setShowPinNotification] = useState(
-    !!admin.pinGenerated,
+  const [accessTokens, setAccessTokens] = useState<AdminData['accessTokens']>(
+    admin.accessTokens,
   );
+  const [pin, setPin] = useState('');
+  const [pinError, setPinError] = useState<string | undefined>(undefined);
+  const [showPinNotification, setShowPinNotification] = useState(false);
+
+  const handleOnSubmitToken = async (e: FormEvent) => {
+    e.preventDefault();
+
+    let pinError: undefined | string = 'Unable to generate a pin';
+    try {
+      const res = await postAccessToken(pin);
+      if (res.ok) {
+        pinError = undefined;
+        setShowPinNotification(true);
+        const { data } = await getAccessTokens();
+        setAccessTokens(data.accessTokens);
+      }
+    } catch {
+      // no-op
+    }
+    setPinError(pinError);
+  };
 
   const renderContent = () => {
-    if (admin.authorized) {
+    if (accessTokens) {
       return (
-        <form method="POST">
-          <Stack align="start">
-            <TextInput
-              id="generate-pin-input"
-              label="Generate pin"
-              description="Enter a 5 digit pin"
-              name="pin"
-              defaultValue={admin.pin}
-              maxLength={5}
-              minLength={5}
-              required
-            />
-            <Button type="submit">Submit</Button>
-            {showPinNotification && admin.pin && (
-              <Notification
-                title="Pin Successfully Generated"
-                onClose={() => setShowPinNotification(false)}
-              >
-                The pin "{admin.pin}" will be valid for 10 minutes.
-              </Notification>
-            )}
-          </Stack>
-        </form>
+        <>
+          <form onSubmit={handleOnSubmitToken}>
+            <Stack align="start">
+              <TextInput
+                id="generate-pin-input"
+                label="Generate pin"
+                description="Enter a 5 digit pin"
+                name="pin"
+                value={pin}
+                error={pinError}
+                onChange={(e) => setPin(e.target.value)}
+                maxLength={5}
+                minLength={5}
+                required
+              />
+              <Button type="submit">Submit</Button>
+              {showPinNotification && (
+                <Notification
+                  title="Pin Successfully Generated"
+                  onClose={() => setShowPinNotification(false)}
+                >
+                  The pin "{pin}" can be used up to 10 times.
+                </Notification>
+              )}
+            </Stack>
+          </form>
+          <Table
+            mt={'xl'}
+            striped
+            styles={{
+              table: {
+                maxWidth: 400,
+              },
+            }}
+            captionSide={'top'}
+            data={{
+              caption: 'Available access tokens for uploading bills',
+              head: ['Pin', 'Active', 'Number of Uses'],
+              body: accessTokens.map((token) => {
+                return [
+                  token.pin,
+                  token.active ? 'True' : 'False',
+                  token.noOfUses,
+                ];
+              }),
+            }}
+          />
+        </>
       );
     }
     return (

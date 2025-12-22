@@ -21,18 +21,18 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
   }
 
   public async read(id: number, client?: PoolClient): Promise<BillRead> {
-    const billCols = BillReadStorage.keyof().options.join(',');
+    const cols = BillReadStorage.keyof().options.join(',');
 
-    const billResult = await (client ?? this.db).query(
+    const result = await (client ?? this.db).query(
       `
-      SELECT ${billCols}
+      SELECT ${cols}
       FROM ${this.tableName}
       WHERE id = $1
       `,
       [id],
     );
 
-    return BillReadStorage.transform(toBillRead).parse(billResult.rows[0]);
+    return BillReadStorage.transform(toBillRead).parse(result.rows[0]);
   }
 
   public async update(id: number, billUpdates: BillUpdate): Promise<IdRecord> {
