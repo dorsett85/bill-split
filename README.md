@@ -8,11 +8,14 @@ TODO
 
 1. Api
    1. Live updates
-   2. Add persistent storage for access pins
+   2. Delete or deactivate access tokens
    3. Encode bill page url
 2. UI
    1. Home page
    2. Bill page
       1. Check for 403 responses for each api request
+   3. Admin page
+      1. Deactivate access token toggle
+      2. Remove access token success notification
 3. CI/CD
    1. Automated deployment
