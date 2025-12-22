@@ -99,6 +99,7 @@ export const postAdminPage =
     const { sessionToken } = parseCookies(req);
 
     let authenticationError: string | undefined = undefined;
+    let adminSessionToken = sessionToken;
 
     if (
       !sessionToken ||
@@ -110,6 +111,7 @@ export const postAdminPage =
         sessionToken,
       );
       if (token) {
+        adminSessionToken = token;
         setSessionCookie(token, res);
       } else {
         authenticationError = 'We could not verify your code';
@@ -117,12 +119,12 @@ export const postAdminPage =
     }
 
     const accessTokens =
-      !authenticationError && sessionToken
-        ? await authService.readAllAccessTokens(sessionToken)
+      !authenticationError && adminSessionToken
+        ? await authService.readAllAccessTokens(adminSessionToken)
         : undefined;
 
     const html = await htmlService.render(req.route, {
-      accessTokens: accessTokens,
+      accessTokens,
       authenticationCode,
       authenticationError,
     });

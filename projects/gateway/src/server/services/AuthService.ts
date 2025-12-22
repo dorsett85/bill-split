@@ -186,7 +186,7 @@ export class AuthService {
         { hashedToken },
         client,
       );
-      if (!accessToken || accessToken.active || accessToken.noOfUses <= 10) {
+      if (!accessToken || !accessToken.active || accessToken.noOfUses >= 10) {
         return null;
       }
 
