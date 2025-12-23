@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS bill (
     image_status VARCHAR CHECK (image_status IN ('parsing', 'ready', 'error')),
     name VARCHAR,
     tax NUMERIC,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON COLUMN bill.business_name IS 'Name of the business';

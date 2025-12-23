@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS access_token (
   initialization_vector VARCHAR NOT NULL,
   active BOOLEAN NOT NULL,
   no_of_uses NUMERIC NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON COLUMN access_token.hashed_token IS 'Hashed access token for lookup';
