@@ -7,23 +7,25 @@ import {
   deleteBillLineItemParticipant,
   deleteBillParticipant,
   getAccessTokens,
-  getAdminPage,
   getBill,
-  getBillPage,
   getBillParticipants,
-  getHomePage,
   patchAccessToken,
   patchBill,
   patchBillLineItem,
   patchBillParticipant,
   postAccessToken,
-  postAdminPage,
   postBill,
   postBillCreateAccess,
   postBillLineItem,
   postBillLineItemParticipant,
   postBillParticipant,
-} from './controllers/controllers.ts';
+} from './controllers/apiControllers.ts';
+import {
+  getAdminPage,
+  getBillPage,
+  getHomePage,
+  postAdminPage,
+} from './controllers/htmlControllers.ts';
 import { HtmlService } from './services/HtmlService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import type { MiddlewareFunction } from './types/serverRequest.ts';

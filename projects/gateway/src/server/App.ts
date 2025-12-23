@@ -9,6 +9,7 @@ import { resolveRouteParams } from './utils/resolveRouteParams.ts';
 import {
   jsonBadRequestResponse,
   jsonNotFoundResponse,
+  SERVER_ERROR_MESSAGE,
   writeToHtml,
 } from './utils/responseHelpers.ts';
 
@@ -30,8 +31,7 @@ export class App {
     req: ServerRequest,
     res: ServerResponse,
     err: Error,
-  ) => ServerResponse = (_, res) =>
-    res.end('We experienced an unexpected issue, please try again later');
+  ) => ServerResponse = (_, res) => res.end(SERVER_ERROR_MESSAGE);
 
   public constructor() {
     //
@@ -132,11 +132,7 @@ export class App {
           await routeDispatch(0);
         } catch (err) {
           const caughtErr =
-            err instanceof Error
-              ? err
-              : new Error(
-                  'We experienced an unexpected issue, please try again later',
-                );
+            err instanceof Error ? err : new Error(SERVER_ERROR_MESSAGE);
           return this.handleRequestError(serverRequest, res, caughtErr);
         }
       };

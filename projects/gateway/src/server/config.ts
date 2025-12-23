@@ -25,3 +25,5 @@ export const env = {
   DB_PASSWORD: getEnvVar('DB_PASSWORD'),
   PORT: getEnvVar('PORT'),
 } satisfies Record<string, string | number>;
+
+export const isProd = (): boolean => env.NODE_ENV === 'production';

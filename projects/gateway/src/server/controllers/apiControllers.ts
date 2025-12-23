@@ -1,156 +1,29 @@
-import { S3Client } from '@aws-sdk/client-s3';
-import { env } from '../config.ts';
-import { AccessTokenDao } from '../dao/AccessTokenDao.ts';
-import { BillDao } from '../dao/BillDao.ts';
-import { BillParticipantDao } from '../dao/BillParticipantDao.ts';
-import { LineItemDao } from '../dao/LineItemDao.ts';
-import { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
-import { ParticipantDao } from '../dao/ParticipantDao.ts';
-import { getDb } from '../db/getDb.ts';
 import {
   AccessTokenCreateRequest,
   AccessTokenUpdate,
   pin,
 } from '../dto/accessToken.ts';
-import { AdminPagePostRequest } from '../dto/admin.ts';
 import { VerifyAccessRequest } from '../dto/auth.ts';
 import { BillUpdate } from '../dto/bill.ts';
 import { intId } from '../dto/id.ts';
 import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import { LineItemParticipantCreateRequest } from '../dto/lineItemParticipant.ts';
 import { ParticipantCreate, ParticipantUpdate } from '../dto/participant.ts';
-import { AdminService } from '../services/AdminService.ts';
-import { BillService } from '../services/BillService.ts';
-import { CryptoService } from '../services/CryptoService.ts';
-import type { HtmlService } from '../services/HtmlService.ts';
-import { KafkaService } from '../services/KafkaService.ts';
-import { ParticipantService } from '../services/ParticipantService.ts';
-import { S3FileStorageService } from '../services/S3FileStorageService.ts';
 import type { MiddlewareFunction } from '../types/serverRequest.ts';
 import { parseCookies } from '../utils/parseCookies.ts';
 import { parseJsonBody } from '../utils/parseJsonBody.ts';
-import { parseUrlEncodedForm } from '../utils/parseUrlEncodedForm.ts';
 import {
   jsonBadRequestResponse,
   jsonForbiddenResponse,
   jsonNotFoundResponse,
   jsonSuccessResponse,
   setSessionCookie,
-  writeRedirect,
-  writeToHtml,
 } from '../utils/responseHelpers.ts';
-
-const getAdminService = () => {
-  return new AdminService({
-    accessTokenDao: new AccessTokenDao(getDb()),
-    adminPassword: env.ADMIN_PASSWORD,
-    cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
-  });
-};
-
-const getBillService = () => {
-  return new BillService({
-    accessTokenDao: new AccessTokenDao(getDb()),
-    billDao: new BillDao(getDb()),
-    lineItemDao: new LineItemDao(getDb()),
-    lineItemParticipantDao: new LineItemParticipantDao(getDb()),
-    participantDao: new ParticipantDao(getDb()),
-    cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
-    fileStorageService: new S3FileStorageService({
-      bucketName: env.AWS_BILL_IMAGE_S3_BUCKET,
-      s3Client: new S3Client({
-        credentials: {
-          accessKeyId: env.AWS_ACCESS_KEY,
-          secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-        },
-        region: env.AWS_REGION,
-      }),
-    }),
-    kafkaService: new KafkaService({
-      billTopic: env.KAFKA_BILL_PROCESSING_TOPIC,
-      connectionString: `${env.KAFKA_HOST}:${env.KAFKA_PORT}`,
-    }),
-  });
-};
-
-const getParticipantService = () => {
-  return new ParticipantService({
-    participantDao: new ParticipantDao(getDb()),
-    billParticipantDao: new BillParticipantDao(getDb()),
-    lineItemParticipantDao: new LineItemParticipantDao(getDb()),
-    cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
-  });
-};
-
-export const getHomePage =
-  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
-  async (req, res) => {
-    const html = await htmlService.render(req.route);
-    return writeToHtml(html, res);
-  };
-
-export const getAdminPage =
-  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
-  async (req, res) => {
-    const { sessionToken } = parseCookies(req);
-    const adminService = getAdminService();
-
-    const accessTokens = sessionToken
-      ? await adminService.readAllAccessTokens(sessionToken)
-      : undefined;
-
-    const html = await htmlService.render(req.route, { accessTokens });
-    return writeToHtml(html, res);
-  };
-
-export const postAdminPage =
-  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
-  async (req, res) => {
-    const { authenticationCode } = AdminPagePostRequest.parse(
-      await parseUrlEncodedForm(req),
-    );
-    const { sessionToken } = parseCookies(req);
-    const adminService = getAdminService();
-
-    const { token, accessTokens, authenticationError } =
-      await adminService.signAdminToken(authenticationCode, sessionToken);
-
-    if (!authenticationError && token) {
-      setSessionCookie(token, res);
-    }
-
-    const html = await htmlService.render(req.route, {
-      accessTokens,
-      authenticationCode,
-      authenticationError,
-    });
-    return writeToHtml(html, res);
-  };
-
-export const getBillPage =
-  ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
-  async (req, res) => {
-    const { sessionToken } = parseCookies(req);
-    const { signature } = req.queryParams;
-    const billId = intId.parse(req.params.id);
-    const billService = getBillService();
-
-    const result = await billService.prepareBillPage(
-      billId,
-      signature,
-      sessionToken,
-    );
-    if (!result) {
-      return writeRedirect('/', res);
-    }
-
-    if (result.token) {
-      setSessionCookie(result.token, res);
-    }
-
-    const html = await htmlService.render(req.route, result.bill);
-    return writeToHtml(html, res);
-  };
+import {
+  getAdminService,
+  getBillService,
+  getParticipantService,
+} from './controllerServices.ts';
 
 export const getAccessTokens: MiddlewareFunction = async (req, res) => {
   const { sessionToken } = parseCookies(req);

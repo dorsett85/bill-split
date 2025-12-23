@@ -17,6 +17,9 @@ interface JsonErrorResponse {
 
 type JsonResponse = JsonSuccessResponse | JsonErrorResponse;
 
+export const SERVER_ERROR_MESSAGE =
+  'We experienced an unexpected issue, please try again later';
+
 /**
  * One year in milliseconds
  */
@@ -87,7 +90,11 @@ export const jsonErrorResponse = (
  * Standardized json 400 response
  */
 export const jsonBadRequestResponse = (res: ServerResponse, msg?: string) => {
-  return jsonErrorResponse(msg ?? 'We were unable to process your', res, 400);
+  return jsonErrorResponse(
+    msg ?? 'We were unable to process your request',
+    res,
+    400,
+  );
 };
 
 /**
@@ -112,11 +119,7 @@ export const jsonNotFoundResponse = (res: ServerResponse, msg?: string) => {
  * Standardized json 500 response
  */
 export const jsonServerErrorResponse = (res: ServerResponse, msg?: string) => {
-  return jsonErrorResponse(
-    msg ?? 'We experienced an unexpected issue, please try again later',
-    res,
-    500,
-  );
+  return jsonErrorResponse(msg ?? SERVER_ERROR_MESSAGE, res, 500);
 };
 
 /**

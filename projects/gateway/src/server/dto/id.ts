@@ -13,6 +13,6 @@ export type IdRecord = z.infer<typeof IdRecord>;
  * request params.
  */
 export const intId = z.preprocess(
-  (val) => (typeof val === 'string' ? parseInt(val) : val),
+  (val) => (typeof val === 'string' ? +val : val),
   z.int(),
 );
