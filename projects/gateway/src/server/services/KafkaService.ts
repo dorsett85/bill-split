@@ -13,17 +13,25 @@ interface KafkaServiceConstructor {
 }
 
 export class KafkaService {
-  private producer: Producer;
-  private billTopic: string;
+  private producerInstance?: Producer;
+  private connectionString: string;
+  private readonly billTopic: string;
 
   constructor({ billTopic, connectionString }: KafkaServiceConstructor) {
     this.billTopic = billTopic;
-    this.producer = new Kafka({
-      clientId: 'gateway',
-      brokers: [connectionString],
-    }).producer({
-      createPartitioner: Partitioners.DefaultPartitioner,
-    });
+    this.connectionString = connectionString;
+  }
+
+  get producer(): Producer {
+    if (!this.producerInstance) {
+      this.producerInstance = new Kafka({
+        clientId: 'gateway',
+        brokers: [this.connectionString],
+      }).producer({
+        createPartitioner: Partitioners.DefaultPartitioner,
+      });
+    }
+    return this.producerInstance;
   }
 
   public publishBill(
