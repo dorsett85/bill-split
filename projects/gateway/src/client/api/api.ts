@@ -2,13 +2,20 @@ import { AccessTokenResponse } from '../pages/admin/dto.ts';
 import { BillResponse, ParticipantResponse } from '../pages/bills/[id]/dto.ts';
 import { IdResponse } from './dto.ts';
 
+const baseOptions: RequestInit = {
+  headers: {
+    Accept: 'application/json',
+  },
+};
+
 export const getAccessTokens = async (): Promise<AccessTokenResponse> => {
-  const res = await fetch(`/admin/access-tokens`);
+  const res = await fetch(`/admin/access-tokens`, baseOptions);
   return AccessTokenResponse.parse(await res.json());
 };
 
 export const postAccessToken = async (pin: string): Promise<Response> => {
   return await fetch(`/admin/access-tokens`, {
+    ...baseOptions,
     method: 'POST',
     body: JSON.stringify({ pin }),
   });
@@ -16,6 +23,7 @@ export const postAccessToken = async (pin: string): Promise<Response> => {
 
 export const postVerifyAccess = async (pin: string): Promise<Response> => {
   return await fetch(`/api/verify-access`, {
+    ...baseOptions,
     method: 'POST',
     body: JSON.stringify({ pin }),
   });
@@ -23,13 +31,14 @@ export const postVerifyAccess = async (pin: string): Promise<Response> => {
 
 export const createBill = async (form: HTMLFormElement): Promise<Response> => {
   return await fetch('/api/bills', {
+    ...baseOptions,
     method: 'POST',
     body: new FormData(form),
   });
 };
 
 export const fetchBill = async (billId: number): Promise<BillResponse> => {
-  const res = await fetch(`/api/bills/${billId}`);
+  const res = await fetch(`/api/bills/${billId}`, baseOptions);
   return BillResponse.parse(await res.json());
 };
 
@@ -43,6 +52,7 @@ export const updateBill = async (
   signal?: AbortSignal,
 ): Promise<IdResponse> => {
   const res = await fetch(`/api/bills/${billId}`, {
+    ...baseOptions,
     method: 'PATCH',
     body: JSON.stringify(body),
     signal,
@@ -55,6 +65,7 @@ export const createBillParticipant = async (
   name: string,
 ): Promise<IdResponse> => {
   const res = await fetch(`/api/bills/${billId}/participants`, {
+    ...baseOptions,
     method: 'POST',
     body: JSON.stringify({ name }),
   });
@@ -64,7 +75,7 @@ export const createBillParticipant = async (
 export const fetchBillParticipants = async (
   billId: number,
 ): Promise<ParticipantResponse> => {
-  const res = await fetch(`/api/bills/${billId}/participants`);
+  const res = await fetch(`/api/bills/${billId}/participants`, baseOptions);
   return ParticipantResponse.parse(await res.json());
 };
 
@@ -75,6 +86,7 @@ export const deleteBillParticipant = async (
   const res = await fetch(
     `/api/bills/${billId}/participants/${participantId}`,
     {
+      ...baseOptions,
       method: 'DELETE',
     },
   );
@@ -87,6 +99,7 @@ export const createLineItemParticipant = async (
   participantId: number,
 ): Promise<IdResponse> => {
   const res = await fetch(`/api/bills/${billId}/line-item-participants`, {
+    ...baseOptions,
     method: 'POST',
     body: JSON.stringify({ lineItemId, participantId }),
   });
@@ -98,6 +111,7 @@ export const deleteLineItemParticipant = async (
   id: number,
 ): Promise<IdResponse> => {
   const res = await fetch(`/api/bills/${billId}/line-item-participants/${id}`, {
+    ...baseOptions,
     method: 'DELETE',
   });
   return IdResponse.parse(await res.json());
@@ -111,6 +125,7 @@ export const updateParticipant = async (
   const res = await fetch(
     `/api/bills/${billId}/participants/${participantId}`,
     {
+      ...baseOptions,
       method: 'PATCH',
       body: JSON.stringify({ name }),
     },

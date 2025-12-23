@@ -26,7 +26,7 @@ import { HtmlService } from './services/HtmlService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import type { MiddlewareFunction } from './types/serverRequest.ts';
 import { billApiAccessMiddleware } from './utils/authMiddleware.ts';
-import { writeToHtml } from './utils/responseHelpers.ts';
+import { jsonErrorResponse, writeToHtml } from './utils/responseHelpers.ts';
 import { staticMiddleware } from './utils/staticMiddleware.ts';
 
 const startServer = async () => {
@@ -149,16 +149,18 @@ const startServer = async () => {
     logger.start(`Server started at http://localhost:${port}`);
   });
 
-  app.onRequestError((_, res, err) => {
+  app.onRequestError((req, res, err) => {
     logger.error(err);
     res.statusCode = 500;
-    // Based on the request context we could send back different response types.
-    // For instance if they requested html we could send back a html error page,
-    // or a json object if the request was for json data.
-    return writeToHtml(
-      'We experienced an unexpected issue, please try again later',
-      res,
-    );
+
+    let message = 'We experienced an unexpected issue, please try again later';
+    if (env.NODE_ENV !== 'production') {
+      message = err.stack ?? err.message;
+    }
+
+    return req.headers.accept === 'application/json'
+      ? jsonErrorResponse(message, res)
+      : writeToHtml(message, res);
   });
 };
 

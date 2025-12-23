@@ -77,9 +77,9 @@ export const jsonSuccessResponse = <TData extends UnknownRecord>(
 export const jsonErrorResponse = (
   message: string,
   res: ServerResponse,
-  statusCode = 404,
+  statusCode?: number,
 ) => {
-  res.statusCode = statusCode;
+  res.statusCode = statusCode ?? res.statusCode;
   return writeToJson({ error: { message } }, res);
 };
 

@@ -142,7 +142,7 @@ export const postAccessToken: MiddlewareFunction = async (req, res) => {
 
   return idRecord
     ? jsonSuccessResponse(idRecord, res)
-    : jsonErrorResponse('Unabled to create access token', res);
+    : jsonErrorResponse('Unabled to create access token', res, 400);
 };
 
 export const getAccessTokens: MiddlewareFunction = async (req, res) => {

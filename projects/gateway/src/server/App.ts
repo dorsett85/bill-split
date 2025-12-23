@@ -1,4 +1,4 @@
-import type { ServerResponse } from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { logger } from '@rsbuild/core';
 import http from 'http';
 import path from 'path';
@@ -8,7 +8,10 @@ import type {
 } from './types/serverRequest.ts';
 import { resolveRoute } from './utils/resolveRoute.ts';
 import { resolveRouteParams } from './utils/resolveRouteParams.ts';
-import { writeToHtml } from './utils/responseHelpers.ts';
+import { jsonErrorResponse, writeToHtml } from './utils/responseHelpers.ts';
+
+const reqAcceptsJson = (req: IncomingMessage) =>
+  !!req.headers.accept?.includes('application/json');
 
 export class App {
   public readonly server = http.createServer();
@@ -21,16 +24,22 @@ export class App {
    * Handles errors originating during a request only, not other server errors
    * like EADDRINUSE if the server can't start.
    */
-  private handleRequestError:
-    | ((
-        req: ServerRequest,
-        res: ServerResponse,
-        err: unknown,
-      ) => ServerResponse)
-    | undefined = undefined;
+  private handleRequestError: (
+    req: ServerRequest,
+    res: ServerResponse,
+    err: Error,
+  ) => ServerResponse;
 
   public constructor() {
-    //
+    this.handleRequestError = (req, res, err) => {
+      logger.error(err);
+      res.statusCode = 500;
+      const message =
+        'We experienced an unexpected issue, please try again later';
+      return reqAcceptsJson(req)
+        ? jsonErrorResponse(message, res)
+        : writeToHtml(message, res);
+    };
   }
 
   public use(middleware: MiddlewareFunction): App {
@@ -62,7 +71,10 @@ export class App {
     this.server.on('request', async (req, res) => {
       if (!req.url) {
         res.statusCode = 400;
-        return writeToHtml('You need to specify a url in your request', res);
+        const message = 'You need to specify a url in your request';
+        return reqAcceptsJson(req)
+          ? jsonErrorResponse(message, res)
+          : writeToHtml(message, res);
       }
 
       // Log a request if it doesn't have a file extension
@@ -95,10 +107,10 @@ export class App {
         // Check if there's no more middleware to run
         if (!middleware) {
           res.statusCode = 404;
-          return writeToHtml(
-            'We were unable to find the resource you requested',
-            res,
-          );
+          const message = 'We were unable to find the resource you requested';
+          return reqAcceptsJson(req)
+            ? jsonErrorResponse(message, res)
+            : writeToHtml(message, res);
         }
 
         // Create the next function that will call the next middleware
@@ -118,8 +130,13 @@ export class App {
         try {
           await middleware.handle(serverRequest, res, next);
         } catch (err) {
-          // TODO maybe add a fallback handler in case one is not defined
-          return this.handleRequestError?.(serverRequest, res, err);
+          const caughtErr =
+            err instanceof Error
+              ? err
+              : new Error(
+                  'We experienced an unexpected issue, please try again later',
+                );
+          return this.handleRequestError(serverRequest, res, caughtErr);
         }
       };
       await dispatch(0);
@@ -130,7 +147,7 @@ export class App {
     onRequestError: (
       req: ServerRequest,
       res: ServerResponse,
-      err: unknown,
+      err: Error,
     ) => ServerResponse,
   ) {
     this.handleRequestError = onRequestError;
