@@ -62,7 +62,6 @@ export const toAccessTokenStorage = (
       : undefined,
   active: 'active' in accessToken ? accessToken.active : undefined,
   no_of_uses: 'noOfUses' in accessToken ? accessToken.noOfUses : undefined,
-  created_at: 'created_at' in accessToken ? accessToken.created_at : undefined,
 });
 
 export const toAccessTokenRead = (
