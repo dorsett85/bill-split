@@ -123,9 +123,9 @@ export class App {
             const routeNext = () => {
               routeDispatch(handlerIndex + 1);
             };
-            handler(serverRequest, res, routeNext);
+            return handler(serverRequest, res, routeNext);
           };
-          routeDispatch(0);
+          await routeDispatch(0);
         } catch (err) {
           const caughtErr =
             err instanceof Error
