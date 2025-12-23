@@ -26,6 +26,7 @@ import { HtmlService } from './services/HtmlService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import type { MiddlewareFunction } from './types/serverRequest.ts';
 import { billApiAccessMiddleware } from './utils/authMiddleware.ts';
+import { loggingMiddleware } from './utils/loggingMiddleware.ts';
 import { jsonErrorResponse, writeToHtml } from './utils/responseHelpers.ts';
 import { staticMiddleware } from './utils/staticMiddleware.ts';
 
@@ -92,6 +93,7 @@ const startServer = async () => {
   }
 
   app.use(envMiddleware);
+  app.use(loggingMiddleware);
 
   // Admin routes
   app.get('/admin', getAdminPage({ htmlService }));
@@ -108,30 +110,35 @@ const startServer = async () => {
 
   const billApiPath = '/api/bills';
   app.post(billApiPath, postBill);
-  app.patch(`${billApiPath}/:billId`, billApiAccessMiddleware(patchBill));
-  app.get(`${billApiPath}/:billId`, billApiAccessMiddleware(getBill));
+  app.patch(`${billApiPath}/:billId`, billApiAccessMiddleware, patchBill);
+  app.get(`${billApiPath}/:billId`, billApiAccessMiddleware, getBill);
 
   app.get(
     `${billApiPath}/:billId/participants`,
-    billApiAccessMiddleware(getBillParticipants),
+    billApiAccessMiddleware,
+    getBillParticipants,
   );
   app.post(
     `${billApiPath}/:billId/participants`,
-    billApiAccessMiddleware(postBillParticipant),
+    billApiAccessMiddleware,
+    postBillParticipant,
   );
   app.delete(
     `${billApiPath}/:billId/participants/:id`,
-    billApiAccessMiddleware(deleteBillParticipant),
+    billApiAccessMiddleware,
+    deleteBillParticipant,
   );
   app.patch(`${billApiPath}/:billId/participants/:id`, patchParticipant);
 
   app.patch(
     `${billApiPath}/:billId/line-items/:id`,
-    billApiAccessMiddleware(patchLineItem),
+    billApiAccessMiddleware,
+    patchLineItem,
   );
   app.post(
     `${billApiPath}/:billId/line-items`,
-    billApiAccessMiddleware(postLineItem),
+    billApiAccessMiddleware,
+    postLineItem,
   );
 
   app.post(

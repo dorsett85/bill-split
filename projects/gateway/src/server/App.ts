@@ -1,7 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { logger } from '@rsbuild/core';
 import http from 'http';
-import path from 'path';
 import type {
   MiddlewareFunction,
   ServerRequest,
@@ -16,7 +14,7 @@ const reqAcceptsJson = (req: IncomingMessage) =>
 export class App {
   public readonly server = http.createServer();
   private middlewares: {
-    handle: MiddlewareFunction;
+    handles: MiddlewareFunction[];
     method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
     route?: string;
   }[] = [];
@@ -28,42 +26,35 @@ export class App {
     req: ServerRequest,
     res: ServerResponse,
     err: Error,
-  ) => ServerResponse;
+  ) => ServerResponse = (_, res) =>
+    res.end('We experienced an unexpected issue, please try again later');
 
   public constructor() {
-    this.handleRequestError = (req, res, err) => {
-      logger.error(err);
-      res.statusCode = 500;
-      const message =
-        'We experienced an unexpected issue, please try again later';
-      return reqAcceptsJson(req)
-        ? jsonErrorResponse(message, res)
-        : writeToHtml(message, res);
-    };
+    //
   }
 
   public use(middleware: MiddlewareFunction): App {
-    this.middlewares.push({ handle: middleware });
+    this.middlewares.push({ handles: [middleware] });
     return this;
   }
 
-  public get(route: string, middleware: MiddlewareFunction): App {
-    this.middlewares.push({ handle: middleware, route, method: 'GET' });
+  public get(route: string, ...middlewares: MiddlewareFunction[]): App {
+    this.middlewares.push({ handles: middlewares, route, method: 'GET' });
     return this;
   }
 
-  public patch(route: string, middleware: MiddlewareFunction): App {
-    this.middlewares.push({ handle: middleware, route, method: 'PATCH' });
+  public patch(route: string, ...middlewares: MiddlewareFunction[]): App {
+    this.middlewares.push({ handles: middlewares, route, method: 'PATCH' });
     return this;
   }
 
-  public post(route: string, middleware: MiddlewareFunction): App {
-    this.middlewares.push({ handle: middleware, route, method: 'POST' });
+  public post(route: string, ...middlewares: MiddlewareFunction[]): App {
+    this.middlewares.push({ handles: middlewares, route, method: 'POST' });
     return this;
   }
 
-  public delete(route: string, middleware: MiddlewareFunction): App {
-    this.middlewares.push({ handle: middleware, route, method: 'DELETE' });
+  public delete(route: string, ...middlewares: MiddlewareFunction[]): App {
+    this.middlewares.push({ handles: middlewares, route, method: 'DELETE' });
     return this;
   }
 
@@ -75,11 +66,6 @@ export class App {
         return reqAcceptsJson(req)
           ? jsonErrorResponse(message, res)
           : writeToHtml(message, res);
-      }
-
-      // Log a request if it doesn't have a file extension
-      if (!path.extname(req.url)) {
-        logger.info(`${req.method} ${req.url}`);
       }
 
       const route = resolveRoute(
@@ -128,7 +114,18 @@ export class App {
         }
 
         try {
-          await middleware.handle(serverRequest, res, next);
+          // Loop through all the inner route handlers
+          const routeDispatch = (handlerIndex: number) => {
+            const handler = middleware.handles[handlerIndex];
+            if (!handler) {
+              return next();
+            }
+            const routeNext = () => {
+              routeDispatch(handlerIndex + 1);
+            };
+            handler(serverRequest, res, routeNext);
+          };
+          routeDispatch(0);
         } catch (err) {
           const caughtErr =
             err instanceof Error
