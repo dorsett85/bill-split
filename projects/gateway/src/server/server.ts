@@ -17,17 +17,19 @@ import {
   postAccessToken,
   postAdminPage,
   postBill,
+  postBillCreateAccess,
   postBillParticipant,
   postLineItem,
   postLineItemParticipant,
-  postVerifyAccess,
 } from './controllers/controllers.ts';
 import { HtmlService } from './services/HtmlService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
 import type { MiddlewareFunction } from './types/serverRequest.ts';
-import { billApiAccessMiddleware } from './utils/authMiddleware.ts';
 import { loggingMiddleware } from './utils/loggingMiddleware.ts';
-import { jsonErrorResponse, writeToHtml } from './utils/responseHelpers.ts';
+import {
+  jsonServerErrorResponse,
+  writeToHtml,
+} from './utils/responseHelpers.ts';
 import { staticMiddleware } from './utils/staticMiddleware.ts';
 
 const startServer = async () => {
@@ -98,48 +100,28 @@ const startServer = async () => {
   // Admin routes
   app.get('/admin', getAdminPage({ htmlService }));
   app.post('/admin', postAdminPage({ htmlService }));
-  app.post('/admin/access-tokens', postAccessToken);
-  app.get('/admin/access-tokens', getAccessTokens);
 
   // Html routes
   app.get('/', getHomePage({ htmlService }));
   app.get('/bills/:id', getBillPage({ htmlService }));
 
   // Api routes
-  app.post('/api/verify-access', postVerifyAccess);
+  app.get('/api/access-tokens', getAccessTokens);
+  app.post('/api/access-tokens', postAccessToken);
+  app.post('/api/bills/create-access', postBillCreateAccess);
 
   const billApiPath = '/api/bills';
   app.post(billApiPath, postBill);
-  app.patch(`${billApiPath}/:billId`, billApiAccessMiddleware, patchBill);
-  app.get(`${billApiPath}/:billId`, billApiAccessMiddleware, getBill);
+  app.patch(`${billApiPath}/:billId`, patchBill);
+  app.get(`${billApiPath}/:billId`, getBill);
 
-  app.get(
-    `${billApiPath}/:billId/participants`,
-    billApiAccessMiddleware,
-    getBillParticipants,
-  );
-  app.post(
-    `${billApiPath}/:billId/participants`,
-    billApiAccessMiddleware,
-    postBillParticipant,
-  );
-  app.delete(
-    `${billApiPath}/:billId/participants/:id`,
-    billApiAccessMiddleware,
-    deleteBillParticipant,
-  );
+  app.get(`${billApiPath}/:billId/participants`, getBillParticipants);
+  app.post(`${billApiPath}/:billId/participants`, postBillParticipant);
+  app.delete(`${billApiPath}/:billId/participants/:id`, deleteBillParticipant);
   app.patch(`${billApiPath}/:billId/participants/:id`, patchParticipant);
 
-  app.patch(
-    `${billApiPath}/:billId/line-items/:id`,
-    billApiAccessMiddleware,
-    patchLineItem,
-  );
-  app.post(
-    `${billApiPath}/:billId/line-items`,
-    billApiAccessMiddleware,
-    postLineItem,
-  );
+  app.patch(`${billApiPath}/:billId/line-items/:id`, patchLineItem);
+  app.post(`${billApiPath}/:billId/line-items`, postLineItem);
 
   app.post(
     `${billApiPath}/:billId/line-item-participants`,
@@ -166,7 +148,7 @@ const startServer = async () => {
     }
 
     return req.headers.accept === 'application/json'
-      ? jsonErrorResponse(message, res)
+      ? jsonServerErrorResponse(res, message)
       : writeToHtml(message, res);
   });
 };

@@ -78,18 +78,19 @@ export const Admin: React.FC<AdminProps> = ({ admin }) => {
             striped
             styles={{
               table: {
-                maxWidth: 400,
+                maxWidth: 500,
               },
             }}
             captionSide={'top'}
             data={{
               caption: 'Available access tokens for uploading bills',
-              head: ['Pin', 'Active', 'Number of Uses'],
+              head: ['Pin', 'Active', 'Number of Uses', 'Created Date'],
               body: accessTokens.map((token) => {
                 return [
                   token.pin,
                   token.active ? 'True' : 'False',
                   token.noOfUses,
+                  token.createdAt.toLocaleString(),
                 ];
               }),
             }}

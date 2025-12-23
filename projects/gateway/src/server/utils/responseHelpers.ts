@@ -84,10 +84,39 @@ export const jsonErrorResponse = (
 };
 
 /**
+ * Standardized json 400 response
+ */
+export const jsonBadRequestResponse = (res: ServerResponse, msg?: string) => {
+  return jsonErrorResponse(msg ?? 'We were unable to process your', res, 400);
+};
+
+/**
  * Standardized json 403 response
  */
-export const jsonForbiddenResponse = (res: ServerResponse) => {
-  return jsonErrorResponse('You are not authorized', res, 403);
+export const jsonForbiddenResponse = (res: ServerResponse, msg?: string) => {
+  return jsonErrorResponse(msg ?? 'You are not authorized', res, 403);
+};
+
+/**
+ * Standardized json 404 response
+ */
+export const jsonNotFoundResponse = (res: ServerResponse, msg?: string) => {
+  return jsonErrorResponse(
+    msg ?? 'We were unable to find the resource you requested',
+    res,
+    404,
+  );
+};
+
+/**
+ * Standardized json 500 response
+ */
+export const jsonServerErrorResponse = (res: ServerResponse, msg?: string) => {
+  return jsonErrorResponse(
+    msg ?? 'We experienced an unexpected issue, please try again later',
+    res,
+    500,
+  );
 };
 
 /**

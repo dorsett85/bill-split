@@ -8,14 +8,14 @@ import { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import { ParticipantDao } from '../dao/ParticipantDao.ts';
 import { getDb } from '../db/getDb.ts';
 import { AccessTokenCreateRequest } from '../dto/accessToken.ts';
-import { AdminRequest } from '../dto/admin.ts';
+import { AdminPagePostRequest } from '../dto/admin.ts';
 import { VerifyAccessRequest } from '../dto/auth.ts';
 import { BillUpdate } from '../dto/bill.ts';
-import { id } from '../dto/id.ts';
+import { intId } from '../dto/id.ts';
 import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import { LineItemParticipantCreateRequest } from '../dto/lineItemParticipant.ts';
 import { ParticipantCreate, ParticipantUpdate } from '../dto/participant.ts';
-import { AuthService } from '../services/AuthService.ts';
+import { AdminService } from '../services/AdminService.ts';
 import { BillService } from '../services/BillService.ts';
 import { CryptoService } from '../services/CryptoService.ts';
 import type { HtmlService } from '../services/HtmlService.ts';
@@ -27,16 +27,17 @@ import { parseCookies } from '../utils/parseCookies.ts';
 import { parseJsonBody } from '../utils/parseJsonBody.ts';
 import { parseUrlEncodedForm } from '../utils/parseUrlEncodedForm.ts';
 import {
-  jsonErrorResponse,
+  jsonBadRequestResponse,
   jsonForbiddenResponse,
+  jsonNotFoundResponse,
   jsonSuccessResponse,
   setSessionCookie,
   writeRedirect,
   writeToHtml,
 } from '../utils/responseHelpers.ts';
 
-export const getAuthService = () => {
-  return new AuthService({
+const getAdminService = () => {
+  return new AdminService({
     accessTokenDao: new AccessTokenDao(getDb()),
     adminPassword: env.ADMIN_PASSWORD,
     cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
@@ -45,11 +46,12 @@ export const getAuthService = () => {
 
 const getBillService = () => {
   return new BillService({
+    accessTokenDao: new AccessTokenDao(getDb()),
     billDao: new BillDao(getDb()),
     lineItemDao: new LineItemDao(getDb()),
     lineItemParticipantDao: new LineItemParticipantDao(getDb()),
     participantDao: new ParticipantDao(getDb()),
-    authService: getAuthService(),
+    cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
     fileStorageService: new S3FileStorageService({
       bucketName: env.AWS_BILL_IMAGE_S3_BUCKET,
       s3Client: new S3Client({
@@ -72,6 +74,7 @@ const getParticipantService = () => {
     participantDao: new ParticipantDao(getDb()),
     billParticipantDao: new BillParticipantDao(getDb()),
     lineItemParticipantDao: new LineItemParticipantDao(getDb()),
+    cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
   });
 };
 
@@ -79,11 +82,10 @@ export const getAdminPage =
   ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
   async (req, res) => {
     const { sessionToken } = parseCookies(req);
-
-    const authService = getAuthService();
+    const adminService = getAdminService();
 
     const accessTokens = sessionToken
-      ? await authService.readAllAccessTokens(sessionToken)
+      ? await adminService.readAllAccessTokens(sessionToken)
       : undefined;
 
     const html = await htmlService.render(req.route, { accessTokens });
@@ -93,37 +95,18 @@ export const getAdminPage =
 export const postAdminPage =
   ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
   async (req, res) => {
-    const authService = getAuthService();
-    const { authenticationCode } = AdminRequest.parse(
+    const { authenticationCode } = AdminPagePostRequest.parse(
       await parseUrlEncodedForm(req),
     );
-
     const { sessionToken } = parseCookies(req);
+    const adminService = getAdminService();
 
-    let authenticationError: string | undefined = undefined;
-    let adminSessionToken = sessionToken;
+    const { token, accessTokens, authenticationError } =
+      await adminService.signAdminToken(authenticationCode, sessionToken);
 
-    if (
-      !sessionToken ||
-      (sessionToken && !authService.verifyAdminToken(sessionToken))
-    ) {
-      // User makes a request to gain admin access
-      const token = authService.signAdminToken(
-        authenticationCode,
-        sessionToken,
-      );
-      if (token) {
-        adminSessionToken = token;
-        setSessionCookie(token, res);
-      } else {
-        authenticationError = 'We could not verify your code';
-      }
+    if (!authenticationError && token) {
+      setSessionCookie(token, res);
     }
-
-    const accessTokens =
-      !authenticationError && adminSessionToken
-        ? await authService.readAllAccessTokens(adminSessionToken)
-        : undefined;
 
     const html = await htmlService.render(req.route, {
       accessTokens,
@@ -133,40 +116,42 @@ export const postAdminPage =
     return writeToHtml(html, res);
   };
 
+export const getAccessTokens: MiddlewareFunction = async (req, res) => {
+  const { sessionToken } = parseCookies(req);
+  const adminService = getAdminService();
+
+  const accessTokens = sessionToken
+    ? await adminService.readAllAccessTokens(sessionToken)
+    : undefined;
+
+  return accessTokens
+    ? jsonSuccessResponse({ accessTokens }, res)
+    : jsonNotFoundResponse(res);
+};
+
 export const postAccessToken: MiddlewareFunction = async (req, res) => {
   const { sessionToken } = parseCookies(req);
   const { pin } = AccessTokenCreateRequest.parse(await parseJsonBody(req));
-  const authService = getAuthService();
+  const adminService = getAdminService();
 
-  const idRecord = await authService.createAccessToken(pin, sessionToken);
+  const idRecord = await adminService.createAccessToken(pin, sessionToken);
 
   return idRecord
     ? jsonSuccessResponse(idRecord, res)
-    : jsonErrorResponse('Unabled to create access token', res, 400);
+    : jsonForbiddenResponse(res);
 };
 
-export const getAccessTokens: MiddlewareFunction = async (req, res) => {
-  const { sessionToken } = parseCookies(req);
-  const authService = getAuthService();
-
-  const accessTokens = sessionToken
-    ? await authService.readAllAccessTokens(sessionToken)
-    : undefined;
-
-  jsonSuccessResponse({ accessTokens }, res);
-};
-
-export const postVerifyAccess: MiddlewareFunction = async (req, res) => {
+export const postBillCreateAccess: MiddlewareFunction = async (req, res) => {
   const { pin } = VerifyAccessRequest.parse(await parseJsonBody(req));
   const { sessionToken } = parseCookies(req);
-  const authService = getAuthService();
+  const billService = getBillService();
 
-  const token = await authService.signCreateBillToken(pin, sessionToken);
+  const token = await billService.signBillCreateToken(pin, sessionToken);
   if (token) {
     setSessionCookie(token, res);
     return jsonSuccessResponse({ success: true }, res);
   }
-  jsonErrorResponse('Could not verify access', res, 400);
+  jsonBadRequestResponse(res, 'Could not verify access');
 };
 
 export const getHomePage =
@@ -176,154 +161,214 @@ export const getHomePage =
     return writeToHtml(html, res);
   };
 
-/**
- * A more complicated controller. Accessing this page either requires a
- * sessionToken with admin or bill access permission, or a hmac signature query
- * param. This allows the page to be shareable with people that don't have a
- * session token.
- *
- * Once The page is accessed with a signature hmac, the response will then set
- * the sessionToken with bill access permission.
- */
 export const getBillPage =
   ({ htmlService }: { htmlService: HtmlService }): MiddlewareFunction =>
   async (req, res) => {
-    const billService = getBillService();
-    const authService = getAuthService();
-    const billId = id.parse(+req.params.id);
     const { sessionToken } = parseCookies(req);
     const { signature } = req.queryParams;
+    const billId = intId.parse(req.params.id);
+    const billService = getBillService();
 
-    const hasBillTokenAccess =
-      !!sessionToken && authService.verifyBillAccessToken(sessionToken, billId);
-
-    const addBillTokenAccess =
-      !hasBillTokenAccess &&
-      !!signature &&
-      authService.verifyBillAccessHmac(signature, billId);
-
-    if (!hasBillTokenAccess && !addBillTokenAccess) {
+    const result = await billService.prepareBillPage(
+      billId,
+      signature,
+      sessionToken,
+    );
+    if (!result) {
       return writeRedirect('/', res);
     }
 
-    if (addBillTokenAccess) {
-      const token = authService.signBillAccessToken(billId, sessionToken);
-      setSessionCookie(token, res);
+    if (result.token) {
+      setSessionCookie(result.token, res);
     }
 
-    const bill = await billService.read(id.parse(+req.params.id));
-
-    const html = await htmlService.render(req.route, bill);
+    const html = await htmlService.render(req.route, result.bill);
     return writeToHtml(html, res);
   };
 
 export const postBill: MiddlewareFunction = async (req, res) => {
-  const billService = getBillService();
-  const authService = getAuthService();
   const { sessionToken } = parseCookies(req);
+  const billService = getBillService();
 
-  const verified =
-    !!sessionToken && authService.verifyCreateBillToken(sessionToken);
-  if (!verified) {
-    return jsonForbiddenResponse(res);
-  }
+  const billCreateRecord = sessionToken
+    ? await billService.create(req, sessionToken)
+    : undefined;
 
-  const billCreateRecord = await billService.create(req);
-  return jsonSuccessResponse(billCreateRecord, res);
+  return billCreateRecord
+    ? jsonSuccessResponse(billCreateRecord, res)
+    : jsonForbiddenResponse(res);
 };
 
 export const getBill: MiddlewareFunction = async (req, res) => {
+  const { sessionToken } = parseCookies(req);
   const billService = getBillService();
-  const bill = await billService.read(id.parse(+req.params.billId));
-  return jsonSuccessResponse(bill, res);
+
+  const bill = await billService.read(
+    intId.parse(req.params.billId),
+    sessionToken,
+  );
+  return bill ? jsonSuccessResponse(bill, res) : jsonNotFoundResponse(res);
 };
 
 export const patchBill: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
-
+  const { sessionToken } = parseCookies(req);
   const billService = getBillService();
 
-  const idRecord = await billService.update(
-    id.parse(+req.params.billId),
-    BillUpdate.parse(body),
-  );
-  return jsonSuccessResponse(idRecord, res);
+  const idRecord = sessionToken
+    ? await billService.update(
+        intId.parse(req.params.billId),
+        BillUpdate.parse(body),
+        sessionToken,
+      )
+    : undefined;
+
+  return idRecord
+    ? jsonSuccessResponse(idRecord, res)
+    : jsonNotFoundResponse(res);
 };
 
 export const postBillParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
+  const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
-  const participant = await participantService.createBillParticipant(
-    id.parse(+req.params.billId),
-    ParticipantCreate.parse(body),
-  );
-  return jsonSuccessResponse(participant, res);
+
+  const participant = sessionToken
+    ? await participantService.createBillParticipant(
+        intId.parse(req.params.billId),
+        ParticipantCreate.parse(body),
+        sessionToken,
+      )
+    : undefined;
+
+  return participant
+    ? jsonSuccessResponse(participant, res)
+    : jsonForbiddenResponse(res);
 };
 
 export const getBillParticipants: MiddlewareFunction = async (req, res) => {
+  const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
-  const participants = await participantService.readBillParticipants(
-    id.parse(+req.params.billId),
-  );
-  return jsonSuccessResponse(participants, res);
+
+  const participants = sessionToken
+    ? await participantService.readBillParticipants(
+        intId.parse(req.params.billId),
+        sessionToken,
+      )
+    : undefined;
+
+  return participants
+    ? jsonSuccessResponse(participants, res)
+    : jsonNotFoundResponse(res);
 };
 
 export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
+  const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
-  const idRecord = await participantService.deleteBillParticipant(
-    id.parse(+req.params.billId),
-    id.parse(+req.params.id),
-  );
 
-  return jsonSuccessResponse(idRecord, res);
+  const idRecord = sessionToken
+    ? await participantService.deleteBillParticipant(
+        intId.parse(req.params.billId),
+        intId.parse(req.params.id),
+        sessionToken,
+      )
+    : undefined;
+
+  return idRecord
+    ? jsonSuccessResponse(idRecord, res)
+    : jsonForbiddenResponse(res);
 };
 
 export const patchLineItem: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
-
+  const { sessionToken } = parseCookies(req);
   const billService = getBillService();
-  const idRecord = await billService.updateLineItem(
-    id.parse(+req.params.id),
-    LineItemUpdate.parse(body),
-  );
-  return jsonSuccessResponse(idRecord, res);
+
+  const idRecord = sessionToken
+    ? await billService.updateLineItem(
+        intId.parse(req.params.id),
+        intId.parse(req.params.billId),
+        LineItemUpdate.parse(body),
+        sessionToken,
+      )
+    : undefined;
+
+  return idRecord
+    ? jsonSuccessResponse(idRecord, res)
+    : jsonForbiddenResponse(res);
 };
 
 export const postLineItem: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
-
+  const { sessionToken } = parseCookies(req);
   const billService = getBillService();
-  const idRecord = await billService.createLineItem(LineItemCreate.parse(body));
-  return jsonSuccessResponse(idRecord, res);
+
+  const idRecord = sessionToken
+    ? await billService.createLineItem(
+        intId.parse(req.params.billId),
+        LineItemCreate.parse(body),
+        sessionToken,
+      )
+    : undefined;
+
+  return idRecord
+    ? jsonSuccessResponse(idRecord, res)
+    : jsonForbiddenResponse(res);
 };
 
 export const postLineItemParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
+  const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
-  const idRecord = await participantService.createLineItemParticipant(
-    LineItemParticipantCreateRequest.parse(body),
-  );
-  return jsonSuccessResponse(idRecord, res);
+
+  const idRecord = sessionToken
+    ? await participantService.createLineItemParticipant(
+        intId.parse(req.params.billId),
+        LineItemParticipantCreateRequest.parse(body),
+        sessionToken,
+      )
+    : undefined;
+
+  return idRecord
+    ? jsonSuccessResponse(idRecord, res)
+    : jsonForbiddenResponse(res);
 };
 
 export const deleteLineItemParticipant: MiddlewareFunction = async (
   req,
   res,
 ) => {
+  const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
-  const idRecord = await participantService.deleteLineItemParticipant(
-    id.parse(+req.params.id),
-  );
-  return jsonSuccessResponse(idRecord, res);
+
+  const idRecord = sessionToken
+    ? await participantService.deleteLineItemParticipant(
+        intId.parse(req.params.id),
+        intId.parse(req.params.billId),
+        sessionToken,
+      )
+    : undefined;
+
+  return idRecord
+    ? jsonSuccessResponse(idRecord, res)
+    : jsonForbiddenResponse(res);
 };
 
 export const patchParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
+  const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
-  const idRecord = await participantService.updateBillParticipant(
-    id.parse(+req.params.id),
-    ParticipantUpdate.parse(body),
-  );
 
-  return jsonSuccessResponse(idRecord, res);
+  const idRecord = sessionToken
+    ? await participantService.updateBillParticipant(
+        intId.parse(req.params.id),
+        intId.parse(req.params.billId),
+        ParticipantUpdate.parse(body),
+        sessionToken,
+      )
+    : undefined;
+
+  return idRecord
+    ? jsonSuccessResponse(idRecord, res)
+    : jsonForbiddenResponse(res);
 };

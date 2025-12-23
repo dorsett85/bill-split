@@ -4,7 +4,7 @@ import type React from 'react';
 import type { FormEvent } from 'react';
 
 import { useState } from 'react';
-import { postVerifyAccess } from '../api/api.ts';
+import { postBillCreateAccess } from '../api/api.ts';
 import { ErrorResponse, SuccessResponse } from '../api/dto.ts';
 
 export interface VerifyAccessProps {
@@ -32,7 +32,7 @@ export const VerifyAccessModal: React.FC<VerifyAccessProps> = ({
     }
 
     try {
-      const res = await postVerifyAccess(accessPin);
+      const res = await postBillCreateAccess(accessPin);
       const json = await res.json();
       if (res.ok && SuccessResponse.parse(json).data.success) {
         return onClose(true);

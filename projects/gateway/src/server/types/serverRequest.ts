@@ -4,7 +4,7 @@ export interface ServerRequest extends Omit<IncomingMessage, 'url'> {
   /**
    * Any dynamic route values parsed from the url
    */
-  params: Record<string, string>;
+  params: Record<string, string | undefined>;
   /**
    * Query params of the request
    */

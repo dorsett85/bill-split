@@ -1,5 +1,5 @@
 import { z } from 'zod';
 
-export const AdminRequest = z.object({
+export const AdminPagePostRequest = z.object({
   authenticationCode: z.string(),
 });

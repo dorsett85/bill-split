@@ -9,20 +9,20 @@ const baseOptions: RequestInit = {
 };
 
 export const getAccessTokens = async (): Promise<AccessTokenResponse> => {
-  const res = await fetch(`/admin/access-tokens`, baseOptions);
+  const res = await fetch(`/api/access-tokens`, baseOptions);
   return AccessTokenResponse.parse(await res.json());
 };
 
 export const postAccessToken = async (pin: string): Promise<Response> => {
-  return await fetch(`/admin/access-tokens`, {
+  return await fetch(`/api/access-tokens`, {
     ...baseOptions,
     method: 'POST',
     body: JSON.stringify({ pin }),
   });
 };
 
-export const postVerifyAccess = async (pin: string): Promise<Response> => {
-  return await fetch(`/api/verify-access`, {
+export const postBillCreateAccess = async (pin: string): Promise<Response> => {
+  return await fetch(`/api/bills/create-access`, {
     ...baseOptions,
     method: 'POST',
     body: JSON.stringify({ pin }),

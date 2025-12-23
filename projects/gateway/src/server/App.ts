@@ -6,7 +6,11 @@ import type {
 } from './types/serverRequest.ts';
 import { resolveRoute } from './utils/resolveRoute.ts';
 import { resolveRouteParams } from './utils/resolveRouteParams.ts';
-import { jsonErrorResponse, writeToHtml } from './utils/responseHelpers.ts';
+import {
+  jsonBadRequestResponse,
+  jsonNotFoundResponse,
+  writeToHtml,
+} from './utils/responseHelpers.ts';
 
 const reqAcceptsJson = (req: IncomingMessage) =>
   !!req.headers.accept?.includes('application/json');
@@ -64,7 +68,7 @@ export class App {
         res.statusCode = 400;
         const message = 'You need to specify a url in your request';
         return reqAcceptsJson(req)
-          ? jsonErrorResponse(message, res)
+          ? jsonBadRequestResponse(res, message)
           : writeToHtml(message, res);
       }
 
@@ -95,7 +99,7 @@ export class App {
           res.statusCode = 404;
           const message = 'We were unable to find the resource you requested';
           return reqAcceptsJson(req)
-            ? jsonErrorResponse(message, res)
+            ? jsonNotFoundResponse(res, message)
             : writeToHtml(message, res);
         }
 

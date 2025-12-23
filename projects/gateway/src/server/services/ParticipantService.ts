@@ -9,26 +9,31 @@ import type {
   ParticipantUpdate,
 } from '../dto/participant.ts';
 import { calculateRemainingPctOwes } from '../utils/calculateRemainingPctOwes.ts';
+import type { CryptoService } from './CryptoService.ts';
 
 interface ParticipantServiceConstructor {
   billParticipantDao: BillParticipantDao;
   lineItemParticipantDao: LineItemParticipantDao;
   participantDao: ParticipantDao;
+  cryptoService: CryptoService;
 }
 
 export class ParticipantService {
-  private billParticipantDao: BillParticipantDao;
-  private lineItemParticipantDao: LineItemParticipantDao;
-  private participantDao: ParticipantDao;
+  private readonly billParticipantDao: BillParticipantDao;
+  private readonly lineItemParticipantDao: LineItemParticipantDao;
+  private readonly participantDao: ParticipantDao;
+  private readonly cryptoService: CryptoService;
 
   constructor({
     billParticipantDao,
     lineItemParticipantDao,
     participantDao,
+    cryptoService,
   }: ParticipantServiceConstructor) {
     this.billParticipantDao = billParticipantDao;
     this.lineItemParticipantDao = lineItemParticipantDao;
     this.participantDao = participantDao;
+    this.cryptoService = cryptoService;
   }
 
   /**
@@ -37,7 +42,13 @@ export class ParticipantService {
   public async createBillParticipant(
     billId: number,
     participant: ParticipantCreate,
-  ): Promise<IdRecord> {
+    sessionToken: string,
+  ): Promise<IdRecord | undefined> {
+    const payload = this.cryptoService.verifySessionJwt(sessionToken);
+    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+      return undefined;
+    }
+
     return await this.participantDao.tx(async (client) => {
       // Check if the name already exists for a bill
       const exists = await this.participantDao.nameAlreadyExistsByBillId(
@@ -65,7 +76,13 @@ export class ParticipantService {
 
   public async readBillParticipants(
     billId: number,
-  ): Promise<ParticipantResponse> {
+    sessionToken: string,
+  ): Promise<ParticipantResponse | undefined> {
+    const payload = this.cryptoService.verifySessionJwt(sessionToken);
+    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+      return undefined;
+    }
+
     return await this.participantDao.tx(async (client) => {
       const lineItemParticipants =
         await this.lineItemParticipantDao.searchByBillId(billId, client);
@@ -90,8 +107,15 @@ export class ParticipantService {
 
   public async updateBillParticipant(
     participantId: number,
+    billId: number,
     update: ParticipantUpdate,
-  ): Promise<IdRecord> {
+    sessionToken: string,
+  ): Promise<IdRecord | undefined> {
+    const payload = this.cryptoService.verifySessionJwt(sessionToken);
+    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+      return undefined;
+    }
+
     return await this.participantDao.update(participantId, update);
   }
 
@@ -101,7 +125,13 @@ export class ParticipantService {
   public async deleteBillParticipant(
     billId: number,
     participantId: number,
-  ): Promise<IdRecord> {
+    sessionToken: string,
+  ): Promise<IdRecord | undefined> {
+    const payload = this.cryptoService.verifySessionJwt(sessionToken);
+    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+      return undefined;
+    }
+
     return await this.participantDao.tx(async (client) => {
       const lineItemParticipants =
         await this.lineItemParticipantDao.searchByLineItemIdUsingBillAndParticipant(
@@ -137,8 +167,14 @@ export class ParticipantService {
   }
 
   public async createLineItemParticipant(
+    billId: number,
     lineItemParticipant: LineItemParticipantCreateRequest,
-  ): Promise<IdRecord> {
+    sessionToken: string,
+  ): Promise<IdRecord | undefined> {
+    const payload = this.cryptoService.verifySessionJwt(sessionToken);
+    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+      return undefined;
+    }
     return await this.lineItemParticipantDao.tx(async (client) => {
       const lineItemParticipants = await this.lineItemParticipantDao.search(
         {
@@ -164,7 +200,16 @@ export class ParticipantService {
     });
   }
 
-  public async deleteLineItemParticipant(id: number): Promise<IdRecord> {
+  public async deleteLineItemParticipant(
+    id: number,
+    billId: number,
+    sessionToken: string,
+  ): Promise<IdRecord | undefined> {
+    const payload = this.cryptoService.verifySessionJwt(sessionToken);
+    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+      return undefined;
+    }
+
     return await this.lineItemParticipantDao.tx(async (client) => {
       const lineItemParticipants =
         await this.lineItemParticipantDao.searchByLineItemIdAssociatedWithPk(

@@ -4,6 +4,7 @@ export const AccessToken = z.object({
   pin: z.string(),
   active: z.boolean(),
   noOfUses: z.number(),
+  createdAt: z.coerce.date(),
 });
 
 export const AccessTokenResponse = z.object({

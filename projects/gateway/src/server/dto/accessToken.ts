@@ -17,6 +17,7 @@ export const AccessTokenReadStorage = z
     initialization_vector: AccessTokenCreate.shape.initializationVector,
     active: AccessTokenCreate.shape.active,
     no_of_uses: AccessTokenCreate.shape.noOfUses,
+    created_at: z.date(),
   })
   .strict();
 
@@ -36,14 +37,14 @@ export const AccessTokenCreateRequest = z.object({
 export type AccessTokenCreate = z.infer<typeof AccessTokenCreate>;
 export type AccessTokenRead = {
   [K in keyof AccessTokenCreate]: Exclude<AccessTokenCreate[K], null>;
-} & IdRecord;
+} & IdRecord & { createdAt: Date };
 export type AccessTokenUpdate = z.infer<typeof AccessTokenUpdate>;
 export type AccessTokenSearch = z.infer<typeof AccessTokenSearch>;
 export type AccessTokenCreateRequest = z.infer<typeof AccessTokenCreateRequest>;
 export type AccessTokenReadStorage = z.infer<typeof AccessTokenReadStorage>;
 export type AccessTokenResponse = Pick<
   AccessTokenRead,
-  'active' | 'noOfUses'
+  'active' | 'noOfUses' | 'createdAt'
 > & {
   pin: string;
 };
@@ -61,6 +62,7 @@ export const toAccessTokenStorage = (
       : undefined,
   active: 'active' in accessToken ? accessToken.active : undefined,
   no_of_uses: 'noOfUses' in accessToken ? accessToken.noOfUses : undefined,
+  created_at: 'created_at' in accessToken ? accessToken.created_at : undefined,
 });
 
 export const toAccessTokenRead = (
@@ -72,4 +74,5 @@ export const toAccessTokenRead = (
   initializationVector: accessToken.initialization_vector,
   active: accessToken.active,
   noOfUses: accessToken.no_of_uses,
+  createdAt: accessToken.created_at,
 });
