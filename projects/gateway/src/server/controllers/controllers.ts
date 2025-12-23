@@ -1,4 +1,5 @@
 import { S3Client } from '@aws-sdk/client-s3';
+import { env } from '../config.ts';
 import { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import { BillDao } from '../dao/BillDao.ts';
 import { BillParticipantDao } from '../dao/BillParticipantDao.ts';
@@ -16,6 +17,7 @@ import { LineItemParticipantCreateRequest } from '../dto/lineItemParticipant.ts'
 import { ParticipantCreate, ParticipantUpdate } from '../dto/participant.ts';
 import { AuthService } from '../services/AuthService.ts';
 import { BillService } from '../services/BillService.ts';
+import { CryptoService } from '../services/CryptoService.ts';
 import type { HtmlService } from '../services/HtmlService.ts';
 import { KafkaService } from '../services/KafkaService.ts';
 import { ParticipantService } from '../services/ParticipantService.ts';
@@ -36,8 +38,8 @@ import {
 export const getAuthService = () => {
   return new AuthService({
     accessTokenDao: new AccessTokenDao(getDb()),
-    adminPassword: process.env.ADMIN_PASSWORD ?? '',
-    secretKey: process.env.ADMIN_SECRET_KEY ?? '',
+    adminPassword: env.ADMIN_PASSWORD,
+    cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
   });
 };
 
@@ -49,18 +51,18 @@ const getBillService = () => {
     participantDao: new ParticipantDao(getDb()),
     authService: getAuthService(),
     fileStorageService: new S3FileStorageService({
-      bucketName: process.env.AWS_BILL_IMAGE_S3_BUCKET ?? '',
+      bucketName: env.AWS_BILL_IMAGE_S3_BUCKET,
       s3Client: new S3Client({
         credentials: {
-          accessKeyId: process.env.AWS_ACCESS_KEY ?? '',
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
+          accessKeyId: env.AWS_ACCESS_KEY,
+          secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
         },
-        region: process.env.AWS_REGION ?? '',
+        region: env.AWS_REGION,
       }),
     }),
     kafkaService: new KafkaService({
-      billTopic: process.env.KAFKA_BILL_PROCESSING_TOPIC ?? '',
-      connectionString: `${process.env.KAFKA_HOST}:${process.env.KAFKA_PORT}`,
+      billTopic: env.KAFKA_BILL_PROCESSING_TOPIC,
+      connectionString: `${env.KAFKA_HOST}:${env.KAFKA_PORT}`,
     }),
   });
 };

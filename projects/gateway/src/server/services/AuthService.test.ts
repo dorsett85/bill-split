@@ -2,15 +2,17 @@ import type { Pool } from 'pg';
 import { describe, expect, it } from 'vitest';
 import { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import { AuthService, type AuthServiceConstructor } from './AuthService.ts';
+import { CryptoService } from './CryptoService.ts';
 
 const getAuthService = <K extends keyof AuthServiceConstructor>(
   args?: Pick<AuthServiceConstructor, K>,
 ) => {
-  const SECRET_KEY = 'SECRET_KEY';
   return new AuthService({
     accessTokenDao: new AccessTokenDao({} as Pool),
     adminPassword: '',
-    secretKey: SECRET_KEY,
+    cryptoService: new CryptoService({
+      key: 'M+Ps6Xz7/=G$k<:dg)B\\VZj(Evm?;r4c',
+    }),
     ...args,
   });
 };

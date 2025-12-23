@@ -2,11 +2,12 @@ import { createRequire } from 'node:module';
 import fs from 'fs/promises';
 import http from 'http';
 import path from 'path';
+import { env } from './config.ts';
 import { writeToHtml, writeToText } from './utils/responseHelpers.ts';
 
 const require = createRequire(import.meta.url);
 
-const port = process.env.PORT || 3007;
+const port = env.PORT;
 
 async function preview() {
   const app = http.createServer(async (req, res) => {

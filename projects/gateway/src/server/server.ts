@@ -1,6 +1,7 @@
 import { createRsbuild, loadConfig, logger } from '@rsbuild/core';
 import path from 'path';
 import { App } from './App.ts';
+import { env } from './config.ts';
 import {
   deleteBillParticipant,
   deleteLineItemParticipant,
@@ -55,7 +56,7 @@ const startServer = async () => {
   let handleEnvListen = () => undefined;
   let port: number | string;
 
-  if (process.env.NODE_ENV === 'development') {
+  if (env.NODE_ENV === 'development') {
     // Init Rsbuild
     const rsbuild = await createRsbuild({
       rsbuildConfig: content,
@@ -86,7 +87,7 @@ const startServer = async () => {
       staticFileService,
     });
 
-    port = process.env.GATEWAY_PORT ?? 3002;
+    port = env.GATEWAY_PORT;
     envMiddleware = staticMiddleware(staticPath);
   }
 

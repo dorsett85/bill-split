@@ -8,8 +8,9 @@ TODO
 
 1. Api
    1. Live updates
-   2. Delete or deactivate access tokens
-   3. Encode bill page url
+   2. Calculate what everyone owes on BE
+   3. Delete or deactivate access tokens
+   4. Encode bill page url
 2. UI
    1. Home page
    2. Bill page

@@ -1,13 +1,14 @@
 import { Pool, types } from 'pg';
+import { env } from '../config.ts';
 
 types.setTypeParser(types.builtins.NUMERIC, parseFloat);
 
 const pool = new Pool({
-  database: process.env.DB_NAME,
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  database: env.DB_NAME,
+  host: env.DB_HOST,
+  port: Number(env.DB_PORT),
+  user: env.DB_USER,
+  password: env.DB_PASSWORD,
 });
 
 export const getDb = (): Pool => pool;
