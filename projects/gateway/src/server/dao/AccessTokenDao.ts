@@ -36,9 +36,10 @@ export class AccessTokenDao extends BaseDao<
   public async update(
     id: number,
     update: AccessTokenUpdate,
+    client?: PoolClient,
   ): Promise<IdRecord> {
     const dbUpdates = toAccessTokenStorage(update);
-    return this.updateRecord(id, dbUpdates);
+    return this.updateRecord(id, dbUpdates, client);
   }
 
   public async search(

@@ -2,6 +2,7 @@ import type { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import {
   AccessTokenCreate,
   type AccessTokenResponse,
+  type AccessTokenUpdate,
 } from '../dto/accessToken.ts';
 import type { IdRecord } from '../dto/id.ts';
 import type { CryptoService } from './CryptoService.ts';
@@ -57,12 +58,9 @@ export class AdminService {
 
   public async createAccessToken(
     pin: string,
-    sessionToken?: string,
+    sessionToken: string,
   ): Promise<IdRecord | undefined> {
-    if (
-      !sessionToken ||
-      !this.cryptoService.verifySessionJwt(sessionToken)?.isAdmin
-    ) {
+    if (!this.isAdmin(sessionToken)) {
       return undefined;
     }
 
@@ -82,9 +80,10 @@ export class AdminService {
   public async readAllAccessTokens(
     sessionToken: string,
   ): Promise<AccessTokenResponse[] | undefined> {
-    if (!this.cryptoService.verifySessionJwt(sessionToken)?.isAdmin) {
+    if (!this.isAdmin(sessionToken)) {
       return undefined;
     }
+
     const accessTokens = await this.accessTokenDao.search({});
 
     return accessTokens.map((token) => {
@@ -100,5 +99,52 @@ export class AdminService {
         createdAt: token.createdAt,
       };
     });
+  }
+
+  public async updateAccessToken(
+    pin: string,
+    update: AccessTokenUpdate,
+    sessionToken: string,
+  ): Promise<IdRecord | undefined> {
+    if (!this.isAdmin(sessionToken)) {
+      return undefined;
+    }
+
+    const hashedToken = this.cryptoService.signHmac(pin);
+
+    return this.accessTokenDao.tx(async (client) => {
+      const [token] = await this.accessTokenDao.search({ hashedToken }, client);
+
+      if (!token) {
+        return undefined;
+      }
+
+      return this.accessTokenDao.update(token.id, update, client);
+    });
+  }
+
+  public async deleteAccessToken(
+    pin: string,
+    sessionToken: string,
+  ): Promise<IdRecord | undefined> {
+    if (!this.isAdmin(sessionToken)) {
+      return undefined;
+    }
+
+    const hashedToken = this.cryptoService.signHmac(pin);
+
+    return this.accessTokenDao.tx(async (client) => {
+      const [token] = await this.accessTokenDao.search({ hashedToken }, client);
+
+      if (!token) {
+        return undefined;
+      }
+
+      return this.accessTokenDao.delete(token.id, client);
+    });
+  }
+
+  private isAdmin(sessionToken: string): boolean {
+    return !!this.cryptoService.verifySessionJwt(sessionToken)?.isAdmin;
   }
 }

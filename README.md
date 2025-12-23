@@ -8,6 +8,7 @@ TODO
 
 1. Api
    1. Live updates
+   2. Add bad request response to controllers (see patchAccessToken for example)
    2. Calculate what everyone owes on BE
    3. Delete or deactivate access tokens
    4. Encode bill page url

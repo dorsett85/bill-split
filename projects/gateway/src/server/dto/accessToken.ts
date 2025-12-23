@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { type IdRecord, id } from './id.ts';
 
+export const pin = z
+  .string()
+  .length(5)
+  .regex(/^\d+$/, 'pin must be all numbers');
+
 export const AccessTokenCreate = z.object({
   hashedToken: z.string(),
   encryptedToken: z.string(),
@@ -31,7 +36,7 @@ export const AccessTokenSearch = z.object({
 });
 
 export const AccessTokenCreateRequest = z.object({
-  pin: z.string(),
+  pin,
 });
 
 export type AccessTokenCreate = z.infer<typeof AccessTokenCreate>;

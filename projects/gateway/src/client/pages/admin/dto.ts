@@ -19,5 +19,6 @@ export const AdminData = z.object({
   authenticationError: z.string().optional(),
 });
 
+export type AccessToken = z.infer<typeof AccessToken>;
 export type AccessTokenResponse = z.infer<typeof AccessTokenResponse>;
 export type AdminData = z.infer<typeof AdminData>;

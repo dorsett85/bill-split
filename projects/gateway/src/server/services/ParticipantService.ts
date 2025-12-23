@@ -44,8 +44,7 @@ export class ParticipantService {
     participant: ParticipantCreate,
     sessionToken: string,
   ): Promise<IdRecord | undefined> {
-    const payload = this.cryptoService.verifySessionJwt(sessionToken);
-    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+    if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
 
@@ -78,8 +77,7 @@ export class ParticipantService {
     billId: number,
     sessionToken: string,
   ): Promise<ParticipantResponse | undefined> {
-    const payload = this.cryptoService.verifySessionJwt(sessionToken);
-    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+    if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
 
@@ -111,8 +109,7 @@ export class ParticipantService {
     update: ParticipantUpdate,
     sessionToken: string,
   ): Promise<IdRecord | undefined> {
-    const payload = this.cryptoService.verifySessionJwt(sessionToken);
-    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+    if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
 
@@ -127,8 +124,7 @@ export class ParticipantService {
     participantId: number,
     sessionToken: string,
   ): Promise<IdRecord | undefined> {
-    const payload = this.cryptoService.verifySessionJwt(sessionToken);
-    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+    if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
 
@@ -171,10 +167,10 @@ export class ParticipantService {
     lineItemParticipant: LineItemParticipantCreateRequest,
     sessionToken: string,
   ): Promise<IdRecord | undefined> {
-    const payload = this.cryptoService.verifySessionJwt(sessionToken);
-    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+    if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
+
     return await this.lineItemParticipantDao.tx(async (client) => {
       const lineItemParticipants = await this.lineItemParticipantDao.search(
         {
@@ -205,8 +201,7 @@ export class ParticipantService {
     billId: number,
     sessionToken: string,
   ): Promise<IdRecord | undefined> {
-    const payload = this.cryptoService.verifySessionJwt(sessionToken);
-    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+    if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
 
@@ -228,5 +223,10 @@ export class ParticipantService {
 
       return await this.lineItemParticipantDao.delete(id, client);
     });
+  }
+
+  private hasBillAccess(billId: number, sessionToken: string) {
+    const payload = this.cryptoService.verifySessionJwt(sessionToken);
+    return payload?.isAdmin || payload?.billAccessIds?.includes(billId);
   }
 }

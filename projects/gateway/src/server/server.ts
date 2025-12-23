@@ -3,24 +3,26 @@ import path from 'path';
 import { App } from './App.ts';
 import { env } from './config.ts';
 import {
+  deleteAccessToken,
+  deleteBillLineItemParticipant,
   deleteBillParticipant,
-  deleteLineItemParticipant,
   getAccessTokens,
   getAdminPage,
   getBill,
   getBillPage,
   getBillParticipants,
   getHomePage,
+  patchAccessToken,
   patchBill,
-  patchLineItem,
-  patchParticipant,
+  patchBillLineItem,
+  patchBillParticipant,
   postAccessToken,
   postAdminPage,
   postBill,
   postBillCreateAccess,
+  postBillLineItem,
+  postBillLineItemParticipant,
   postBillParticipant,
-  postLineItem,
-  postLineItemParticipant,
 } from './controllers/controllers.ts';
 import { HtmlService } from './services/HtmlService.ts';
 import { LocalStaticFileService } from './services/LocalStaticFileService.ts';
@@ -97,39 +99,40 @@ const startServer = async () => {
   app.use(envMiddleware);
   app.use(loggingMiddleware);
 
-  // Admin routes
-  app.get('/admin', getAdminPage({ htmlService }));
-  app.post('/admin', postAdminPage({ htmlService }));
-
   // Html routes
   app.get('/', getHomePage({ htmlService }));
+  app.get('/admin', getAdminPage({ htmlService }));
+  app.post('/admin', postAdminPage({ htmlService }));
   app.get('/bills/:id', getBillPage({ htmlService }));
 
   // Api routes
-  app.get('/api/access-tokens', getAccessTokens);
-  app.post('/api/access-tokens', postAccessToken);
-  app.post('/api/bills/create-access', postBillCreateAccess);
+  const accessTokenApiPath = '/api/access-tokens';
+  app.get(accessTokenApiPath, getAccessTokens);
+  app.post(accessTokenApiPath, postAccessToken);
+  app.patch(`${accessTokenApiPath}/:pin`, patchAccessToken);
+  app.delete(`${accessTokenApiPath}/:pin`, deleteAccessToken);
 
   const billApiPath = '/api/bills';
+  app.get(`${billApiPath}/:billId`, getBill);
   app.post(billApiPath, postBill);
   app.patch(`${billApiPath}/:billId`, patchBill);
-  app.get(`${billApiPath}/:billId`, getBill);
+  app.post(`${billApiPath}/create-access`, postBillCreateAccess);
 
   app.get(`${billApiPath}/:billId/participants`, getBillParticipants);
   app.post(`${billApiPath}/:billId/participants`, postBillParticipant);
+  app.patch(`${billApiPath}/:billId/participants/:id`, patchBillParticipant);
   app.delete(`${billApiPath}/:billId/participants/:id`, deleteBillParticipant);
-  app.patch(`${billApiPath}/:billId/participants/:id`, patchParticipant);
 
-  app.patch(`${billApiPath}/:billId/line-items/:id`, patchLineItem);
-  app.post(`${billApiPath}/:billId/line-items`, postLineItem);
+  app.post(`${billApiPath}/:billId/line-items`, postBillLineItem);
+  app.patch(`${billApiPath}/:billId/line-items/:id`, patchBillLineItem);
 
   app.post(
     `${billApiPath}/:billId/line-item-participants`,
-    postLineItemParticipant,
+    postBillLineItemParticipant,
   );
   app.delete(
     `${billApiPath}/:billId/line-item-participants/:id`,
-    deleteLineItemParticipant,
+    deleteBillLineItemParticipant,
   );
 
   app.listen(port, () => {

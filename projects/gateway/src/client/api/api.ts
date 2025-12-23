@@ -21,6 +21,24 @@ export const postAccessToken = async (pin: string): Promise<Response> => {
   });
 };
 
+export const patchAccessToken = async (
+  pin: string,
+  active: boolean,
+): Promise<Response> => {
+  return await fetch(`/api/access-tokens/${pin}`, {
+    ...baseOptions,
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
+  });
+};
+
+export const deleteAccessToken = async (pin: string): Promise<Response> => {
+  return await fetch(`/api/access-tokens/${pin}`, {
+    ...baseOptions,
+    method: 'DELETE',
+  });
+};
+
 export const postBillCreateAccess = async (pin: string): Promise<Response> => {
   return await fetch(`/api/bills/create-access`, {
     ...baseOptions,

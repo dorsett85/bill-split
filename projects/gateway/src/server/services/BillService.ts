@@ -98,11 +98,11 @@ export class BillService {
     sessionToken?: string,
   ): Promise<BillResponse | undefined> {
     if (sessionToken) {
-      const payload = this.cryptoService.verifySessionJwt(sessionToken);
-      if (!payload?.isAdmin && !payload?.createBill) {
+      if (!this.hasBillAccess(id, sessionToken)) {
         return undefined;
       }
     }
+
     const res: BillResponse = await this.billDao.tx(async (client) => {
       const bill = await this.billDao.read(id, client);
       const lineItems = await this.lineItemDao.search(
@@ -146,15 +146,14 @@ export class BillService {
 
   public async update(
     id: number,
-    bill: BillUpdate,
+    update: BillUpdate,
     sessionToken: string,
   ): Promise<IdRecord | undefined> {
-    const payload = this.cryptoService.verifySessionJwt(sessionToken);
-    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(id)) {
+    if (!this.hasBillAccess(id, sessionToken)) {
       return undefined;
     }
 
-    return await this.billDao.update(id, bill);
+    return await this.billDao.update(id, update);
   }
 
   public async createLineItem(
@@ -162,8 +161,7 @@ export class BillService {
     lineItem: LineItemCreate,
     sessionToken: string,
   ): Promise<IdRecord | undefined> {
-    const payload = this.cryptoService.verifySessionJwt(sessionToken);
-    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+    if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
 
@@ -176,8 +174,7 @@ export class BillService {
     update: LineItemUpdate,
     sessionToken: string,
   ): Promise<IdRecord | undefined> {
-    const payload = this.cryptoService.verifySessionJwt(sessionToken);
-    if (!payload?.isAdmin && !payload?.billAccessIds?.includes(billId)) {
+    if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
 
@@ -201,9 +198,13 @@ export class BillService {
         return null;
       }
 
-      return this.accessTokenDao.update(accessToken.id, {
-        noOfUses: accessToken.noOfUses + 1,
-      });
+      return this.accessTokenDao.update(
+        accessToken.id,
+        {
+          noOfUses: accessToken.noOfUses + 1,
+        },
+        client,
+      );
     });
 
     if (!result) {
@@ -231,13 +232,8 @@ export class BillService {
     signature?: string,
     sessionToken?: string,
   ): Promise<{ token?: string; bill: BillResponse } | undefined> {
-    let hasBillAccess = false;
-    if (sessionToken) {
-      const payload = this.cryptoService.verifySessionJwt(sessionToken);
-      hasBillAccess = !!(
-        payload?.isAdmin || payload?.billAccessIds?.includes(billId)
-      );
-    }
+    const hasBillAccess =
+      !!sessionToken && this.hasBillAccess(billId, sessionToken);
 
     const addBillTokenAccess =
       !hasBillAccess &&
@@ -271,5 +267,10 @@ export class BillService {
       bill,
       token,
     };
+  }
+
+  private hasBillAccess(billId: number, sessionToken: string) {
+    const payload = this.cryptoService.verifySessionJwt(sessionToken);
+    return payload?.isAdmin || payload?.billAccessIds?.includes(billId);
   }
 }

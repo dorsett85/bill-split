@@ -2,17 +2,25 @@ import {
   Anchor,
   Button,
   Container,
-  Notification,
   Stack,
-  Table,
   TextInput,
   Title,
 } from '@mantine/core';
 import type React from 'react';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
-import { getAccessTokens, postAccessToken } from '../../api/api.ts';
-import type { AdminData } from './dto.ts';
+import {
+  deleteAccessToken,
+  getAccessTokens,
+  patchAccessToken,
+  postAccessToken,
+} from '../../api/api.ts';
+import { AdminAccessTokenTable } from '../../components/AdminAccessTokenTable.tsx';
+import type { AccessToken, AdminData } from './dto.ts';
+
+const byLatestDesc = (a: AccessToken, b: AccessToken) => {
+  return a.createdAt < b.createdAt ? 1 : -1;
+};
 
 export interface AdminProps {
   admin: AdminData;
@@ -20,11 +28,10 @@ export interface AdminProps {
 
 export const Admin: React.FC<AdminProps> = ({ admin }) => {
   const [accessTokens, setAccessTokens] = useState<AdminData['accessTokens']>(
-    admin.accessTokens,
+    admin.accessTokens?.sort(byLatestDesc),
   );
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState<string | undefined>(undefined);
-  const [showPinNotification, setShowPinNotification] = useState(false);
 
   const handleOnSubmitToken = async (e: FormEvent) => {
     e.preventDefault();
@@ -34,14 +41,37 @@ export const Admin: React.FC<AdminProps> = ({ admin }) => {
       const res = await postAccessToken(pin);
       if (res.ok) {
         pinError = undefined;
-        setShowPinNotification(true);
         const { data } = await getAccessTokens();
-        setAccessTokens(data.accessTokens);
+        setAccessTokens(data.accessTokens?.sort(byLatestDesc));
       }
     } catch {
       // no-op
     }
     setPinError(pinError);
+  };
+
+  const handleOnTokenActiveToggle = async (pin: string, active: boolean) => {
+    try {
+      const res = await patchAccessToken(pin, active);
+      if (res.ok) {
+        const { data } = await getAccessTokens();
+        setAccessTokens(data.accessTokens?.sort(byLatestDesc));
+      }
+    } catch {
+      //
+    }
+  };
+
+  const handleOnDeleteToken = async (pin: string) => {
+    try {
+      const res = await deleteAccessToken(pin);
+      if (res.ok) {
+        const { data } = await getAccessTokens();
+        setAccessTokens(data.accessTokens?.sort(byLatestDesc));
+      }
+    } catch {
+      //
+    }
   };
 
   const renderContent = () => {
@@ -63,37 +93,12 @@ export const Admin: React.FC<AdminProps> = ({ admin }) => {
                 required
               />
               <Button type="submit">Submit</Button>
-              {showPinNotification && (
-                <Notification
-                  title="Pin Successfully Generated"
-                  onClose={() => setShowPinNotification(false)}
-                >
-                  The pin "{pin}" can be used up to 10 times.
-                </Notification>
-              )}
             </Stack>
           </form>
-          <Table
-            mt={'xl'}
-            striped
-            styles={{
-              table: {
-                maxWidth: 500,
-              },
-            }}
-            captionSide={'top'}
-            data={{
-              caption: 'Available access tokens for uploading bills',
-              head: ['Pin', 'Active', 'Number of Uses', 'Created Date'],
-              body: accessTokens.map((token) => {
-                return [
-                  token.pin,
-                  token.active ? 'True' : 'False',
-                  token.noOfUses,
-                  token.createdAt.toLocaleString(),
-                ];
-              }),
-            }}
+          <AdminAccessTokenTable
+            accessTokens={accessTokens}
+            onActiveToggle={handleOnTokenActiveToggle}
+            onDelete={handleOnDeleteToken}
           />
         </>
       );
