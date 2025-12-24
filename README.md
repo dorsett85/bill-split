@@ -12,9 +12,8 @@ TODO
    3. Calculate what everyone owes on BE
    4. Encode bill page url
 2. UI
-   1. Home page
-   2. Bill page
-      1. Check for 403 responses for each api request
-   3. Error page
+   1. Handle api error responses (only checking for 'data' property right now)
+   2. Home page
+   3. Bill page
 3. CI/CD
    1. Automated deployment

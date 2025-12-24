@@ -1,3 +1,4 @@
+import { logger } from '@rsbuild/core';
 import {
   AccessTokenCreateRequest,
   AccessTokenUpdate,
@@ -16,6 +17,7 @@ import {
   jsonBadRequestResponse,
   jsonForbiddenResponse,
   jsonNotFoundResponse,
+  jsonServerErrorResponse,
   jsonSuccessResponse,
   setSessionCookie,
 } from '../utils/responseHelpers.ts';
@@ -29,13 +31,18 @@ export const getAccessTokens: MiddlewareFunction = async (req, res) => {
   const { sessionToken } = parseCookies(req);
   const adminService = getAdminService();
 
-  const accessTokens = sessionToken
-    ? await adminService.readAllAccessTokens(sessionToken)
-    : undefined;
+  try {
+    const accessTokens = sessionToken
+      ? await adminService.readAllAccessTokens(sessionToken)
+      : undefined;
 
-  return accessTokens
-    ? jsonSuccessResponse({ accessTokens }, res)
-    : jsonNotFoundResponse(res);
+    return accessTokens
+      ? jsonSuccessResponse({ accessTokens }, res)
+      : jsonNotFoundResponse(res);
+  } catch (error) {
+    logger.error(error);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const postAccessToken: MiddlewareFunction = async (req, res) => {
@@ -164,7 +171,7 @@ export const getBillParticipants: MiddlewareFunction = async (req, res) => {
     : undefined;
 
   return participants
-    ? jsonSuccessResponse(participants, res)
+    ? jsonSuccessResponse({ participants }, res)
     : jsonNotFoundResponse(res);
 };
 

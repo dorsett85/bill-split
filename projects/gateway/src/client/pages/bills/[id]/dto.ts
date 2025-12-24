@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { IdRecord } from '../../../api/dto.ts';
+import { createApiResponse, IdRecord } from '../../../api/dto.ts';
 
 const ImageStatus = z.literal(['parsing', 'ready', 'error']);
 
@@ -33,13 +33,13 @@ export const BillData = IdRecord.extend({
   participants: z.array(Participant),
 });
 
-export const BillResponse = z.object({
-  data: BillData,
-});
+export const BillResponse = createApiResponse(BillData);
 
-export const ParticipantResponse = z.object({
-  data: z.array(Participant),
-});
+export const ParticipantResponse = createApiResponse(
+  z.object({
+    participants: z.array(Participant),
+  }),
+);
 
 export type BillData = z.infer<typeof BillData>;
 export type Participant = z.infer<typeof Participant>;

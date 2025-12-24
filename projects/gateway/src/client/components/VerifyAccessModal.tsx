@@ -5,7 +5,7 @@ import type { FormEvent } from 'react';
 
 import { useState } from 'react';
 import { postBillCreateAccess } from '../api/api.ts';
-import { ErrorResponse, SuccessResponse } from '../api/dto.ts';
+import { SuccessResponse } from '../api/dto.ts';
 
 export interface VerifyAccessProps {
   open: boolean;
@@ -33,13 +33,17 @@ export const VerifyAccessModal: React.FC<VerifyAccessProps> = ({
 
     try {
       const res = await postBillCreateAccess(accessPin);
-      const json = await res.json();
-      if (res.ok && SuccessResponse.parse(json).data.success) {
+      const json = SuccessResponse.parse(await res.json());
+
+      if ('data' in json && json.data.success) {
         return onClose(true);
       }
 
-      const { error } = ErrorResponse.parse(json);
-      setError(error.message);
+      setError(
+        'error' in json
+          ? json.error.message
+          : 'We were unable to verify your pin',
+      );
     } catch (e) {
       console.log(e);
       setError('We were unable to verify your pin');

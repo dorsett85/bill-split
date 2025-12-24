@@ -31,8 +31,10 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
     setError(undefined);
 
     try {
-      const { data } = await createBillParticipant(billId, name);
-      onChange([...participants, { id: data.id, name, lineItems: [] }]);
+      const json = await createBillParticipant(billId, name);
+      if ('data' in json) {
+        onChange([...participants, { id: json.data.id, name, lineItems: [] }]);
+      }
     } catch {
       // no-up
     }
@@ -55,8 +57,10 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
         // TODO we probably want to create a modal here to warn users of the
         //  consequences of deleting a participant.
         await deleteBillParticipant(billId, deleteId);
-        const { data } = await fetchBillParticipants(billId);
-        onChange(data);
+        const json = await fetchBillParticipants(billId);
+        if ('data' in json) {
+          onChange(json.data.participants);
+        }
       } catch {
         // no-op
       }

@@ -40,17 +40,18 @@ export const Bill: React.FC<BillProps> = (props) => {
       setAnalyzeProgress((prev) => (prev < 100 ? prev + 5 : prev));
 
       try {
-        const { data } = await fetchBill(bill.id);
-        if (data.imageStatus === 'parsing') {
-          // Refetch if it's still parsing
-          return setTimeout(() => pollBill(), 1000);
+        const json = await fetchBill(bill.id);
+        if ('data' in json) {
+          if (json.data.imageStatus === 'parsing') {
+            // Refetch if it's still parsing
+            return setTimeout(() => pollBill(), 1000);
+          }
+          // The backend will get a new presigned url on each request, but we only
+          // need it on initial page load, otherwise it will rerequest the image
+          // with the new presigned url.
+          setBill({ ...json.data, imagePath: bill.imagePath });
         }
-        // The backend will get a new presigned url on each request, but we only
-        // need it on initial page load, otherwise it will rerequest the image
-        // with the new presigned url.
-        setBill({ ...data, imagePath: bill.imagePath });
-      } catch (e) {
-        console.log(e);
+      } catch {
         // Any fetch errors we can just set the image status to error
         setBill((prev) => ({
           ...prev,

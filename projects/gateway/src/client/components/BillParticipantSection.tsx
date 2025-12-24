@@ -102,8 +102,10 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
         await deleteLineItemParticipant(billId, id);
       }
 
-      const { data } = await fetchBillParticipants(billId);
-      onChange(data);
+      const json = await fetchBillParticipants(billId);
+      if ('data' in json) {
+        onChange(json.data.participants);
+      }
     } catch (e) {
       console.log(e);
     }

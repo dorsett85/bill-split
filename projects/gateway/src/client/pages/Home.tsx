@@ -48,10 +48,12 @@ export const Home = () => {
         return setUploading(false);
       }
 
-      const { data } = BillCreateResponse.parse(await res.json());
-
-      // Redirect to the specific bills page
-      window.location.assign(`/bills/${data.id}?signature=${data.signature}`);
+      const json = BillCreateResponse.parse(await res.json());
+      if ('data' in json) {
+        const { id, signature } = json.data;
+        // Redirect to the specific bills page
+        window.location.assign(`/bills/${id}?signature=${signature}`);
+      }
     } catch (e) {
       console.log(e);
       setUploading(false);

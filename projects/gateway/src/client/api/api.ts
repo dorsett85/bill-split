@@ -1,4 +1,4 @@
-import { AccessTokenResponse } from '../pages/admin/dto.ts';
+import { AccessTokenApiResponse } from '../pages/admin/dto.ts';
 import { BillResponse, ParticipantResponse } from '../pages/bills/[id]/dto.ts';
 import { IdResponse } from './dto.ts';
 
@@ -8,9 +8,9 @@ const baseOptions: RequestInit = {
   },
 };
 
-export const getAccessTokens = async (): Promise<AccessTokenResponse> => {
+export const getAccessTokens = async (): Promise<AccessTokenApiResponse> => {
   const res = await fetch(`/api/access-tokens`, baseOptions);
-  return AccessTokenResponse.parse(await res.json());
+  return AccessTokenApiResponse.parse(await res.json());
 };
 
 export const postAccessToken = async (pin: string): Promise<Response> => {

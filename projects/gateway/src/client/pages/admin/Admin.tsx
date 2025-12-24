@@ -33,6 +33,13 @@ export const Admin: React.FC<AdminProps> = ({ admin }) => {
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState<string | undefined>(undefined);
 
+  const fetchAndSetAccessTokens = async () => {
+    const json = await getAccessTokens();
+    if ('data' in json) {
+      setAccessTokens(json.data.accessTokens.sort(byLatestDesc));
+    }
+  };
+
   const handleOnSubmitToken = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -41,8 +48,7 @@ export const Admin: React.FC<AdminProps> = ({ admin }) => {
       const res = await postAccessToken(pin);
       if (res.ok) {
         pinError = undefined;
-        const { data } = await getAccessTokens();
-        setAccessTokens(data.accessTokens?.sort(byLatestDesc));
+        void fetchAndSetAccessTokens();
       }
     } catch {
       // no-op
@@ -54,8 +60,7 @@ export const Admin: React.FC<AdminProps> = ({ admin }) => {
     try {
       const res = await patchAccessToken(pin, active);
       if (res.ok) {
-        const { data } = await getAccessTokens();
-        setAccessTokens(data.accessTokens?.sort(byLatestDesc));
+        void fetchAndSetAccessTokens();
       }
     } catch {
       //
@@ -66,8 +71,7 @@ export const Admin: React.FC<AdminProps> = ({ admin }) => {
     try {
       const res = await deleteAccessToken(pin);
       if (res.ok) {
-        const { data } = await getAccessTokens();
-        setAccessTokens(data.accessTokens?.sort(byLatestDesc));
+        void fetchAndSetAccessTokens();
       }
     } catch {
       //

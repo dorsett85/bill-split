@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createApiResponse } from '../../api/dto.ts';
 
 export const AccessToken = z.object({
   pin: z.string(),
@@ -7,11 +8,11 @@ export const AccessToken = z.object({
   createdAt: z.coerce.date(),
 });
 
-export const AccessTokenResponse = z.object({
-  data: z.object({
-    accessTokens: z.array(AccessToken).optional(),
+export const AccessTokenApiResponse = createApiResponse(
+  z.object({
+    accessTokens: z.array(AccessToken),
   }),
-});
+);
 
 export const AdminData = z.object({
   accessTokens: z.array(AccessToken).optional(),
@@ -20,5 +21,5 @@ export const AdminData = z.object({
 });
 
 export type AccessToken = z.infer<typeof AccessToken>;
-export type AccessTokenResponse = z.infer<typeof AccessTokenResponse>;
+export type AccessTokenApiResponse = z.infer<typeof AccessTokenApiResponse>;
 export type AdminData = z.infer<typeof AdminData>;
