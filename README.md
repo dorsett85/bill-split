@@ -8,7 +8,8 @@ TODO
 
 1. Api
    1. Live updates
-   2. Encode bill page url
+   2. Remove tip from backend (handle on FE w/ state and localstorage)
+   3. Encode bill page url
 2. UI
    1. Handle api error responses (only checking for 'data' property right now)
    2. Home page
