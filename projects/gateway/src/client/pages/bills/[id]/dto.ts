@@ -17,6 +17,7 @@ const Participant = IdRecord.extend({
       pctOwes: z.number(),
     }),
   ),
+  owes: z.number(),
 });
 
 export const BillData = IdRecord.extend({
@@ -31,19 +32,14 @@ export const BillData = IdRecord.extend({
   tax: z.number().optional(),
   lineItems: z.array(LineItem),
   participants: z.array(Participant),
+  subTotal: z.number().optional(),
+  total: z.number().optional(),
 });
 
 export const BillResponse = createApiResponse(BillData);
-
-export const ParticipantResponse = createApiResponse(
-  z.object({
-    participants: z.array(Participant),
-  }),
-);
 
 export type BillData = z.infer<typeof BillData>;
 export type Participant = z.infer<typeof Participant>;
 export type LineItems = z.infer<typeof LineItem>[];
 export type BillResponse = z.infer<typeof BillResponse>;
-export type ParticipantResponse = z.infer<typeof ParticipantResponse>;
 export type ImageStatus = z.infer<typeof ImageStatus>;

@@ -218,33 +218,6 @@ export const postBillCreateAccess: MiddlewareFunction = async (req, res) => {
   }
 };
 
-export const getBillParticipants: MiddlewareFunction = async (req, res) => {
-  const parseResult = intId.safeParse(req.params.billId);
-
-  if (!parseResult.success) {
-    return jsonBadRequestResponse(res);
-  }
-
-  const { sessionToken } = parseCookies(req);
-  const participantService = getParticipantService();
-
-  try {
-    const participants = sessionToken
-      ? await participantService.readBillParticipants(
-          parseResult.data,
-          sessionToken,
-        )
-      : undefined;
-
-    return participants
-      ? jsonSuccessResponse({ participants }, res)
-      : jsonNotFoundResponse(res);
-  } catch (e) {
-    logger.error(e);
-    return jsonServerErrorResponse(res);
-  }
-};
-
 export const postBillParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
   const parseBillIdResult = intId.safeParse(req.params.billId);

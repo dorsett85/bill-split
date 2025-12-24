@@ -25,6 +25,7 @@ export type ParticipantUpdate = z.infer<typeof ParticipantUpdate>;
 export type ParticipantReadStorage = z.infer<typeof ParticipantReadStorage>;
 export type ParticipantResponse = (ParticipantRead & {
   lineItems: Omit<LineItemParticipantRead, 'participantId'>[];
+  owes: number;
 })[];
 
 export const toParticipantStorage = (

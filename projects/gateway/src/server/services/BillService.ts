@@ -9,6 +9,7 @@ import type { IdRecord } from '../dto/id.ts';
 import type { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import type { FileStorageService } from '../types/fileStorageService.ts';
 import type { ServerRequest } from '../types/serverRequest.ts';
+import { calculateBill } from '../utils/calculateBill.ts';
 import type { CryptoService } from './CryptoService.ts';
 import type { KafkaService } from './KafkaService.ts';
 import { S3FileStorageService } from './S3FileStorageService.ts';
@@ -116,21 +117,7 @@ export class BillService {
         client,
       );
 
-      return {
-        ...bill,
-        lineItems,
-        participants: participants.map((participant) => ({
-          id: participant.id,
-          name: participant.name,
-          lineItems: lineItemParticipants
-            .filter((lip) => lip.participantId === participant.id)
-            .map((lip) => ({
-              id: lip.id,
-              lineItemId: lip.lineItemId,
-              pctOwes: lip.pctOwes,
-            })),
-        })),
-      };
+      return calculateBill(bill, lineItems, lineItemParticipants, participants);
     });
 
     // Get a presigned image URL so the FE can fetch the image from a private

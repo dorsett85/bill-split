@@ -1,11 +1,12 @@
+import type { BillDao } from '../dao/BillDao.ts';
 import type { BillParticipantDao } from '../dao/BillParticipantDao.ts';
+import type { LineItemDao } from '../dao/LineItemDao.ts';
 import type { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
 import type { IdRecord } from '../dto/id.ts';
 import type { LineItemParticipantCreateRequest } from '../dto/lineItemParticipant.ts';
 import type {
   ParticipantCreate,
-  ParticipantResponse,
   ParticipantUpdate,
 } from '../dto/participant.ts';
 import { calculateRemainingPctOwes } from '../utils/calculateRemainingPctOwes.ts';
@@ -15,6 +16,8 @@ interface ParticipantServiceConstructor {
   billParticipantDao: BillParticipantDao;
   lineItemParticipantDao: LineItemParticipantDao;
   participantDao: ParticipantDao;
+  billDao: BillDao;
+  lineItemDao: LineItemDao;
   cryptoService: CryptoService;
 }
 
@@ -70,36 +73,6 @@ export class ParticipantService {
         client,
       );
       return res;
-    });
-  }
-
-  public async readBillParticipants(
-    billId: number,
-    sessionToken: string,
-  ): Promise<ParticipantResponse | undefined> {
-    if (!this.hasBillAccess(billId, sessionToken)) {
-      return undefined;
-    }
-
-    return await this.participantDao.tx(async (client) => {
-      const lineItemParticipants =
-        await this.lineItemParticipantDao.searchByBillId(billId, client);
-      const participants = await this.participantDao.searchByBillId(
-        billId,
-        client,
-      );
-
-      return participants.map((participant) => ({
-        id: participant.id,
-        name: participant.name,
-        lineItems: lineItemParticipants
-          .filter((lip) => lip.participantId === participant.id)
-          .map((lip) => ({
-            id: lip.id,
-            lineItemId: lip.lineItemId,
-            pctOwes: lip.pctOwes,
-          })),
-      }));
     });
   }
 

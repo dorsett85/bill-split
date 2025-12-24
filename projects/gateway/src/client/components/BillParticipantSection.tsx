@@ -16,7 +16,7 @@ import { useMemo, useState } from 'react';
 import {
   createLineItemParticipant,
   deleteLineItemParticipant,
-  fetchBillParticipants,
+  fetchBill,
 } from '../api/api.ts';
 import type { LineItems, Participant } from '../pages/bills/[id]/dto.ts';
 import { BillParticipantCheckBoxCard } from './BillParticipantCheckBoxCard.tsx';
@@ -34,10 +34,7 @@ interface BillParticipantSectionsProps {
   /**
    * Render the line calculating how much and individual participant owes
    */
-  renderParticipantOwes: (
-    participantLineItems: Participant['lineItems'],
-    lineItemPriceLookup: Record<string, number>,
-  ) => React.ReactElement;
+  renderParticipantOwes: (participant: Participant) => React.ReactElement;
 }
 
 export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
@@ -49,10 +46,6 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
 }) => {
   const colorScheme = useComputedColorScheme();
   const [openSection, setOpenSection] = useState<Set<number>>(new Set());
-
-  const lineItemPriceLookup = Object.fromEntries(
-    lineItems.map((li) => [li.id, li.price]),
-  );
 
   const participantLineItemLookup = useMemo(() => {
     const records: Record<
@@ -102,7 +95,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
         await deleteLineItemParticipant(billId, id);
       }
 
-      const json = await fetchBillParticipants(billId);
+      const json = await fetchBill(billId);
       if ('data' in json) {
         onChange(json.data.participants);
       }
@@ -145,7 +138,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                 )}
               </ActionIcon>
             </Group>
-            {renderParticipantOwes(participant.lineItems, lineItemPriceLookup)}
+            {renderParticipantOwes(participant)}
           </Box>
           <Divider />
           <Collapse in={openSection.has(participant.id)} mb="md">

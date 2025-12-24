@@ -44,6 +44,8 @@ export type BillUpdate = z.infer<typeof BillUpdate>;
 export type BillResponse = BillRead & {
   lineItems: Omit<LineItemRead, 'billId'>[];
   participants: ParticipantResponse;
+  subTotal: number;
+  total: number;
 };
 
 export const toBillStorage = (bill: BillCreate | BillUpdate) => ({

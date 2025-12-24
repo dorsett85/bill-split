@@ -1,5 +1,5 @@
 import { AccessTokenApiResponse } from '../pages/admin/dto.ts';
-import { BillResponse, ParticipantResponse } from '../pages/bills/[id]/dto.ts';
+import { BillResponse } from '../pages/bills/[id]/dto.ts';
 import { IdResponse } from './dto.ts';
 
 const baseOptions: RequestInit = {
@@ -88,13 +88,6 @@ export const createBillParticipant = async (
     body: JSON.stringify({ name }),
   });
   return IdResponse.parse(await res.json());
-};
-
-export const fetchBillParticipants = async (
-  billId: number,
-): Promise<ParticipantResponse> => {
-  const res = await fetch(`/api/bills/${billId}/participants`, baseOptions);
-  return ParticipantResponse.parse(await res.json());
 };
 
 export const deleteBillParticipant = async (

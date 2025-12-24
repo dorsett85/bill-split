@@ -1,11 +1,11 @@
 import { NumberInput } from '@mantine/core';
 import type React from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { updateBill } from '../api/api.ts';
 
 interface TipInputProps {
   billId: number;
-  tip?: number;
+  tip: number;
   onChange: (tip: number) => void;
 }
 
@@ -14,9 +14,13 @@ export const TipInput: React.FC<TipInputProps> = ({
   tip,
   onChange,
 }) => {
-  const [inputTip, setInputTip] = useState(tip ?? 0);
+  const [inputTip, setInputTip] = useState(tip);
   const timeoutRef = useRef<NodeJS.Timeout>(undefined);
   const abortRef = useRef<AbortController>(new AbortController());
+
+  useEffect(() => {
+    setInputTip(tip);
+  }, [tip]);
 
   const handleOnChange = (value: number | string) => {
     const newTip = typeof value === 'string' ? 0 : value;

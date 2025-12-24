@@ -52,6 +52,8 @@ export const getParticipantService = () => {
     participantDao: new ParticipantDao(getDb()),
     billParticipantDao: new BillParticipantDao(getDb()),
     lineItemParticipantDao: new LineItemParticipantDao(getDb()),
+    billDao: new BillDao(getDb()),
+    lineItemDao: new LineItemDao(getDb()),
     cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
   });
 };

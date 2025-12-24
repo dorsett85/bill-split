@@ -20,7 +20,6 @@ import { BillStatusNotification } from '../../../components/BillStatusNotificati
 import { TipInput } from '../../../components/TipInput.tsx';
 import { USCurrency } from '../../../utils/UsCurrency.ts';
 import type { BillData, Participant } from './dto.ts';
-import { calculateTotals } from './utils.ts';
 
 interface BillProps {
   bill: BillData;
@@ -70,16 +69,13 @@ export const Bill: React.FC<BillProps> = (props) => {
     }));
   };
 
-  const {
-    gratuity,
-    tax,
-    tip,
-    discount,
-    discountPct,
-    subTotal,
-    total,
-    totalWithTip,
-  } = calculateTotals(bill);
+  const gratuity = bill.gratuity ?? 0;
+  const tax = bill.tax ?? 0;
+  const tip = bill.tip ?? 0;
+  const discount = bill.discount ?? 0;
+  const subTotal = bill.subTotal ?? 0;
+  const total = bill.total ?? 0;
+  const totalWithTip = total * (tip / 100) + total;
 
   const renderBillItemValue = (value: number) => {
     return bill.imageStatus === 'ready' ? (
@@ -139,8 +135,8 @@ export const Bill: React.FC<BillProps> = (props) => {
           <Group gap={8}>
             <TipInput
               billId={bill.id}
-              tip={bill.tip}
-              onChange={(tip) => setBill({ ...bill, tip })}
+              tip={tip}
+              onChange={(newTip) => setBill({ ...bill, tip: newTip })}
             />
             <Text span fs="italic" fw={700} size="lg">
               {renderBillItemValue(totalWithTip)}
@@ -162,16 +158,8 @@ export const Bill: React.FC<BillProps> = (props) => {
         participants={bill.participants}
         lineItems={bill.lineItems}
         onChange={handleOnChangeParticipant}
-        renderParticipantOwes={(participantLineItems, lineItemPriceLookup) => (
-          <BillParticipantOwes
-            lineItemPriceLookup={lineItemPriceLookup}
-            participantLineItems={participantLineItems}
-            tip={tip}
-            tax={tax}
-            discountPct={discountPct}
-            subTotal={subTotal}
-            gratuity={gratuity}
-          />
+        renderParticipantOwes={(participant) => (
+          <BillParticipantOwes owes={participant.owes} tip={tip} />
         )}
       />
     </Container>

@@ -8,7 +8,6 @@ import {
   deleteBillParticipant,
   getAccessTokens,
   getBill,
-  getBillParticipants,
   patchAccessToken,
   patchBill,
   patchBillLineItem,
@@ -120,7 +119,6 @@ const startServer = async () => {
   app.patch(`${billApiPath}/:billId`, patchBill);
   app.post(`${billApiPath}/create-access`, postBillCreateAccess);
 
-  app.get(`${billApiPath}/:billId/participants`, getBillParticipants);
   app.post(`${billApiPath}/:billId/participants`, postBillParticipant);
   app.patch(`${billApiPath}/:billId/participants/:id`, patchBillParticipant);
   app.delete(`${billApiPath}/:billId/participants/:id`, deleteBillParticipant);

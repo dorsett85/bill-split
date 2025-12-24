@@ -4,7 +4,7 @@ import { useState } from 'react';
 import {
   createBillParticipant,
   deleteBillParticipant,
-  fetchBillParticipants,
+  fetchBill,
 } from '../api/api.ts';
 import type { Participant } from '../pages/bills/[id]/dto.ts';
 
@@ -33,7 +33,10 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
     try {
       const json = await createBillParticipant(billId, name);
       if ('data' in json) {
-        onChange([...participants, { id: json.data.id, name, lineItems: [] }]);
+        onChange([
+          ...participants,
+          { id: json.data.id, name, lineItems: [], owes: 0 },
+        ]);
       }
     } catch {
       // no-up
@@ -57,7 +60,7 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
         // TODO we probably want to create a modal here to warn users of the
         //  consequences of deleting a participant.
         await deleteBillParticipant(billId, deleteId);
-        const json = await fetchBillParticipants(billId);
+        const json = await fetchBill(billId);
         if ('data' in json) {
           onChange(json.data.participants);
         }
