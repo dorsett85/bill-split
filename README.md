@@ -8,9 +8,8 @@ TODO
 
 1. Api
    1. Live updates
-   2. Add bad request / server error responses to controllers (see patchAccessToken for example)
-   3. Calculate what everyone owes on BE
-   4. Encode bill page url
+   2. Calculate what everyone owes on BE
+   3. Encode bill page url
 2. UI
    1. Handle api error responses (only checking for 'data' property right now)
    2. Home page

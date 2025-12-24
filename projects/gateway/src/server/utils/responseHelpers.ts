@@ -91,7 +91,7 @@ export const jsonErrorResponse = (
  */
 export const jsonBadRequestResponse = (res: ServerResponse, msg?: string) => {
   return jsonErrorResponse(
-    msg ?? 'We were unable to process your request',
+    msg ?? 'We received bad inputs from your request',
     res,
     400,
   );

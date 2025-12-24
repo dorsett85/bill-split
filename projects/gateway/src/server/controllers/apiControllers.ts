@@ -39,231 +39,372 @@ export const getAccessTokens: MiddlewareFunction = async (req, res) => {
     return accessTokens
       ? jsonSuccessResponse({ accessTokens }, res)
       : jsonNotFoundResponse(res);
-  } catch (error) {
-    logger.error(error);
+  } catch (e) {
+    logger.error(e);
     return jsonServerErrorResponse(res);
   }
 };
 
 export const postAccessToken: MiddlewareFunction = async (req, res) => {
+  const parseResult = AccessTokenCreateRequest.safeParse(
+    await parseJsonBody(req),
+  );
+
+  if (!parseResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
   const { sessionToken } = parseCookies(req);
-  const { pin } = AccessTokenCreateRequest.parse(await parseJsonBody(req));
   const adminService = getAdminService();
 
-  const idRecord = sessionToken
-    ? await adminService.createAccessToken(pin, sessionToken)
-    : undefined;
+  try {
+    const idRecord = sessionToken
+      ? await adminService.createAccessToken(parseResult.data.pin, sessionToken)
+      : undefined;
 
-  return idRecord
-    ? jsonSuccessResponse(idRecord, res)
-    : jsonForbiddenResponse(res);
+    return idRecord
+      ? jsonSuccessResponse(idRecord, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const patchAccessToken: MiddlewareFunction = async (req, res) => {
-  const { sessionToken } = parseCookies(req);
+  const parsePinResult = pin.safeParse(req.params.pin);
+  const parseUpdatesResult = AccessTokenUpdate.safeParse(
+    await parseJsonBody(req),
+  );
 
-  const verifiedPin = pin.safeParse(req.params.pin);
-  const verifiedUpdates = AccessTokenUpdate.safeParse(await parseJsonBody(req));
-
-  if (!verifiedPin.success || !verifiedUpdates.success) {
+  if (!parsePinResult.success || !parseUpdatesResult.success) {
     return jsonBadRequestResponse(res);
   }
 
+  const { sessionToken } = parseCookies(req);
   const adminService = getAdminService();
 
-  const idRecord = sessionToken
-    ? await adminService.updateAccessToken(
-        verifiedPin.data,
-        verifiedUpdates.data,
-        sessionToken,
-      )
-    : undefined;
+  try {
+    const idRecord = sessionToken
+      ? await adminService.updateAccessToken(
+          parsePinResult.data,
+          parseUpdatesResult.data,
+          sessionToken,
+        )
+      : undefined;
 
-  return idRecord
-    ? jsonSuccessResponse(idRecord, res)
-    : jsonForbiddenResponse(res);
+    return idRecord
+      ? jsonSuccessResponse(idRecord, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const deleteAccessToken: MiddlewareFunction = async (req, res) => {
-  const { sessionToken } = parseCookies(req);
+  const parsePinResult = pin.safeParse(req.params.pin);
 
-  const verifiedPin = pin.safeParse(req.params.pin);
-
-  if (!verifiedPin.success) {
+  if (!parsePinResult.success) {
     return jsonBadRequestResponse(res);
   }
 
+  const { sessionToken } = parseCookies(req);
   const adminService = getAdminService();
 
-  const idRecord = sessionToken
-    ? await adminService.deleteAccessToken(verifiedPin.data, sessionToken)
-    : undefined;
+  try {
+    const idRecord = sessionToken
+      ? await adminService.deleteAccessToken(parsePinResult.data, sessionToken)
+      : undefined;
 
-  return idRecord
-    ? jsonSuccessResponse(idRecord, res)
-    : jsonForbiddenResponse(res);
+    return idRecord
+      ? jsonSuccessResponse(idRecord, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const getBill: MiddlewareFunction = async (req, res) => {
+  const parseResult = intId.safeParse(req.params.billId);
+
+  if (!parseResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
   const { sessionToken } = parseCookies(req);
   const billService = getBillService();
 
-  const bill = await billService.read(
-    intId.parse(req.params.billId),
-    sessionToken,
-  );
-  return bill ? jsonSuccessResponse(bill, res) : jsonNotFoundResponse(res);
+  try {
+    const bill = await billService.read(parseResult.data, sessionToken);
+    return bill ? jsonSuccessResponse(bill, res) : jsonNotFoundResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const postBill: MiddlewareFunction = async (req, res) => {
   const { sessionToken } = parseCookies(req);
   const billService = getBillService();
 
-  const billCreateRecord = sessionToken
-    ? await billService.create(req, sessionToken)
-    : undefined;
+  try {
+    const billCreateRecord = sessionToken
+      ? await billService.create(req, sessionToken)
+      : undefined;
 
-  return billCreateRecord
-    ? jsonSuccessResponse(billCreateRecord, res)
-    : jsonForbiddenResponse(res);
+    return billCreateRecord
+      ? jsonSuccessResponse(billCreateRecord, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const patchBill: MiddlewareFunction = async (req, res) => {
-  const body = await parseJsonBody(req);
+  const parseBillIdResult = intId.safeParse(req.params.billId);
+  const parseUpdatesResult = BillUpdate.safeParse(await parseJsonBody(req));
+
+  if (!parseBillIdResult.success || !parseUpdatesResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
   const { sessionToken } = parseCookies(req);
   const billService = getBillService();
 
-  const idRecord = sessionToken
-    ? await billService.update(
-        intId.parse(req.params.billId),
-        BillUpdate.parse(body),
-        sessionToken,
-      )
-    : undefined;
+  try {
+    const idRecord = sessionToken
+      ? await billService.update(
+          parseBillIdResult.data,
+          parseUpdatesResult.data,
+          sessionToken,
+        )
+      : undefined;
 
-  return idRecord
-    ? jsonSuccessResponse(idRecord, res)
-    : jsonNotFoundResponse(res);
+    return idRecord
+      ? jsonSuccessResponse(idRecord, res)
+      : jsonNotFoundResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const postBillCreateAccess: MiddlewareFunction = async (req, res) => {
-  const { pin } = VerifyAccessRequest.parse(await parseJsonBody(req));
+  const parseResult = VerifyAccessRequest.safeParse(await parseJsonBody(req));
+
+  if (!parseResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
   const { sessionToken } = parseCookies(req);
   const billService = getBillService();
 
-  const token = await billService.signBillCreateToken(pin, sessionToken);
-  if (token) {
-    setSessionCookie(token, res);
-    return jsonSuccessResponse({ success: true }, res);
+  try {
+    const token = await billService.signBillCreateToken(
+      parseResult.data.pin,
+      sessionToken,
+    );
+    if (token) {
+      setSessionCookie(token, res);
+      return jsonSuccessResponse({ success: true }, res);
+    }
+    jsonBadRequestResponse(res, 'Could not verify access');
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
   }
-  jsonBadRequestResponse(res, 'Could not verify access');
 };
 
 export const getBillParticipants: MiddlewareFunction = async (req, res) => {
+  const parseResult = intId.safeParse(req.params.billId);
+
+  if (!parseResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
   const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
 
-  const participants = sessionToken
-    ? await participantService.readBillParticipants(
-        intId.parse(req.params.billId),
-        sessionToken,
-      )
-    : undefined;
+  try {
+    const participants = sessionToken
+      ? await participantService.readBillParticipants(
+          parseResult.data,
+          sessionToken,
+        )
+      : undefined;
 
-  return participants
-    ? jsonSuccessResponse({ participants }, res)
-    : jsonNotFoundResponse(res);
+    return participants
+      ? jsonSuccessResponse({ participants }, res)
+      : jsonNotFoundResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const postBillParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
+  const parseBillIdResult = intId.safeParse(req.params.billId);
+  const parseCreateResult = ParticipantCreate.safeParse(body);
+
+  if (!parseBillIdResult.success || !parseCreateResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
   const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
 
-  const participant = sessionToken
-    ? await participantService.createBillParticipant(
-        intId.parse(req.params.billId),
-        ParticipantCreate.parse(body),
-        sessionToken,
-      )
-    : undefined;
+  try {
+    const participant = sessionToken
+      ? await participantService.createBillParticipant(
+          parseBillIdResult.data,
+          parseCreateResult.data,
+          sessionToken,
+        )
+      : undefined;
 
-  return participant
-    ? jsonSuccessResponse(participant, res)
-    : jsonForbiddenResponse(res);
+    return participant
+      ? jsonSuccessResponse(participant, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const patchBillParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
+
+  const parseIdResult = intId.safeParse(req.params.id);
+  const parseBillIdResult = intId.safeParse(req.params.billId);
+  const parseUpdatesResult = ParticipantUpdate.safeParse(body);
+
+  if (
+    !parseIdResult.success ||
+    !parseBillIdResult.success ||
+    !parseUpdatesResult.success
+  ) {
+    return jsonBadRequestResponse(res);
+  }
+
   const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
 
-  const idRecord = sessionToken
-    ? await participantService.updateBillParticipant(
-        intId.parse(req.params.id),
-        intId.parse(req.params.billId),
-        ParticipantUpdate.parse(body),
-        sessionToken,
-      )
-    : undefined;
+  try {
+    const idRecord = sessionToken
+      ? await participantService.updateBillParticipant(
+          parseIdResult.data,
+          parseBillIdResult.data,
+          parseUpdatesResult.data,
+          sessionToken,
+        )
+      : undefined;
 
-  return idRecord
-    ? jsonSuccessResponse(idRecord, res)
-    : jsonForbiddenResponse(res);
+    return idRecord
+      ? jsonSuccessResponse(idRecord, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
+  const parseBillIdResult = intId.safeParse(req.params.billId);
+  const parseIdResult = intId.safeParse(req.params.id);
+
+  if (!parseBillIdResult.success || !parseIdResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
   const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
 
-  const idRecord = sessionToken
-    ? await participantService.deleteBillParticipant(
-        intId.parse(req.params.billId),
-        intId.parse(req.params.id),
-        sessionToken,
-      )
-    : undefined;
+  try {
+    const idRecord = sessionToken
+      ? await participantService.deleteBillParticipant(
+          parseBillIdResult.data,
+          parseIdResult.data,
+          sessionToken,
+        )
+      : undefined;
 
-  return idRecord
-    ? jsonSuccessResponse(idRecord, res)
-    : jsonForbiddenResponse(res);
+    return idRecord
+      ? jsonSuccessResponse(idRecord, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const postBillLineItem: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
+  const parseBillIdResult = intId.safeParse(req.params.billId);
+  const parseCreateResult = LineItemCreate.safeParse(body);
+
+  if (!parseBillIdResult.success || !parseCreateResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
   const { sessionToken } = parseCookies(req);
   const billService = getBillService();
 
-  const idRecord = sessionToken
-    ? await billService.createLineItem(
-        intId.parse(req.params.billId),
-        LineItemCreate.parse(body),
-        sessionToken,
-      )
-    : undefined;
+  try {
+    const idRecord = sessionToken
+      ? await billService.createLineItem(
+          parseBillIdResult.data,
+          parseCreateResult.data,
+          sessionToken,
+        )
+      : undefined;
 
-  return idRecord
-    ? jsonSuccessResponse(idRecord, res)
-    : jsonForbiddenResponse(res);
+    return idRecord
+      ? jsonSuccessResponse(idRecord, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const patchBillLineItem: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
-  const { sessionToken } = parseCookies(req);
-  const billService = getBillService();
+  const parseIdResult = intId.safeParse(req.params.id);
+  const parseBillIdResult = intId.safeParse(req.params.billId);
+  const parseUpdatesResult = LineItemUpdate.safeParse(body);
 
-  const idRecord = sessionToken
-    ? await billService.updateLineItem(
-        intId.parse(req.params.id),
-        intId.parse(req.params.billId),
-        LineItemUpdate.parse(body),
-        sessionToken,
-      )
-    : undefined;
+  if (
+    !parseIdResult.success ||
+    !parseBillIdResult.success ||
+    !parseUpdatesResult.success
+  ) {
+    return jsonBadRequestResponse(res);
+  }
 
-  return idRecord
-    ? jsonSuccessResponse(idRecord, res)
-    : jsonForbiddenResponse(res);
+  try {
+    const { sessionToken } = parseCookies(req);
+    const billService = getBillService();
+
+    const idRecord = sessionToken
+      ? await billService.updateLineItem(
+          parseIdResult.data,
+          parseBillIdResult.data,
+          parseUpdatesResult.data,
+          sessionToken,
+        )
+      : undefined;
+
+    return idRecord
+      ? jsonSuccessResponse(idRecord, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const postBillLineItemParticipant: MiddlewareFunction = async (
@@ -271,38 +412,62 @@ export const postBillLineItemParticipant: MiddlewareFunction = async (
   res,
 ) => {
   const body = await parseJsonBody(req);
-  const { sessionToken } = parseCookies(req);
-  const participantService = getParticipantService();
+  const parseBillIdResult = intId.safeParse(req.params.billId);
+  const parseCreateResult = LineItemParticipantCreateRequest.safeParse(body);
 
-  const idRecord = sessionToken
-    ? await participantService.createLineItemParticipant(
-        intId.parse(req.params.billId),
-        LineItemParticipantCreateRequest.parse(body),
-        sessionToken,
-      )
-    : undefined;
+  if (!parseBillIdResult.success || !parseCreateResult.success) {
+    return jsonBadRequestResponse(res);
+  }
 
-  return idRecord
-    ? jsonSuccessResponse(idRecord, res)
-    : jsonForbiddenResponse(res);
+  try {
+    const { sessionToken } = parseCookies(req);
+    const participantService = getParticipantService();
+
+    const idRecord = sessionToken
+      ? await participantService.createLineItemParticipant(
+          parseBillIdResult.data,
+          parseCreateResult.data,
+          sessionToken,
+        )
+      : undefined;
+
+    return idRecord
+      ? jsonSuccessResponse(idRecord, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
 
 export const deleteBillLineItemParticipant: MiddlewareFunction = async (
   req,
   res,
 ) => {
-  const { sessionToken } = parseCookies(req);
-  const participantService = getParticipantService();
+  const parseIdResult = intId.safeParse(req.params.id);
+  const parseBillIdResult = intId.safeParse(req.params.billId);
 
-  const idRecord = sessionToken
-    ? await participantService.deleteLineItemParticipant(
-        intId.parse(req.params.id),
-        intId.parse(req.params.billId),
-        sessionToken,
-      )
-    : undefined;
+  if (!parseIdResult.success || !parseBillIdResult.success) {
+    return jsonBadRequestResponse(res);
+  }
 
-  return idRecord
-    ? jsonSuccessResponse(idRecord, res)
-    : jsonForbiddenResponse(res);
+  try {
+    const { sessionToken } = parseCookies(req);
+    const participantService = getParticipantService();
+
+    const idRecord = sessionToken
+      ? await participantService.deleteLineItemParticipant(
+          parseIdResult.data,
+          parseBillIdResult.data,
+          sessionToken,
+        )
+      : undefined;
+
+    return idRecord
+      ? jsonSuccessResponse(idRecord, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
 };
