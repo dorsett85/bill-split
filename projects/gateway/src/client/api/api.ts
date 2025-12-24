@@ -40,7 +40,7 @@ export const deleteAccessToken = async (pin: string): Promise<Response> => {
 };
 
 export const postBillCreateAccess = async (pin: string): Promise<Response> => {
-  return await fetch(`/api/bills/create-access`, {
+  return await fetch(`/api/bills:create-access`, {
     ...baseOptions,
     method: 'POST',
     body: JSON.stringify({ pin }),

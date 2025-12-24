@@ -41,4 +41,12 @@ describe('resolveRoute', () => {
     const actualRoute = resolveRoute(url, ['/api/nonexistent']);
     expect(actualRoute).toBe(expectedRoute);
   });
+
+  it('figures out colons mid path', () => {
+    const url = '/api/bills:check-access';
+    const expectedRoute = '/api/bills:check-access';
+
+    const actualRoute = resolveRoute(url, [expectedRoute]);
+    expect(actualRoute).toBe(expectedRoute);
+  });
 });

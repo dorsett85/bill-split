@@ -117,7 +117,7 @@ const startServer = async () => {
   app.get(`${billApiPath}/:billId`, getBill);
   app.post(billApiPath, postBill);
   app.patch(`${billApiPath}/:billId`, patchBill);
-  app.post(`${billApiPath}/create-access`, postBillCreateAccess);
+  app.post(`${billApiPath}:create-access`, postBillCreateAccess);
 
   app.post(`${billApiPath}/:billId/participants`, postBillParticipant);
   app.patch(`${billApiPath}/:billId/participants/:id`, patchBillParticipant);
