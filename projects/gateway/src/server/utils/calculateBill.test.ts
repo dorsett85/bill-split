@@ -13,7 +13,6 @@ describe('calculateBill', () => {
       imageStatus: 'ready',
       gratuity: 0,
       tax: 0,
-      tip: 0,
       discount: 0,
       businessLocation: 'Test Location',
       businessName: 'Test Business',
@@ -50,7 +49,6 @@ describe('calculateBill', () => {
       imageStatus: 'ready',
       gratuity: 10,
       tax: 5,
-      tip: 20,
       discount: 5,
       businessLocation: 'Test Location',
       businessName: 'Test Business',
@@ -63,8 +61,6 @@ describe('calculateBill', () => {
     // Tax = 5
     // Gratuity = 10
     // Total = 95 + 5 + 10 = 110
-    // Tip = 20% of 110 = 22
-    // TotalWithTip = 110 + 22 = 132
 
     const lineItems: LineItemRead[] = [
       { id: 1, billId: 1, name: 'Item 1', price: 60 },

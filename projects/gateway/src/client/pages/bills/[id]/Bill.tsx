@@ -3,7 +3,6 @@ import {
   Container,
   Divider,
   Group,
-  Skeleton,
   Stack,
   Text,
   Title,
@@ -13,12 +12,13 @@ import { useEffect, useState } from 'react';
 import { fetchBill } from '../../../api/api.ts';
 import { BillInfoItem } from '../../../components/BillInfoItem.tsx';
 import { BillInfoItemUnclaimed } from '../../../components/BillInfoItemUnclaimed.tsx';
+import { BillItemValue } from '../../../components/BillItemValue.tsx';
 import { BillParticipantInput } from '../../../components/BillParticipantInput.tsx';
 import { BillParticipantOwes } from '../../../components/BillParticipantOwes.tsx';
 import { BillParticipantSection } from '../../../components/BillParticipantSection.tsx';
 import { BillStatusNotification } from '../../../components/BillStatusNotification.tsx';
 import { TipInput } from '../../../components/TipInput.tsx';
-import { USCurrency } from '../../../utils/UsCurrency.ts';
+import { useTip } from '../../../hooks/useTip.ts';
 import type { BillData, Participant } from './dto.ts';
 
 interface BillProps {
@@ -28,6 +28,7 @@ interface BillProps {
 export const Bill: React.FC<BillProps> = (props) => {
   const [bill, setBill] = useState<BillData>(props.bill);
   const [analyzeProgress, setAnalyzeProgress] = useState(0);
+  const [tip, setTip] = useTip(bill.id);
 
   useEffect(() => {
     // No need to refetch the bill if it's done parsing
@@ -71,19 +72,10 @@ export const Bill: React.FC<BillProps> = (props) => {
 
   const gratuity = bill.gratuity ?? 0;
   const tax = bill.tax ?? 0;
-  const tip = bill.tip ?? 0;
   const discount = bill.discount ?? 0;
   const subTotal = bill.subTotal ?? 0;
   const total = bill.total ?? 0;
   const totalWithTip = total * (tip / 100) + total;
-
-  const renderBillItemValue = (value: number) => {
-    return bill.imageStatus === 'ready' ? (
-      USCurrency.format(value)
-    ) : (
-      <Skeleton height={24} animate width={64} />
-    );
-  };
 
   return (
     <Container mt={32} mb={256}>
@@ -110,22 +102,24 @@ export const Bill: React.FC<BillProps> = (props) => {
       <Stack gap="sm" mb="xl">
         {!!discount && (
           <BillInfoItem label="Discount">
-            {renderBillItemValue(-discount)}
+            <BillItemValue imageStatus={bill.imageStatus} value={-discount} />
           </BillInfoItem>
         )}
         <BillInfoItem label="Subtotal">
-          {renderBillItemValue(subTotal)}
+          <BillItemValue imageStatus={bill.imageStatus} value={subTotal} />
         </BillInfoItem>
-        <BillInfoItem label="Tax">{renderBillItemValue(tax)}</BillInfoItem>
+        <BillInfoItem label="Tax">
+          <BillItemValue imageStatus={bill.imageStatus} value={tax} />
+        </BillInfoItem>
         {!!gratuity && (
           <BillInfoItem label="Gratuity">
-            {renderBillItemValue(gratuity)}
+            <BillItemValue imageStatus={bill.imageStatus} value={gratuity} />
           </BillInfoItem>
         )}
         <Divider />
         <BillInfoItem labelProps={{ fw: 700, size: 'lg' }} label="Total">
           <Text span fw={700} size="lg">
-            {renderBillItemValue(total)}
+            <BillItemValue imageStatus={bill.imageStatus} value={total} />
           </Text>
         </BillInfoItem>
         <BillInfoItem
@@ -133,13 +127,12 @@ export const Bill: React.FC<BillProps> = (props) => {
           label="Total With Tip"
         >
           <Group gap={8}>
-            <TipInput
-              billId={bill.id}
-              tip={tip}
-              onChange={(newTip) => setBill({ ...bill, tip: newTip })}
-            />
+            <TipInput tip={tip} onChange={setTip} />
             <Text span fs="italic" fw={700} size="lg">
-              {renderBillItemValue(totalWithTip)}
+              <BillItemValue
+                imageStatus={bill.imageStatus}
+                value={totalWithTip}
+              />
             </Text>
           </Group>
         </BillInfoItem>

@@ -120,7 +120,7 @@ export const transformTextractToProcessedBill = (
  */
 export const updateBill = async (
   billId: number,
-  expense: Omit<ProcessedExpense, 'items'> & { tip: number },
+  expense: Omit<ProcessedExpense, 'items'>,
 ): Promise<number | null> => {
   const db = getDb();
   const res = await db.query(
@@ -130,17 +130,15 @@ export const updateBill = async (
         business_name = $2,
         image_status = $3,
         tax = $4,
-        tip = $5,
-        gratuity = $6,
-        discount = $7
-    WHERE id = $8;
+        gratuity = $5,
+        discount = $6
+    WHERE id = $7;
   `,
     [
       expense.business_location,
       expense.business_name,
       'ready',
       expense.tax,
-      expense.tip,
       expense.gratuity,
       expense.discount,
       billId,

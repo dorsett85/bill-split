@@ -8,7 +8,7 @@ TODO
 
 1. Api
    1. Live updates
-   2. Remove tip from backend (handle on FE w/ state and localstorage)
+   2. Possibly change from % owes to just owes in db. Might make future calculations simpler
    3. Encode bill page url
 2. UI
    1. Handle api error responses (only checking for 'data' property right now)

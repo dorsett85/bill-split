@@ -60,24 +60,6 @@ export const fetchBill = async (billId: number): Promise<BillResponse> => {
   return BillResponse.parse(await res.json());
 };
 
-type UpdateBillBody = {
-  tip: number;
-};
-
-export const updateBill = async (
-  billId: number,
-  body: UpdateBillBody,
-  signal?: AbortSignal,
-): Promise<IdResponse> => {
-  const res = await fetch(`/api/bills/${billId}`, {
-    ...baseOptions,
-    method: 'PATCH',
-    body: JSON.stringify(body),
-    signal,
-  });
-  return IdResponse.parse(await res.json());
-};
-
 export const createBillParticipant = async (
   billId: number,
   name: string,

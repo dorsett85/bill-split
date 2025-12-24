@@ -55,8 +55,6 @@ export class RemoteBillProcessingService implements BillProcessingService {
         business_location: processedExpense.business_location,
         business_name: processedExpense.business_name,
         tax: processedExpense.tax,
-        // default to 20% tip
-        tip: 20,
         gratuity: processedExpense.gratuity,
         discount: processedExpense.discount,
       });
