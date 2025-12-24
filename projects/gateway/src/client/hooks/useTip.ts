@@ -14,7 +14,7 @@ export const useTip = (billId: number): UseTipOutput => {
     const parsedLocalTip = parseFloat(localTip ?? '');
 
     // Default to 20% tip if there's no local storage tip
-    setTip(parsedLocalTip ?? 20);
+    setTip(isNaN(parsedLocalTip) ? 20 : parsedLocalTip);
   }, []);
 
   const handleSetTip = (tip: number) => {
