@@ -109,14 +109,12 @@ export class LineItemParticipantDao extends BaseDao<
     ids: number[],
     client?: PoolClient,
   ): Promise<CountRecord> {
-    // Divide the pct by the total number of ids to evenly distribute.
-    const splitPct = pct / ids.length;
     const { rowCount } = await (client ?? this.db).query(
       `
       UPDATE line_item_participant lip SET pct_owes = pct_owes + $1
       WHERE lip.id = ANY ($2)
       `,
-      [splitPct, ids],
+      [pct, ids],
     );
 
     return { count: rowCount ?? 0 };
