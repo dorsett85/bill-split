@@ -21,10 +21,10 @@ export type ParticipantCreate = z.infer<typeof ParticipantCreate>;
 export type ParticipantRead = {
   [K in keyof ParticipantCreate]: Exclude<ParticipantCreate[K], null>;
 } & IdRecord;
-export type ParticipantUpdate = z.infer<typeof ParticipantUpdate>;
 export type ParticipantReadStorage = z.infer<typeof ParticipantReadStorage>;
+export type ParticipantUpdate = z.infer<typeof ParticipantUpdate>;
 export type ParticipantResponse = (ParticipantRead & {
-  lineItems: Omit<LineItemParticipantRead, 'participantId'>[];
+  lineItemsParticipants: Omit<LineItemParticipantRead, 'participantId'>[];
   owes: number;
 })[];
 

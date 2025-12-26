@@ -137,7 +137,30 @@ export const getBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
 
   try {
-    const bill = await billService.read(parseResult.data, sessionToken);
+    const bill = sessionToken
+      ? await billService.read(parseResult.data, sessionToken)
+      : undefined;
+    return bill ? jsonSuccessResponse(bill, res) : jsonNotFoundResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
+};
+
+export const getBillRecalculate: MiddlewareFunction = async (req, res) => {
+  const parseResult = intId.safeParse(req.params.billId);
+
+  if (!parseResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
+  const { sessionToken } = parseCookies(req);
+  const billService = getBillService();
+
+  try {
+    const bill = sessionToken
+      ? await billService.recalculate(parseResult.data, sessionToken)
+      : undefined;
     return bill ? jsonSuccessResponse(bill, res) : jsonNotFoundResponse(res);
   } catch (e) {
     logger.error(e);

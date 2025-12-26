@@ -8,11 +8,12 @@ TODO
 
 1. Api
    1. Live updates
-   2. Possibly change from % owes to just owes in db. Might make future calculations simpler
-   3. Encode bill page url
+   2. Add dao tests (mock testing db)
+   2. Encode bill page url
 2. UI
    1. Handle api error responses (only checking for 'data' property right now)
    2. Home page
    3. Bill page
+      1. Show loading indicator when line item is claimed/unclaimed
 3. CI/CD
    1. Automated deployment

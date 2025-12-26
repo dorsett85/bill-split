@@ -2,14 +2,17 @@ import path from 'path';
 import type { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import type { BillDao } from '../dao/BillDao.ts';
 import type { LineItemDao } from '../dao/LineItemDao.ts';
-import type { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
-import { BillCreate, type BillResponse, type BillUpdate } from '../dto/bill.ts';
+import {
+  BillCreate,
+  type BillReadDetailed,
+  type BillRecalculateResponse,
+  type BillUpdate,
+} from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
 import type { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import type { FileStorageService } from '../types/fileStorageService.ts';
 import type { ServerRequest } from '../types/serverRequest.ts';
-import { calculateBill } from '../utils/calculateBill.ts';
 import type { CryptoService } from './CryptoService.ts';
 import type { KafkaService } from './KafkaService.ts';
 import { S3FileStorageService } from './S3FileStorageService.ts';
@@ -23,7 +26,6 @@ interface BillServiceConstructor {
   accessTokenDao: AccessTokenDao;
   billDao: BillDao;
   lineItemDao: LineItemDao;
-  lineItemParticipantDao: LineItemParticipantDao;
   participantDao: ParticipantDao;
   cryptoService: CryptoService;
   fileStorageService: FileStorageService;
@@ -34,8 +36,6 @@ export class BillService {
   private readonly accessTokenDao: AccessTokenDao;
   private readonly billDao: BillDao;
   private readonly lineItemDao: LineItemDao;
-  private readonly lineItemParticipantDao: LineItemParticipantDao;
-  private readonly participantDao: ParticipantDao;
   private readonly cryptoService: CryptoService;
   private readonly fileStorageService: FileStorageService;
   private readonly kafkaService: KafkaService;
@@ -44,8 +44,6 @@ export class BillService {
     accessTokenDao,
     billDao,
     lineItemDao,
-    lineItemParticipantDao,
-    participantDao,
     cryptoService,
     fileStorageService,
     kafkaService,
@@ -53,8 +51,6 @@ export class BillService {
     this.accessTokenDao = accessTokenDao;
     this.billDao = billDao;
     this.lineItemDao = lineItemDao;
-    this.lineItemParticipantDao = lineItemParticipantDao;
-    this.participantDao = participantDao;
     this.cryptoService = cryptoService;
     this.fileStorageService = fileStorageService;
     this.kafkaService = kafkaService;
@@ -95,40 +91,108 @@ export class BillService {
   }
 
   public async read(
-    id: number,
-    sessionToken?: string,
-  ): Promise<BillResponse | undefined> {
-    if (sessionToken) {
-      if (!this.hasBillAccess(id, sessionToken)) {
-        return undefined;
-      }
+    billId: number,
+    sessionToken: string,
+  ): Promise<BillReadDetailed | undefined> {
+    if (!this.hasBillAccess(billId, sessionToken)) {
+      return undefined;
     }
 
-    const res: BillResponse = await this.billDao.tx(async (client) => {
-      const bill = await this.billDao.read(id, client);
-      const lineItems = await this.lineItemDao.search(
-        { billId: bill.id },
-        client,
-      );
-      const lineItemParticipants =
-        await this.lineItemParticipantDao.searchByBillId(bill.id, client);
-      const participants = await this.participantDao.searchByBillId(
-        bill.id,
-        client,
-      );
+    const bill = await this.billDao.readDetailed(billId);
 
-      return calculateBill(bill, lineItems, lineItemParticipants, participants);
-    });
+    if (!bill) {
+      return undefined;
+    }
 
-    // Get a presigned image URL so the FE can fetch the image from a private
-    // repo.
     if (this.fileStorageService instanceof S3FileStorageService) {
-      res.imagePath = await this.fileStorageService.getPresignedUrl(
-        res.imagePath,
+      bill.imagePath = await this.fileStorageService.getPresignedUrl(
+        bill.imagePath,
       );
     }
 
-    return res;
+    return bill;
+  }
+
+  /**
+   * A more complicated method. Accessing the bill page requires either a
+   * sessionToken with admin or bill access permission, or a hmac signature
+   * query param. This allows the page to be shareable with people that don't
+   * have a session token.
+   *
+   * Once The page is accessed with a signature hmac, the response will then set
+   * the sessionToken with bill access permission.
+   */
+  public async readBillPage(
+    billId: number,
+    signature?: string,
+    sessionToken?: string,
+  ): Promise<{ token?: string; bill: BillReadDetailed } | undefined> {
+    const hasBillAccess =
+      !!sessionToken && this.hasBillAccess(billId, sessionToken);
+
+    const addBillTokenAccess =
+      !hasBillAccess &&
+      !!signature &&
+      this.cryptoService.verifyHmac(signature, makeHmacReadyBillText(billId));
+
+    // This check reveals if the user can access the page
+    if (!hasBillAccess && !addBillTokenAccess) {
+      return undefined;
+    }
+
+    let token: string | undefined = undefined;
+    if (addBillTokenAccess) {
+      const payload = sessionToken
+        ? this.cryptoService.verifySessionJwt(sessionToken)
+        : null;
+
+      token = this.cryptoService.signSessionJwt({
+        ...payload,
+        billAccessIds: (payload?.billAccessIds ?? []).concat(billId),
+      });
+    }
+
+    const bill = await this.billDao.readDetailed(billId);
+
+    if (!bill) {
+      return undefined;
+    }
+
+    if (this.fileStorageService instanceof S3FileStorageService) {
+      bill.imagePath = await this.fileStorageService.getPresignedUrl(
+        bill.imagePath,
+      );
+    }
+
+    return {
+      bill,
+      token,
+    };
+  }
+
+  /**
+   * Same as the read method, but returns only the bill properties requiring
+   * calculation.
+   */
+  public async recalculate(
+    billId: number,
+    sessionToken: string,
+  ): Promise<BillRecalculateResponse | undefined> {
+    if (!this.hasBillAccess(billId, sessionToken)) {
+      return undefined;
+    }
+
+    const detailedBill = await this.billDao.readDetailed(billId);
+
+    return {
+      discount: detailedBill.discount,
+      subTotal: detailedBill.subTotal,
+      gratuity: detailedBill.gratuity,
+      tax: detailedBill.tax,
+      total: detailedBill.total,
+      lineItems: detailedBill.lineItems,
+      participants: detailedBill.participants,
+    };
   }
 
   public async update(
@@ -203,57 +267,6 @@ export class BillService {
       : null;
 
     return this.cryptoService.signSessionJwt({ ...payload, createBill: true });
-  }
-
-  /**
-   * A more complicated method. Accessing the bill page requires either a
-   * sessionToken with admin or bill access permission, or a hmac signature
-   * query param. This allows the page to be shareable with people that don't
-   * have a session token.
-   *
-   * Once The page is accessed with a signature hmac, the response will then set
-   * the sessionToken with bill access permission.
-   */
-  public async prepareBillPage(
-    billId: number,
-    signature?: string,
-    sessionToken?: string,
-  ): Promise<{ token?: string; bill: BillResponse } | undefined> {
-    const hasBillAccess =
-      !!sessionToken && this.hasBillAccess(billId, sessionToken);
-
-    const addBillTokenAccess =
-      !hasBillAccess &&
-      !!signature &&
-      this.cryptoService.verifyHmac(signature, makeHmacReadyBillText(billId));
-
-    // This check reveals if the user can access the page
-    if (!hasBillAccess && !addBillTokenAccess) {
-      return undefined;
-    }
-
-    let token: string | undefined = undefined;
-    if (addBillTokenAccess) {
-      const payload = sessionToken
-        ? this.cryptoService.verifySessionJwt(sessionToken)
-        : null;
-
-      token = this.cryptoService.signSessionJwt({
-        ...payload,
-        billAccessIds: (payload?.billAccessIds ?? []).concat(billId),
-      });
-    }
-
-    const bill = await this.read(billId);
-
-    if (!bill) {
-      return undefined;
-    }
-
-    return {
-      bill,
-      token,
-    };
   }
 
   private hasBillAccess(billId: number, sessionToken: string) {

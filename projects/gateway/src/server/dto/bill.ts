@@ -1,7 +1,5 @@
 import * as z from 'zod';
 import { type IdRecord, id } from './id.ts';
-import type { LineItemRead } from './lineItem.ts';
-import type { ParticipantResponse } from './participant.ts';
 
 const ImageStatus = z.literal(['parsing', 'ready', 'error']);
 
@@ -27,8 +25,44 @@ export const BillReadStorage = z
     name: BillCreate.shape.name.nullable(),
     tax: BillCreate.shape.tax.nullable(),
     discount: BillCreate.shape.discount.nullable(),
+    created_at: z.date(),
   })
   .strict();
+
+/**
+ * This zod object is for our "one big" calculate bill query
+ */
+export const BillReadDetailedStorage = BillReadStorage.extend({
+  sub_total: z.number(),
+  total: z.number(),
+  line_items: z
+    .array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        price: z.number(),
+        participant_ids: z.array(z.number()),
+      }),
+    )
+    .nullable()
+    .transform((arg) => arg ?? []),
+  participants: z
+    .array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        line_item_participants: z.array(
+          z.object({
+            id: z.number(),
+            line_item_id: z.number(),
+          }),
+        ),
+        owes: z.number(),
+      }),
+    )
+    .nullable()
+    .transform((arg) => arg ?? []),
+});
 
 // There's nothing to update at this point, but we'll keep this route and types
 // anyway.
@@ -39,12 +73,6 @@ export type BillRead = {
   [K in keyof BillCreate]: Exclude<BillCreate[K], null>;
 } & IdRecord;
 export type BillUpdate = z.infer<typeof BillUpdate>;
-export type BillResponse = BillRead & {
-  lineItems: Omit<LineItemRead, 'billId'>[];
-  participants: ParticipantResponse;
-  subTotal: number;
-  total: number;
-};
 
 export const toBillStorage = (bill: BillCreate | BillUpdate) => ({
   business_location:
@@ -71,3 +99,37 @@ export const toBillRead = (
   tax: bill.tax ?? undefined,
   discount: bill.discount ?? undefined,
 });
+
+export const toBillReadDetailed = (
+  bill: z.infer<typeof BillReadDetailedStorage>,
+) => ({
+  ...toBillRead(bill),
+  subTotal: bill.sub_total,
+  total: bill.total,
+  lineItems: bill.line_items.map((li) => ({
+    id: li.id,
+    name: li.name,
+    price: li.price,
+    participantIds: li.participant_ids,
+  })),
+  participants: bill.participants.map((p) => ({
+    id: p.id,
+    name: p.name,
+    lineItemParticipants: p.line_item_participants.map((lip) => ({
+      id: lip.id,
+      lineItemId: lip.line_item_id,
+    })),
+    owes: p.owes,
+  })),
+});
+
+export type BillReadDetailed = ReturnType<typeof toBillReadDetailed>;
+export type BillRecalculateResponse = {
+  discount: BillReadDetailed['discount'];
+  subTotal: BillReadDetailed['subTotal'];
+  tax: BillReadDetailed['tax'];
+  gratuity: BillReadDetailed['gratuity'];
+  total: BillReadDetailed['total'];
+  lineItems: BillReadDetailed['lineItems'];
+  participants: BillReadDetailed['participants'];
+};

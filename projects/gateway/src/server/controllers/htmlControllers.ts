@@ -120,7 +120,7 @@ export const getBillPage =
     const billService = getBillService();
 
     try {
-      const result = await billService.prepareBillPage(
+      const result = await billService.readBillPage(
         parseResult.data,
         signature,
         sessionToken,

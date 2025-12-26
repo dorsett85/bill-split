@@ -12,13 +12,17 @@ import {
 } from '@mantine/core';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import type React from 'react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   createLineItemParticipant,
   deleteLineItemParticipant,
-  fetchBill,
+  fetchRecalculateBill,
 } from '../api/api.ts';
-import type { LineItems, Participant } from '../pages/bills/[id]/dto.ts';
+import type {
+  BillRecalculateData,
+  LineItems,
+  Participant,
+} from '../pages/bills/[id]/dto.ts';
 import { BillParticipantCheckBoxCard } from './BillParticipantCheckBoxCard.tsx';
 import { BillParticipantEditName } from './BillParticipantEditName.tsx';
 
@@ -26,11 +30,7 @@ interface BillParticipantSectionsProps {
   billId: number;
   lineItems: LineItems;
   participants: Participant[];
-  /**
-   * When updates are made to the bill participant sections we'll send back a
-   * new reference to the participant array with all changes.
-   */
-  onChange: (newParticipants: Participant[]) => void;
+  onChange: (recalculatedBill: BillRecalculateData) => void;
   /**
    * Render the line calculating how much and individual participant owes
    */
@@ -46,21 +46,6 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
 }) => {
   const colorScheme = useComputedColorScheme();
   const [openSection, setOpenSection] = useState<Set<number>>(new Set());
-
-  const participantLineItemLookup = useMemo(() => {
-    const records: Record<
-      string,
-      Record<string, { id: number; pctOwes: number }>
-    > = {};
-    participants.forEach((participant) => {
-      records[participant.id] ??= {};
-      participant.lineItems.forEach((lineItem) => {
-        records[participant.id][lineItem.lineItemId] = lineItem;
-      });
-    });
-
-    return records;
-  }, [participants]);
 
   const handleOnToggleSection = (id: number) => {
     if (openSection.has(id)) {
@@ -79,7 +64,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
         name: participantId === participant.id ? name : participant.name,
       };
     });
-    onChange(updatedParticipants);
+    onChange({ participants: updatedParticipants, lineItems });
   };
 
   const handleOnItemClick = async (
@@ -91,15 +76,21 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
       if (checked) {
         await createLineItemParticipant(billId, lineItemId, participantId);
       } else {
-        const id = participantLineItemLookup[participantId][lineItemId].id;
-        await deleteLineItemParticipant(billId, id);
+        const participant = participants.find((p) => p.id === participantId);
+        const lineItemParticipant = participant?.lineItemParticipants.find(
+          (li) => li.lineItemId === lineItemId,
+        );
+        if (lineItemParticipant) {
+          await deleteLineItemParticipant(billId, lineItemParticipant.id);
+        }
       }
 
-      const json = await fetchBill(billId);
+      const json = await fetchRecalculateBill(billId);
       if ('data' in json) {
-        onChange(json.data.participants);
+        onChange(json.data);
       }
     } catch (e) {
+      // TODO error handling
       console.log(e);
     }
   };
@@ -149,20 +140,10 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
               {lineItems.map((lineItem) => (
                 <BillParticipantCheckBoxCard
                   key={lineItem.id}
-                  claimed={
-                    !!participantLineItemLookup[participant.id][lineItem.id]
-                  }
-                  othersClaimed={
-                    // See if anyone else has claimed the item
-                    Object.entries(participantLineItemLookup).some(
-                      ([participantId, items]) => {
-                        return (
-                          +participantId !== participant.id &&
-                          !!items[lineItem.id]
-                        );
-                      },
-                    )
-                  }
+                  claimed={lineItem.participantIds.includes(participant.id)}
+                  othersClaimed={lineItem.participantIds.some(
+                    (id) => id !== participant.id,
+                  )}
                   onChange={(checked) =>
                     handleOnItemClick(checked, lineItem.id, participant.id)
                   }

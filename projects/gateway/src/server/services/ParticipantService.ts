@@ -1,4 +1,3 @@
-import type { BillDao } from '../dao/BillDao.ts';
 import type { BillParticipantDao } from '../dao/BillParticipantDao.ts';
 import type { LineItemDao } from '../dao/LineItemDao.ts';
 import type { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
@@ -16,7 +15,6 @@ interface ParticipantServiceConstructor {
   billParticipantDao: BillParticipantDao;
   lineItemParticipantDao: LineItemParticipantDao;
   participantDao: ParticipantDao;
-  billDao: BillDao;
   lineItemDao: LineItemDao;
   cryptoService: CryptoService;
 }
@@ -101,7 +99,7 @@ export class ParticipantService {
       return undefined;
     }
 
-    return await this.participantDao.tx(async (client) => {
+    const result = await this.participantDao.tx(async (client) => {
       const lineItemParticipants =
         await this.lineItemParticipantDao.searchByLineItemIdUsingBillAndParticipant(
           billId,
@@ -133,6 +131,10 @@ export class ParticipantService {
       );
       return await this.billParticipantDao.delete(billParticipant.id, client);
     });
+
+    // TODO recalculate the bill, publish it to Kafka and send back the result
+
+    return result;
   }
 
   public async createLineItemParticipant(
@@ -144,7 +146,7 @@ export class ParticipantService {
       return undefined;
     }
 
-    return await this.lineItemParticipantDao.tx(async (client) => {
+    const result = await this.lineItemParticipantDao.tx(async (client) => {
       const lineItemParticipants = await this.lineItemParticipantDao.search(
         {
           lineItemId: lineItemParticipant.lineItemId,
@@ -167,6 +169,10 @@ export class ParticipantService {
         client,
       );
     });
+
+    // TODO recalculate the bill, publish it to Kafka and send back the result
+
+    return result;
   }
 
   public async deleteLineItemParticipant(
@@ -178,7 +184,7 @@ export class ParticipantService {
       return undefined;
     }
 
-    return await this.lineItemParticipantDao.tx(async (client) => {
+    const result = await this.lineItemParticipantDao.tx(async (client) => {
       const lineItemParticipants =
         await this.lineItemParticipantDao.searchByLineItemIdAssociatedWithPk(
           id,
@@ -196,6 +202,10 @@ export class ParticipantService {
 
       return await this.lineItemParticipantDao.delete(id, client);
     });
+
+    // TODO recalculate the bill, publish it to Kafka and send back the result
+
+    return result;
   }
 
   private hasBillAccess(billId: number, sessionToken: string) {

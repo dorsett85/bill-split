@@ -4,19 +4,24 @@ import { useState } from 'react';
 import {
   createBillParticipant,
   deleteBillParticipant,
-  fetchBill,
+  fetchRecalculateBill,
 } from '../api/api.ts';
-import type { Participant } from '../pages/bills/[id]/dto.ts';
+import type {
+  BillRecalculateData,
+  Participant,
+} from '../pages/bills/[id]/dto.ts';
 
 export interface BillParticipantInputProps {
   billId: number;
-  onChange: (newParticipants: Participant[]) => void;
+  onCreateParticipant: (newParticipants: Participant[]) => void;
+  onDeleteParticipant: (recalculatedBill: BillRecalculateData) => void;
   participants: Participant[];
 }
 
 export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
   billId,
-  onChange,
+  onCreateParticipant,
+  onDeleteParticipant,
   participants,
 }) => {
   const [error, setError] = useState<string>();
@@ -33,13 +38,13 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
     try {
       const json = await createBillParticipant(billId, name);
       if ('data' in json) {
-        onChange([
+        onCreateParticipant([
           ...participants,
-          { id: json.data.id, name, lineItems: [], owes: 0 },
+          { id: json.data.id, name, lineItemParticipants: [], owes: 0 },
         ]);
       }
     } catch {
-      // no-up
+      // no-op
     }
 
     setUpdatingParticipants(false);
@@ -60,9 +65,9 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
         // TODO we probably want to create a modal here to warn users of the
         //  consequences of deleting a participant.
         await deleteBillParticipant(billId, deleteId);
-        const json = await fetchBill(billId);
+        const json = await fetchRecalculateBill(billId);
         if ('data' in json) {
-          onChange(json.data.participants);
+          onDeleteParticipant(json.data);
         }
       } catch {
         // no-op

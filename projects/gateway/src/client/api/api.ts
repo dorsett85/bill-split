@@ -1,5 +1,8 @@
 import { AccessTokenApiResponse } from '../pages/admin/dto.ts';
-import { BillResponse } from '../pages/bills/[id]/dto.ts';
+import {
+  BillRecalculateResponse,
+  BillResponse,
+} from '../pages/bills/[id]/dto.ts';
 import { IdResponse } from './dto.ts';
 
 const baseOptions: RequestInit = {
@@ -58,6 +61,13 @@ export const createBill = async (form: HTMLFormElement): Promise<Response> => {
 export const fetchBill = async (billId: number): Promise<BillResponse> => {
   const res = await fetch(`/api/bills/${billId}`, baseOptions);
   return BillResponse.parse(await res.json());
+};
+
+export const fetchRecalculateBill = async (
+  billId: number,
+): Promise<BillRecalculateResponse> => {
+  const res = await fetch(`/api/bills/${billId}/recalculate`, baseOptions);
+  return BillRecalculateResponse.parse(await res.json());
 };
 
 export const createBillParticipant = async (

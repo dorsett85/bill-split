@@ -40,6 +40,13 @@ export class KafkaService {
     return this.publish(this.billTopic, value);
   }
 
+  public publishBillUpdate(
+    value: Record<string, unknown>,
+  ): Promise<RecordMetadata[]> {
+    // Using the same topic for now, or you could create a new 'bill-updates' topic
+    return this.publish(this.billTopic, value);
+  }
+
   /**
    * Post messages to Kafka
    */

@@ -19,7 +19,7 @@ import { BillParticipantSection } from '../../../components/BillParticipantSecti
 import { BillStatusNotification } from '../../../components/BillStatusNotification.tsx';
 import { TipInput } from '../../../components/TipInput.tsx';
 import { useTip } from '../../../hooks/useTip.ts';
-import type { BillData, Participant } from './dto.ts';
+import type { BillData, BillRecalculateData, Participant } from './dto.ts';
 
 interface BillProps {
   bill: BillData;
@@ -46,9 +46,9 @@ export const Bill: React.FC<BillProps> = (props) => {
             // Refetch if it's still parsing
             return setTimeout(() => pollBill(), 1000);
           }
-          // The backend will get a new presigned url on each request, but we only
-          // need it on initial page load, otherwise it will rerequest the image
-          // with the new presigned url.
+          // The backend will get a new presigned url on each request, but we
+          // only need it on initial page load, otherwise it will rerequest the
+          // image with the new presigned url.
           setBill({ ...json.data, imagePath: bill.imagePath });
         }
       } catch {
@@ -63,10 +63,17 @@ export const Bill: React.FC<BillProps> = (props) => {
     void pollBill();
   }, [props.bill.imageStatus]);
 
-  const handleOnChangeParticipant = (newParticipants: Participant[]) => {
+  const handleOnCreateParticipant = (newParticipants: Participant[]) => {
     setBill((bill) => ({
       ...bill,
       participants: newParticipants,
+    }));
+  };
+
+  const handleOnRecalculateBill = (recalculatedBill: BillRecalculateData) => {
+    setBill((bill) => ({
+      ...bill,
+      ...recalculatedBill,
     }));
   };
 
@@ -143,14 +150,15 @@ export const Bill: React.FC<BillProps> = (props) => {
       </Stack>
       <BillParticipantInput
         billId={bill.id}
-        onChange={handleOnChangeParticipant}
+        onCreateParticipant={handleOnCreateParticipant}
+        onDeleteParticipant={handleOnRecalculateBill}
         participants={bill.participants}
       />
       <BillParticipantSection
         billId={bill.id}
         participants={bill.participants}
         lineItems={bill.lineItems}
-        onChange={handleOnChangeParticipant}
+        onChange={handleOnRecalculateBill}
         renderParticipantOwes={(participant) => (
           <BillParticipantOwes owes={participant.owes} tip={tip} />
         )}
