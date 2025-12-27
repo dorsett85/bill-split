@@ -72,14 +72,21 @@ export class ParticipantService {
       }
 
       // Create both the participant and the bill_participant
-      const res = await this.participantDao.create(participant, client);
-      await this.billParticipantDao.create(
-        {
-          billId,
-          participantId: res.id,
-        },
-        client,
-      );
+      const res = await this.billParticipantDao.tx(async (client) => {
+        const idRecord = await this.participantDao.create(participant, client);
+        await this.billParticipantDao.create(
+          {
+            billId,
+            participantId: idRecord.id,
+          },
+          client,
+        );
+
+        return idRecord;
+      });
+
+      void this.publishRecalculatedBill(billId, sessionToken);
+
       return res;
     });
   }

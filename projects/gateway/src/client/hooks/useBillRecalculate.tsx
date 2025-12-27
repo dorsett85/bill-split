@@ -1,9 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { subscribeRecalculateBill } from '../api/api.ts';
-import {
-  type BillRecalculateData,
-  BillRecalculateResponse,
-} from '../pages/bills/[id]/dto.ts';
+import { BillRecalculateData } from '../pages/bills/[id]/dto.ts';
 
 export const useBillSubscription = (
   billId: number,
@@ -19,10 +16,8 @@ export const useBillSubscription = (
       console.log(event.data);
 
       try {
-        const json = BillRecalculateResponse.parse(event.data);
-        if ('data' in json) {
-          onRecalculate(json.data);
-        }
+        const data = BillRecalculateData.parse(event.data);
+        onRecalculate(data);
       } catch (e) {
         console.error('Failed to parse SSE message:', e);
       }

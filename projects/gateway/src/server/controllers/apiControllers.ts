@@ -271,7 +271,7 @@ export const subscribeBillRecalculate: MiddlewareFunction = async (
         parseResult.data,
         sessionToken,
         (bill) => {
-          res.write(`data: ${JSON.stringify({ data: bill })}\n\n`);
+          res.write(`data: ${JSON.stringify(bill)}\n\n`);
         },
       );
 

@@ -1,5 +1,4 @@
 import EventEmitter from 'node:events';
-import { logger } from '@rsbuild/core';
 import type { Consumer, Kafka, KafkaMessage } from 'kafkajs';
 import type { BillRecalculateResponse } from '../dto/bill.ts';
 import type { CryptoService } from './CryptoService.ts';
@@ -64,11 +63,6 @@ export class KafkaConsumerService {
       // Check if it's coming from another user and it's the right bill! We can
       // do a simple session token comparison here as we've already verified the
       // token.
-      // TODO remove this once prod passes on
-      logger.log(
-        'message published:',
-        JSON.stringify(message.value?.toString() ?? ''),
-      );
       const parsedData = JSON.parse(message.value?.toString() ?? '');
       if (
         billId === parsedData.billId &&
