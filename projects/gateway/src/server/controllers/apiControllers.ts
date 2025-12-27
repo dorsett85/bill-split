@@ -276,10 +276,10 @@ export const subscribeBillRecalculate: MiddlewareFunction = async (
       );
 
       if (!subscribed) {
-        return jsonForbiddenResponse(
-          res,
-          'You are not authorized for recalculate subscription',
+        res.write(
+          `data: you are not authorized for recalculate subscription\n\n`,
         );
+        return res.end();
       }
 
       req.on('close', () => {
