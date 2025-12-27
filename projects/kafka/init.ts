@@ -18,6 +18,9 @@ const init = async () => {
       {
         topic: process.env.KAFKA_BILL_PROCESSING_TOPIC,
       },
+      {
+        topic: process.env.KAFKA_BILL_RECALCULATE_TOPIC,
+      },
     ],
   });
   await admin.disconnect();

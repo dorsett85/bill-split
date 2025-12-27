@@ -14,7 +14,7 @@ import type { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import type { FileStorageService } from '../types/fileStorageService.ts';
 import type { ServerRequest } from '../types/serverRequest.ts';
 import type { CryptoService } from './CryptoService.ts';
-import type { KafkaService } from './KafkaService.ts';
+import type { KafkaProducerService } from './KafkaProducerService.ts';
 import { S3FileStorageService } from './S3FileStorageService.ts';
 
 /**
@@ -29,7 +29,7 @@ interface BillServiceConstructor {
   participantDao: ParticipantDao;
   cryptoService: CryptoService;
   fileStorageService: FileStorageService;
-  kafkaService: KafkaService;
+  kafkaProducerService: KafkaProducerService;
 }
 
 export class BillService {
@@ -38,7 +38,7 @@ export class BillService {
   private readonly lineItemDao: LineItemDao;
   private readonly cryptoService: CryptoService;
   private readonly fileStorageService: FileStorageService;
-  private readonly kafkaService: KafkaService;
+  private readonly kafkaProducerService: KafkaProducerService;
 
   constructor({
     accessTokenDao,
@@ -46,14 +46,14 @@ export class BillService {
     lineItemDao,
     cryptoService,
     fileStorageService,
-    kafkaService,
+    kafkaProducerService,
   }: BillServiceConstructor) {
     this.accessTokenDao = accessTokenDao;
     this.billDao = billDao;
     this.lineItemDao = lineItemDao;
     this.cryptoService = cryptoService;
     this.fileStorageService = fileStorageService;
-    this.kafkaService = kafkaService;
+    this.kafkaProducerService = kafkaProducerService;
   }
 
   /**
@@ -79,7 +79,7 @@ export class BillService {
       }),
     );
 
-    await this.kafkaService.publishBill({
+    await this.kafkaProducerService.publishBill({
       billId: id,
       imageName: path.basename(storedFiles[0].path),
     });
@@ -183,6 +183,10 @@ export class BillService {
     }
 
     const detailedBill = await this.billDao.readDetailed(billId);
+
+    if (!detailedBill) {
+      return undefined;
+    }
 
     return {
       discount: detailedBill.discount,

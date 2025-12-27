@@ -133,3 +133,12 @@ export type BillRecalculateResponse = {
   lineItems: BillReadDetailed['lineItems'];
   participants: BillReadDetailed['participants'];
 };
+
+/**
+ * The object used to publish and subscribe to bill recalculation changes
+ */
+export type BillRecalculatePubSubPayload = {
+  billId: number;
+  sessionToken: string;
+  recalculatedBill: BillRecalculateResponse;
+};

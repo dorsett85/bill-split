@@ -34,7 +34,7 @@ export class App {
   ) => ServerResponse = (_, res) => res.end(SERVER_ERROR_MESSAGE);
 
   public constructor() {
-    //
+    // TODO, maybe add singleton services here
   }
 
   public use(middleware: MiddlewareFunction): App {

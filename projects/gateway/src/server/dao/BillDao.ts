@@ -52,7 +52,7 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
   public async readDetailed(
     id: number,
     client?: PoolClient,
-  ): Promise<BillReadDetailed> {
+  ): Promise<BillReadDetailed | undefined> {
     const { rows } = await (client ?? this.db).query(
       `
       WITH bill_stats AS (

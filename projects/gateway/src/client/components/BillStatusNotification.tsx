@@ -41,7 +41,7 @@ export const BillStatusNotification: React.FC<BillStatusNotificationProps> = ({
         return {
           children: (
             <Box m="sm">
-              Click <a href="/projects/gateway/public">here</a> to try again
+              Click <a href="/">here</a> to try again
             </Box>
           ),
           color: 'red',

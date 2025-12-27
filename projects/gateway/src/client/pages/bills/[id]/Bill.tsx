@@ -18,6 +18,7 @@ import { BillParticipantOwes } from '../../../components/BillParticipantOwes.tsx
 import { BillParticipantSection } from '../../../components/BillParticipantSection.tsx';
 import { BillStatusNotification } from '../../../components/BillStatusNotification.tsx';
 import { TipInput } from '../../../components/TipInput.tsx';
+import { useBillSubscription } from '../../../hooks/useBillRecalculate.tsx';
 import { useTip } from '../../../hooks/useTip.ts';
 import type { BillData, BillRecalculateData, Participant } from './dto.ts';
 
@@ -37,7 +38,18 @@ export const Bill: React.FC<BillProps> = (props) => {
     }
 
     const pollBill = async () => {
-      setAnalyzeProgress((prev) => (prev < 100 ? prev + 5 : prev));
+      let progress = 0;
+      setAnalyzeProgress((prev) => {
+        progress = prev + 10;
+        return prev < 100 ? progress : prev;
+      });
+
+      if (progress >= 100) {
+        setBill((prev) => ({
+          ...prev,
+          imageStatus: 'error',
+        }));
+      }
 
       try {
         const json = await fetchBill(bill.id);
@@ -62,6 +74,10 @@ export const Bill: React.FC<BillProps> = (props) => {
 
     void pollBill();
   }, [props.bill.imageStatus]);
+
+  useBillSubscription(bill.id, (recalculatedBill: BillRecalculateData) => {
+    setBill({ ...bill, ...recalculatedBill });
+  });
 
   const handleOnCreateParticipant = (newParticipants: Participant[]) => {
     setBill((bill) => ({

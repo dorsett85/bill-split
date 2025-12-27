@@ -24,6 +24,7 @@ import {
 import {
   getAdminService,
   getBillService,
+  getKafkaConsumerService,
   getParticipantService,
 } from './controllerServices.ts';
 
@@ -147,27 +148,6 @@ export const getBill: MiddlewareFunction = async (req, res) => {
   }
 };
 
-export const getBillRecalculate: MiddlewareFunction = async (req, res) => {
-  const parseResult = intId.safeParse(req.params.billId);
-
-  if (!parseResult.success) {
-    return jsonBadRequestResponse(res);
-  }
-
-  const { sessionToken } = parseCookies(req);
-  const billService = getBillService();
-
-  try {
-    const bill = sessionToken
-      ? await billService.recalculate(parseResult.data, sessionToken)
-      : undefined;
-    return bill ? jsonSuccessResponse(bill, res) : jsonNotFoundResponse(res);
-  } catch (e) {
-    logger.error(e);
-    return jsonServerErrorResponse(res);
-  }
-};
-
 export const postBill: MiddlewareFunction = async (req, res) => {
   const { sessionToken } = parseCookies(req);
   const billService = getBillService();
@@ -235,6 +215,81 @@ export const postBillCreateAccess: MiddlewareFunction = async (req, res) => {
       return jsonSuccessResponse({ success: true }, res);
     }
     jsonBadRequestResponse(res, 'Could not verify access');
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
+};
+
+export const getBillRecalculate: MiddlewareFunction = async (req, res) => {
+  const parseResult = intId.safeParse(req.params.billId);
+
+  if (!parseResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
+  const { sessionToken } = parseCookies(req);
+  const billService = getBillService();
+
+  try {
+    const bill = sessionToken
+      ? await billService.recalculate(parseResult.data, sessionToken)
+      : undefined;
+    return bill ? jsonSuccessResponse(bill, res) : jsonNotFoundResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
+};
+
+export const subscribeBillRecalculate: MiddlewareFunction = async (
+  req,
+  res,
+) => {
+  const parseResult = intId.safeParse(req.params.billId);
+
+  if (!parseResult.success) {
+    logger.log('ENDED - could not parse bill id');
+    return jsonBadRequestResponse(res);
+  }
+
+  const { sessionToken } = parseCookies(req);
+  const kafkaConsumerService = getKafkaConsumerService();
+
+  try {
+    if (sessionToken) {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+        'X-Accel-Buffering': 'no', // Essential for Nginx/Cloudflare
+      });
+      // Avoid connection timeouts with a heartbeat
+      const interval = setInterval(() => res.write(`heartbeat:\n\n`), 15000);
+
+      const subscribed = await kafkaConsumerService.subscribeRecalculate(
+        parseResult.data,
+        sessionToken,
+        (bill) => {
+          res.write(`data: ${JSON.stringify({ data: bill })}\n\n`);
+        },
+      );
+
+      if (!subscribed) {
+        return jsonForbiddenResponse(
+          res,
+          'You are not authorized for recalculate subscription',
+        );
+      }
+
+      req.on('close', () => {
+        clearInterval(interval);
+        subscribed.unsubscribe();
+      });
+    } else {
+      logger.log('ENDED - no session token');
+      return jsonNotFoundResponse(res);
+    }
   } catch (e) {
     logger.error(e);
     return jsonServerErrorResponse(res);

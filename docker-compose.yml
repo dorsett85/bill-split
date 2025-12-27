@@ -19,7 +19,8 @@ x-aws-env: &aws-env
 
 x-kafka-host: &kafka-host kafka
 x-kafka-port: &kafka-port 9092
-x-kafka-bill-processing-topic: &kafka-bill-processing-topic bills-to-process
+x-kafka-bill-processing-topic: &kafka-bill-processing-topic bill-processor
+x-kafka-bill-recalculate-topic: &kafka-bill-recalculate-topic bill-recalculate
 
 x-bill-processor-url: &bill-processor-url http://bill-processor:8080/2015-03-31/functions/function/invocations
 
@@ -80,6 +81,7 @@ services:
       KAFKA_HOST: *kafka-host
       KAFKA_PORT: *kafka-port
       KAFKA_BILL_PROCESSING_TOPIC: *kafka-bill-processing-topic
+      KAFKA_BILL_RECALCULATE_TOPIC: *kafka-bill-recalculate-topic
 
   bill-consumer:
     build:
@@ -116,6 +118,7 @@ services:
       KAFKA_HOST: *kafka-host
       KAFKA_PORT: *kafka-port
       KAFKA_BILL_PROCESSING_TOPIC: *kafka-bill-processing-topic
+      KAFKA_BILL_RECALCULATE_TOPIC: *kafka-bill-recalculate-topic
       ADMIN_PASSWORD: *admin-password
       ADMIN_SECRET_KEY: *admin-secret-key
     ports:

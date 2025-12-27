@@ -1,4 +1,5 @@
 import { S3Client } from '@aws-sdk/client-s3';
+import { Kafka } from 'kafkajs';
 import { env } from '../config.ts';
 import { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import { BillDao } from '../dao/BillDao.ts';
@@ -10,9 +11,35 @@ import { getDb } from '../db/getDb.ts';
 import { AdminService } from '../services/AdminService.ts';
 import { BillService } from '../services/BillService.ts';
 import { CryptoService } from '../services/CryptoService.ts';
-import { KafkaService } from '../services/KafkaService.ts';
+import { KafkaConsumerService } from '../services/KafkaConsumerService.ts';
+import { KafkaProducerService } from '../services/KafkaProducerService.ts';
 import { ParticipantService } from '../services/ParticipantService.ts';
 import { S3FileStorageService } from '../services/S3FileStorageService.ts';
+
+let kafka: Kafka;
+const getKafka = (): Kafka => {
+  if (!kafka) {
+    kafka = new Kafka({
+      clientId: 'gateway',
+      brokers: [`${env.KAFKA_HOST}:${env.KAFKA_PORT}`],
+    });
+  }
+  return kafka;
+};
+
+let kafkaConsumerService: KafkaConsumerService;
+export const getKafkaConsumerService = (): KafkaConsumerService => {
+  if (!kafkaConsumerService) {
+    kafkaConsumerService = new KafkaConsumerService({
+      kafka: getKafka(),
+      billRecalculateTopic: env.KAFKA_BILL_RECALCULATE_TOPIC,
+      cryptoService: new CryptoService({
+        key: env.ADMIN_SECRET_KEY,
+      }),
+    });
+  }
+  return kafkaConsumerService;
+};
 
 export const getAdminService = () => {
   return new AdminService({
@@ -39,19 +66,26 @@ export const getBillService = () => {
         region: env.AWS_REGION,
       }),
     }),
-    kafkaService: new KafkaService({
-      billTopic: env.KAFKA_BILL_PROCESSING_TOPIC,
-      connectionString: `${env.KAFKA_HOST}:${env.KAFKA_PORT}`,
+    kafkaProducerService: new KafkaProducerService({
+      kafka: getKafka(),
+      billCreateTopic: env.KAFKA_BILL_PROCESSING_TOPIC,
+      billRecalculateTopic: env.KAFKA_BILL_RECALCULATE_TOPIC,
     }),
   });
 };
 
 export const getParticipantService = () => {
   return new ParticipantService({
+    billDao: new BillDao(getDb()),
     participantDao: new ParticipantDao(getDb()),
     billParticipantDao: new BillParticipantDao(getDb()),
     lineItemParticipantDao: new LineItemParticipantDao(getDb()),
     lineItemDao: new LineItemDao(getDb()),
     cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
+    kafkaProducerService: new KafkaProducerService({
+      kafka: getKafka(),
+      billCreateTopic: env.KAFKA_BILL_PROCESSING_TOPIC,
+      billRecalculateTopic: env.KAFKA_BILL_RECALCULATE_TOPIC,
+    }),
   });
 };

@@ -1,3 +1,4 @@
+import type { BillDao } from '../dao/BillDao.ts';
 import type { BillParticipantDao } from '../dao/BillParticipantDao.ts';
 import type { LineItemDao } from '../dao/LineItemDao.ts';
 import type { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
@@ -10,31 +11,40 @@ import type {
 } from '../dto/participant.ts';
 import { calculateRemainingPctOwes } from '../utils/calculateRemainingPctOwes.ts';
 import type { CryptoService } from './CryptoService.ts';
+import type { KafkaProducerService } from './KafkaProducerService.ts';
 
 interface ParticipantServiceConstructor {
+  billDao: BillDao;
   billParticipantDao: BillParticipantDao;
   lineItemParticipantDao: LineItemParticipantDao;
   participantDao: ParticipantDao;
   lineItemDao: LineItemDao;
   cryptoService: CryptoService;
+  kafkaProducerService: KafkaProducerService;
 }
 
 export class ParticipantService {
+  private readonly billDao: BillDao;
   private readonly billParticipantDao: BillParticipantDao;
   private readonly lineItemParticipantDao: LineItemParticipantDao;
   private readonly participantDao: ParticipantDao;
   private readonly cryptoService: CryptoService;
+  private readonly kafkaProducerService: KafkaProducerService;
 
   constructor({
+    billDao,
     billParticipantDao,
     lineItemParticipantDao,
     participantDao,
     cryptoService,
+    kafkaProducerService,
   }: ParticipantServiceConstructor) {
+    this.billDao = billDao;
     this.billParticipantDao = billParticipantDao;
     this.lineItemParticipantDao = lineItemParticipantDao;
     this.participantDao = participantDao;
     this.cryptoService = cryptoService;
+    this.kafkaProducerService = kafkaProducerService;
   }
 
   /**
@@ -132,7 +142,7 @@ export class ParticipantService {
       return await this.billParticipantDao.delete(billParticipant.id, client);
     });
 
-    // TODO recalculate the bill, publish it to Kafka and send back the result
+    void this.publishRecalculatedBill(billId, sessionToken);
 
     return result;
   }
@@ -170,7 +180,7 @@ export class ParticipantService {
       );
     });
 
-    // TODO recalculate the bill, publish it to Kafka and send back the result
+    void this.publishRecalculatedBill(billId, sessionToken);
 
     return result;
   }
@@ -203,7 +213,7 @@ export class ParticipantService {
       return await this.lineItemParticipantDao.delete(id, client);
     });
 
-    // TODO recalculate the bill, publish it to Kafka and send back the result
+    void this.publishRecalculatedBill(billId, sessionToken);
 
     return result;
   }
@@ -211,5 +221,30 @@ export class ParticipantService {
   private hasBillAccess(billId: number, sessionToken: string) {
     const payload = this.cryptoService.verifySessionJwt(sessionToken);
     return payload?.isAdmin || payload?.billAccessIds?.includes(billId);
+  }
+
+  private async publishRecalculatedBill(
+    billId: number,
+    sessionToken: string,
+  ): Promise<void> {
+    const detailed = await this.billDao.readDetailed(billId);
+
+    if (!detailed) {
+      return;
+    }
+
+    void this.kafkaProducerService.publishBillRecalculate({
+      billId,
+      sessionToken,
+      recalculatedBill: {
+        discount: detailed.discount,
+        subTotal: detailed.subTotal,
+        tax: detailed.tax,
+        gratuity: detailed.gratuity,
+        total: detailed.total,
+        lineItems: detailed.lineItems,
+        participants: detailed.participants,
+      },
+    });
   }
 }

@@ -19,6 +19,7 @@ import {
   postBillLineItem,
   postBillLineItemParticipant,
   postBillParticipant,
+  subscribeBillRecalculate,
 } from './controllers/apiControllers.ts';
 import {
   getAdminPage,
@@ -120,6 +121,10 @@ const startServer = async () => {
   app.patch(`${billApiPath}/:billId`, patchBill);
   app.post(`${billApiPath}:create-access`, postBillCreateAccess);
   app.get(`${billApiPath}/:billId/recalculate`, getBillRecalculate);
+  app.get(
+    `${billApiPath}/:billId/recalculate/subscribe`,
+    subscribeBillRecalculate,
+  );
 
   app.post(`${billApiPath}/:billId/participants`, postBillParticipant);
   app.patch(`${billApiPath}/:billId/participants/:id`, patchBillParticipant);

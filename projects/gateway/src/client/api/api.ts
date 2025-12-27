@@ -70,6 +70,11 @@ export const fetchRecalculateBill = async (
   return BillRecalculateResponse.parse(await res.json());
 };
 
+export const subscribeRecalculateBill = (billId: number): EventSource => {
+  const url = `/api/bills/${billId}/recalculate/subscribe`;
+  return new EventSource(url);
+};
+
 export const createBillParticipant = async (
   billId: number,
   name: string,
