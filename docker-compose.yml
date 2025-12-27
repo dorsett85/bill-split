@@ -36,7 +36,7 @@ services:
       POSTGRES_USER: *db-user
       POSTGRES_PASSWORD: *db-password
     ports:
-      - "5432:5432"
+      - "${DB_HOST_PORT}:5432"
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
