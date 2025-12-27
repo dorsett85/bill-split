@@ -13,10 +13,8 @@ export const useBillSubscription = (
     const eventSource = subscribeRecalculateBill(billId);
 
     eventSource.onmessage = (event) => {
-      console.log(event.data);
-
       try {
-        const data = BillRecalculateData.parse(event.data);
+        const data = BillRecalculateData.parse(JSON.parse(event.data));
         onRecalculate(data);
       } catch (e) {
         console.error('Failed to parse SSE message:', e);
