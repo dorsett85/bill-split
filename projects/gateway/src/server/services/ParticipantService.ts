@@ -1,6 +1,5 @@
 import type { BillDao } from '../dao/BillDao.ts';
 import type { BillParticipantDao } from '../dao/BillParticipantDao.ts';
-import type { LineItemDao } from '../dao/LineItemDao.ts';
 import type { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
 import type { IdRecord } from '../dto/id.ts';
@@ -18,7 +17,6 @@ interface ParticipantServiceConstructor {
   billParticipantDao: BillParticipantDao;
   lineItemParticipantDao: LineItemParticipantDao;
   participantDao: ParticipantDao;
-  lineItemDao: LineItemDao;
   cryptoService: CryptoService;
   kafkaProducerService: KafkaProducerService;
 }

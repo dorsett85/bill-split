@@ -1,7 +1,6 @@
 import path from 'path';
 import type { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import type { BillDao } from '../dao/BillDao.ts';
-import type { LineItemDao } from '../dao/LineItemDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
 import {
   BillCreate,
@@ -10,7 +9,6 @@ import {
   type BillUpdate,
 } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
-import type { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import type { FileStorageService } from '../types/fileStorageService.ts';
 import type { ServerRequest } from '../types/serverRequest.ts';
 import type { CryptoService } from './CryptoService.ts';
@@ -25,7 +23,6 @@ const makeHmacReadyBillText = (billId: number) => `bill/${billId}`;
 interface BillServiceConstructor {
   accessTokenDao: AccessTokenDao;
   billDao: BillDao;
-  lineItemDao: LineItemDao;
   participantDao: ParticipantDao;
   cryptoService: CryptoService;
   fileStorageService: FileStorageService;
@@ -35,7 +32,6 @@ interface BillServiceConstructor {
 export class BillService {
   private readonly accessTokenDao: AccessTokenDao;
   private readonly billDao: BillDao;
-  private readonly lineItemDao: LineItemDao;
   private readonly cryptoService: CryptoService;
   private readonly fileStorageService: FileStorageService;
   private readonly kafkaProducerService: KafkaProducerService;
@@ -43,14 +39,12 @@ export class BillService {
   constructor({
     accessTokenDao,
     billDao,
-    lineItemDao,
     cryptoService,
     fileStorageService,
     kafkaProducerService,
   }: BillServiceConstructor) {
     this.accessTokenDao = accessTokenDao;
     this.billDao = billDao;
-    this.lineItemDao = lineItemDao;
     this.cryptoService = cryptoService;
     this.fileStorageService = fileStorageService;
     this.kafkaProducerService = kafkaProducerService;
@@ -211,31 +205,6 @@ export class BillService {
     return await this.billDao.update(id, update);
   }
 
-  public async createLineItem(
-    billId: number,
-    lineItem: LineItemCreate,
-    sessionToken: string,
-  ): Promise<IdRecord | undefined> {
-    if (!this.hasBillAccess(billId, sessionToken)) {
-      return undefined;
-    }
-
-    return await this.lineItemDao.create(lineItem);
-  }
-
-  public async updateLineItem(
-    id: number,
-    billId: number,
-    update: LineItemUpdate,
-    sessionToken: string,
-  ): Promise<IdRecord | undefined> {
-    if (!this.hasBillAccess(billId, sessionToken)) {
-      return undefined;
-    }
-
-    return await this.lineItemDao.update(id, update);
-  }
-
   public async signBillCreateToken(
     pin: string,
     sessionToken?: string,
@@ -243,7 +212,7 @@ export class BillService {
     const hashedToken = this.cryptoService.signHmac(pin);
 
     // Check that the pin is active and hasn't gone over its usage limit. If
-    // successful then increase the no of uses.
+    //  successful, then increase the no of uses.
     const result = await this.accessTokenDao.tx(async (client) => {
       const [accessToken] = await this.accessTokenDao.search(
         { hashedToken },

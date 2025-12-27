@@ -4,7 +4,6 @@ import { env } from '../config.ts';
 import { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import { BillDao } from '../dao/BillDao.ts';
 import { BillParticipantDao } from '../dao/BillParticipantDao.ts';
-import { LineItemDao } from '../dao/LineItemDao.ts';
 import { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import { ParticipantDao } from '../dao/ParticipantDao.ts';
 import { getDb } from '../db/getDb.ts';
@@ -53,7 +52,6 @@ export const getBillService = () => {
   return new BillService({
     accessTokenDao: new AccessTokenDao(getDb()),
     billDao: new BillDao(getDb()),
-    lineItemDao: new LineItemDao(getDb()),
     participantDao: new ParticipantDao(getDb()),
     cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
     fileStorageService: new S3FileStorageService({
@@ -80,7 +78,6 @@ export const getParticipantService = () => {
     participantDao: new ParticipantDao(getDb()),
     billParticipantDao: new BillParticipantDao(getDb()),
     lineItemParticipantDao: new LineItemParticipantDao(getDb()),
-    lineItemDao: new LineItemDao(getDb()),
     cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
     kafkaProducerService: new KafkaProducerService({
       kafka: getKafka(),

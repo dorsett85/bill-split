@@ -11,12 +11,10 @@ import {
   getBillRecalculate,
   patchAccessToken,
   patchBill,
-  patchBillLineItem,
   patchBillParticipant,
   postAccessToken,
   postBill,
   postBillCreateAccess,
-  postBillLineItem,
   postBillLineItemParticipant,
   postBillParticipant,
   subscribeBillRecalculate,
@@ -129,9 +127,6 @@ const startServer = async () => {
   app.post(`${billApiPath}/:billId/participants`, postBillParticipant);
   app.patch(`${billApiPath}/:billId/participants/:id`, patchBillParticipant);
   app.delete(`${billApiPath}/:billId/participants/:id`, deleteBillParticipant);
-
-  app.post(`${billApiPath}/:billId/line-items`, postBillLineItem);
-  app.patch(`${billApiPath}/:billId/line-items/:id`, patchBillLineItem);
 
   app.post(
     `${billApiPath}/:billId/line-item-participants`,

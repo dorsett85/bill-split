@@ -7,7 +7,6 @@ import {
 import { VerifyAccessRequest } from '../dto/auth.ts';
 import { BillUpdate } from '../dto/bill.ts';
 import { intId } from '../dto/id.ts';
-import { LineItemCreate, LineItemUpdate } from '../dto/lineItem.ts';
 import { LineItemParticipantCreateRequest } from '../dto/lineItemParticipant.ts';
 import { ParticipantCreate, ParticipantUpdate } from '../dto/participant.ts';
 import type { MiddlewareFunction } from '../types/serverRequest.ts';
@@ -391,73 +390,6 @@ export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
     return jsonServerErrorResponse(res);
   }
 };
-
-export const postBillLineItem: MiddlewareFunction = async (req, res) => {
-  const body = await parseJsonBody(req);
-  const parseBillIdResult = intId.safeParse(req.params.billId);
-  const parseCreateResult = LineItemCreate.safeParse(body);
-
-  if (!parseBillIdResult.success || !parseCreateResult.success) {
-    return jsonBadRequestResponse(res);
-  }
-
-  const { sessionToken } = parseCookies(req);
-  const billService = getBillService();
-
-  try {
-    const idRecord = sessionToken
-      ? await billService.createLineItem(
-          parseBillIdResult.data,
-          parseCreateResult.data,
-          sessionToken,
-        )
-      : undefined;
-
-    return idRecord
-      ? jsonSuccessResponse(idRecord, res)
-      : jsonForbiddenResponse(res);
-  } catch (e) {
-    logger.error(e);
-    return jsonServerErrorResponse(res);
-  }
-};
-
-export const patchBillLineItem: MiddlewareFunction = async (req, res) => {
-  const body = await parseJsonBody(req);
-  const parseIdResult = intId.safeParse(req.params.id);
-  const parseBillIdResult = intId.safeParse(req.params.billId);
-  const parseUpdatesResult = LineItemUpdate.safeParse(body);
-
-  if (
-    !parseIdResult.success ||
-    !parseBillIdResult.success ||
-    !parseUpdatesResult.success
-  ) {
-    return jsonBadRequestResponse(res);
-  }
-
-  try {
-    const { sessionToken } = parseCookies(req);
-    const billService = getBillService();
-
-    const idRecord = sessionToken
-      ? await billService.updateLineItem(
-          parseIdResult.data,
-          parseBillIdResult.data,
-          parseUpdatesResult.data,
-          sessionToken,
-        )
-      : undefined;
-
-    return idRecord
-      ? jsonSuccessResponse(idRecord, res)
-      : jsonForbiddenResponse(res);
-  } catch (e) {
-    logger.error(e);
-    return jsonServerErrorResponse(res);
-  }
-};
-
 export const postBillLineItemParticipant: MiddlewareFunction = async (
   req,
   res,

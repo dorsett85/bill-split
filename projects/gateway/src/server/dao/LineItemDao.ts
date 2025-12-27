@@ -1,13 +1,9 @@
-import type { Pool, PoolClient } from 'pg';
+import type { Pool } from 'pg';
 import type { IdRecord } from '../dto/id.ts';
-import {
-  type LineItemCreate,
-  type LineItemRead,
-  LineItemReadStorage,
-  type LineItemSearch,
-  type LineItemUpdate,
-  toLineItemRead,
-  toLineItemStorage,
+import type {
+  LineItemCreate,
+  LineItemRead,
+  LineItemUpdate,
 } from '../dto/lineItem.ts';
 import { BaseDao } from '../types/baseDao.ts';
 
@@ -20,35 +16,23 @@ export class LineItemDao extends BaseDao<
     super(db, 'line_item');
   }
 
-  public async create(lineItem: LineItemCreate): Promise<IdRecord> {
-    const lineItemToInsert = toLineItemStorage(lineItem);
-    return this.createRecord(lineItemToInsert);
-  }
-
-  public async read(): Promise<LineItemRead> {
+  public async create(): Promise<IdRecord> {
     // TODO
     throw new Error('Not implemented');
   }
 
-  public async update(
-    id: number,
-    lineItemUpdates: LineItemUpdate,
-  ): Promise<IdRecord> {
-    const updates = toLineItemStorage(lineItemUpdates);
-    return this.updateRecord(id, updates);
+  public async read(): Promise<LineItemRead | undefined> {
+    // TODO
+    throw new Error('Not implemented');
   }
 
-  public async search(
-    searchParams: LineItemSearch,
-    client?: PoolClient,
-  ): Promise<LineItemRead[]> {
-    const cols = LineItemReadStorage.keyof().options;
+  public async update(): Promise<IdRecord> {
+    // TODO
+    throw new Error('Not implemented');
+  }
 
-    const dbParams = toLineItemStorage(searchParams);
-    const { rows } = await this.searchRecords(dbParams, cols, client);
-
-    return rows.map((rows) =>
-      LineItemReadStorage.transform(toLineItemRead).parse(rows),
-    );
+  public async search(): Promise<LineItemRead[]> {
+    // TODO
+    throw new Error('Not implemented');
   }
 }
