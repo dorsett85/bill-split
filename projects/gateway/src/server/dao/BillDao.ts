@@ -131,7 +131,7 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
                         (
                           SELECT json_agg(pli_nested)
                           FROM (
-                            SELECT pli.id, pli.line_item_id
+                            SELECT pli.line_item_id
                             FROM participant_line_item pli
                             WHERE pli.participant_id = p.id
                             AND EXISTS (SELECT 1 FROM line_item li WHERE li.id = pli.line_item_id AND li.bill_id = bs.id)
