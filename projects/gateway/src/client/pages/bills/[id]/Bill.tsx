@@ -49,6 +49,7 @@ export const Bill: React.FC<BillProps> = (props) => {
           ...prev,
           imageStatus: 'error',
         }));
+        return;
       }
 
       try {
