@@ -139,6 +139,9 @@ services:
           path: package.json
     environment:
       <<: [*db-env, *aws-env]
+      # Used to override the NODE_ENV variable set by aws lambda (which must be
+      # overridden manually in the handler code).
+      LOCAL_DEV: ${LOCAL_DEV}
       KAFKA_BILL_PROCESSING_TOPIC: *kafka-bill-processing-topic
     ports:
       - "9000:8080"

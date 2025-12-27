@@ -7,10 +7,13 @@ import { stubbedAnalyzeOutput } from './data/whole-foods-receipt.ts';
 import { RemoteBillProcessingService } from './services/RemoteBillProcessingService.ts';
 import type { BillProcessingService } from './types/billProcessingService.ts';
 
-// Only make an actual textract client in production. It costs 25 cents per
+// Only make an actual textract client in production. It costs money per
 // request!
+const NODE_ENV =
+  process.env.LOCAL_DEV === 'true' ? 'development' : process.env.NODE_ENV;
+
 const textractClient: TextractClient =
-  process.env.NODE_ENV === 'production'
+  NODE_ENV === 'production'
     ? new TextractClient({
         credentials: {
           accessKeyId: process.env.AWS_ACCESS_KEY ?? '',
