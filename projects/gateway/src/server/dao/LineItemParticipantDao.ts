@@ -1,6 +1,6 @@
 import type { Pool, PoolClient } from 'pg';
 import type { CountRecord } from '../dto/count.ts';
-import type { IdRecord } from '../dto/id.ts';
+import { IdRecord } from '../dto/id.ts';
 import {
   type LineItemParticipantCreate,
   type LineItemParticipantRead,
@@ -55,11 +55,12 @@ export class LineItemParticipantDao extends BaseDao<
   }
 
   /**
-   * This query gets all the records from a line item id that are associated
-   * with an id (pk).
+   * This query gets all the records with a line item id that are associated
+   * with a given line item id and participant id.
    */
-  public async searchByLineItemIdAssociatedWithPk(
-    pk: number,
+  public async searchByRelatedLineItemIds(
+    participantId: number,
+    lineItemId: number,
     client?: PoolClient,
   ): Promise<LineItemParticipantRead[]> {
     const { rows } = await (client ?? this.db).query(
@@ -67,9 +68,9 @@ export class LineItemParticipantDao extends BaseDao<
       SELECT lip2.*
       FROM ${this.tableName} lip
       JOIN line_item_participant lip2 ON lip.line_item_id = lip2.line_item_id
-      WHERE lip.id = $1
+      WHERE lip.participant_id = $1 AND lip.line_item_id = $2
       `,
-      [pk],
+      [participantId, lineItemId],
     );
 
     return rows.map((row) =>
@@ -144,5 +145,22 @@ export class LineItemParticipantDao extends BaseDao<
         row,
       ),
     );
+  }
+
+  public async deleteByParticipantAndLineItemIds(
+    participantId: number,
+    lineItemId: number,
+    client?: PoolClient,
+  ): Promise<IdRecord> {
+    const { rows } = await (client ?? this.db).query(
+      `
+      DELETE FROM ${this.tableName}
+      WHERE participant_id = $1 AND line_item_id = $2
+      RETURNING id
+      `,
+      [participantId, lineItemId],
+    );
+
+    return IdRecord.parse(rows[0]);
   }
 }

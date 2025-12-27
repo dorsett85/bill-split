@@ -14,12 +14,12 @@ import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import type React from 'react';
 import { useState } from 'react';
 import {
-  createLineItemParticipant,
-  deleteLineItemParticipant,
-  fetchRecalculateBill,
+  createParticipantLineItem,
+  deleteParticipantLineItem,
 } from '../api/api.ts';
 import type {
   BillRecalculateData,
+  BillRecalculateResponse,
   LineItems,
   Participant,
 } from '../pages/bills/[id]/dto.ts';
@@ -73,21 +73,23 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
     participantId: number,
   ) => {
     try {
+      let recalculatedBillResponse: BillRecalculateResponse;
       if (checked) {
-        await createLineItemParticipant(billId, lineItemId, participantId);
-      } else {
-        const participant = participants.find((p) => p.id === participantId);
-        const lineItemParticipant = participant?.lineItemParticipants.find(
-          (li) => li.lineItemId === lineItemId,
+        recalculatedBillResponse = await createParticipantLineItem(
+          billId,
+          participantId,
+          lineItemId,
         );
-        if (lineItemParticipant) {
-          await deleteLineItemParticipant(billId, lineItemParticipant.id);
-        }
+      } else {
+        recalculatedBillResponse = await deleteParticipantLineItem(
+          billId,
+          participantId,
+          lineItemId,
+        );
       }
 
-      const json = await fetchRecalculateBill(billId);
-      if ('data' in json) {
-        onChange(json.data);
+      if ('data' in recalculatedBillResponse) {
+        onChange(recalculatedBillResponse.data);
       }
     } catch (e) {
       // TODO error handling

@@ -2,8 +2,8 @@ import type { BillDao } from '../dao/BillDao.ts';
 import type { BillParticipantDao } from '../dao/BillParticipantDao.ts';
 import type { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
+import type { BillReadDetailed } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
-import type { LineItemParticipantCreateRequest } from '../dto/lineItemParticipant.ts';
 import type {
   ParticipantCreate,
   ParticipantUpdate,
@@ -52,7 +52,7 @@ export class ParticipantService {
     billId: number,
     participant: ParticipantCreate,
     sessionToken: string,
-  ): Promise<IdRecord | undefined> {
+  ): Promise<BillReadDetailed | undefined> {
     if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
@@ -70,7 +70,7 @@ export class ParticipantService {
       }
 
       // Create both the participant and the bill_participant
-      const res = await this.billParticipantDao.tx(async (client) => {
+      const detailed = await this.billParticipantDao.tx(async (client) => {
         const idRecord = await this.participantDao.create(participant, client);
         await this.billParticipantDao.create(
           {
@@ -80,12 +80,19 @@ export class ParticipantService {
           client,
         );
 
-        return idRecord;
+        // TODO this is heavy handed for creating a new user, but we need other
+        //  users to see this change and this is the only object our SSE topic
+        //  supports at the moment.
+        return this.billDao.readDetailed(billId, client);
       });
 
-      void this.publishRecalculatedBill(billId, sessionToken);
+      if (!detailed) {
+        return;
+      }
 
-      return res;
+      void this.publishRecalculatedBill(detailed, sessionToken);
+
+      return detailed;
     });
   }
 
@@ -109,12 +116,12 @@ export class ParticipantService {
     billId: number,
     participantId: number,
     sessionToken: string,
-  ): Promise<IdRecord | undefined> {
+  ): Promise<BillReadDetailed | undefined> {
     if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
 
-    const result = await this.participantDao.tx(async (client) => {
+    const detailed = await this.participantDao.tx(async (client) => {
       const lineItemParticipants =
         await this.lineItemParticipantDao.searchByLineItemIdUsingBillAndParticipant(
           billId,
@@ -144,27 +151,35 @@ export class ParticipantService {
         { billId, participantId },
         client,
       );
-      return await this.billParticipantDao.delete(billParticipant.id, client);
+
+      await this.billParticipantDao.delete(billParticipant.id, client);
+
+      return this.billDao.readDetailed(billId, client);
     });
 
-    void this.publishRecalculatedBill(billId, sessionToken);
+    if (!detailed) {
+      return;
+    }
 
-    return result;
+    void this.publishRecalculatedBill(detailed, sessionToken);
+
+    return detailed;
   }
 
-  public async createLineItemParticipant(
+  public async createParticipantLineItem(
     billId: number,
-    lineItemParticipant: LineItemParticipantCreateRequest,
+    participantId: number,
+    lineItemId: number,
     sessionToken: string,
-  ): Promise<IdRecord | undefined> {
+  ): Promise<BillReadDetailed | undefined> {
     if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
 
-    const result = await this.lineItemParticipantDao.tx(async (client) => {
+    const detailed = await this.lineItemParticipantDao.tx(async (client) => {
       const lineItemParticipants = await this.lineItemParticipantDao.search(
         {
-          lineItemId: lineItemParticipant.lineItemId,
+          lineItemId,
         },
         client,
       );
@@ -179,35 +194,47 @@ export class ParticipantService {
         );
       }
 
-      return await this.lineItemParticipantDao.create(
-        { ...lineItemParticipant, pctOwes: newPctOwes },
+      await this.lineItemParticipantDao.create(
+        { lineItemId, participantId, pctOwes: newPctOwes },
         client,
       );
+
+      return this.billDao.readDetailed(billId, client);
     });
 
-    void this.publishRecalculatedBill(billId, sessionToken);
+    if (!detailed) {
+      return;
+    }
 
-    return result;
+    void this.publishRecalculatedBill(detailed, sessionToken);
+
+    return detailed;
   }
 
-  public async deleteLineItemParticipant(
-    id: number,
+  public async deleteParticipantLineItem(
     billId: number,
+    participantId: number,
+    lineItemId: number,
     sessionToken: string,
-  ): Promise<IdRecord | undefined> {
+  ): Promise<BillReadDetailed | undefined> {
     if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
 
-    const result = await this.lineItemParticipantDao.tx(async (client) => {
+    const detailed = await this.lineItemParticipantDao.tx(async (client) => {
       const lineItemParticipants =
-        await this.lineItemParticipantDao.searchByLineItemIdAssociatedWithPk(
-          id,
+        await this.lineItemParticipantDao.searchByRelatedLineItemIds(
+          participantId,
+          lineItemId,
           client,
         );
 
       const result = calculateRemainingPctOwes(
-        lineItemParticipants.filter((lip) => lip.id === id)[0].participantId,
+        lineItemParticipants.filter(
+          (lip) =>
+            lip.participantId === participantId &&
+            lip.lineItemId === lineItemId,
+        )[0].participantId,
         lineItemParticipants,
       );
 
@@ -215,12 +242,22 @@ export class ParticipantService {
         await this.lineItemParticipantDao.addOwesByIds(owes, ids, client);
       }
 
-      return await this.lineItemParticipantDao.delete(id, client);
+      await this.lineItemParticipantDao.deleteByParticipantAndLineItemIds(
+        participantId,
+        lineItemId,
+        client,
+      );
+
+      return this.billDao.readDetailed(billId, client);
     });
 
-    void this.publishRecalculatedBill(billId, sessionToken);
+    if (!detailed) {
+      return;
+    }
 
-    return result;
+    void this.publishRecalculatedBill(detailed, sessionToken);
+
+    return detailed;
   }
 
   private hasBillAccess(billId: number, sessionToken: string) {
@@ -228,27 +265,21 @@ export class ParticipantService {
     return payload?.isAdmin || payload?.billAccessIds?.includes(billId);
   }
 
-  private async publishRecalculatedBill(
-    billId: number,
+  private publishRecalculatedBill(
+    bill: BillReadDetailed,
     sessionToken: string,
-  ): Promise<void> {
-    const detailed = await this.billDao.readDetailed(billId);
-
-    if (!detailed) {
-      return;
-    }
-
+  ): void {
     void this.kafkaProducerService.publishBillRecalculate({
-      billId,
+      billId: bill.id,
       sessionToken,
       recalculatedBill: {
-        discount: detailed.discount,
-        subTotal: detailed.subTotal,
-        tax: detailed.tax,
-        gratuity: detailed.gratuity,
-        total: detailed.total,
-        lineItems: detailed.lineItems,
-        participants: detailed.participants,
+        discount: bill.discount,
+        subTotal: bill.subTotal,
+        tax: bill.tax,
+        gratuity: bill.gratuity,
+        total: bill.total,
+        lineItems: bill.lineItems,
+        participants: bill.participants,
       },
     });
   }

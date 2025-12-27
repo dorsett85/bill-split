@@ -7,7 +7,6 @@ import {
 import { VerifyAccessRequest } from '../dto/auth.ts';
 import { BillUpdate } from '../dto/bill.ts';
 import { intId } from '../dto/id.ts';
-import { LineItemParticipantCreateRequest } from '../dto/lineItemParticipant.ts';
 import { ParticipantCreate, ParticipantUpdate } from '../dto/participant.ts';
 import type { MiddlewareFunction } from '../types/serverRequest.ts';
 import { parseCookies } from '../utils/parseCookies.ts';
@@ -220,27 +219,6 @@ export const postBillCreateAccess: MiddlewareFunction = async (req, res) => {
   }
 };
 
-export const getBillRecalculate: MiddlewareFunction = async (req, res) => {
-  const parseResult = intId.safeParse(req.params.billId);
-
-  if (!parseResult.success) {
-    return jsonBadRequestResponse(res);
-  }
-
-  const { sessionToken } = parseCookies(req);
-  const billService = getBillService();
-
-  try {
-    const bill = sessionToken
-      ? await billService.recalculate(parseResult.data, sessionToken)
-      : undefined;
-    return bill ? jsonSuccessResponse(bill, res) : jsonNotFoundResponse(res);
-  } catch (e) {
-    logger.error(e);
-    return jsonServerErrorResponse(res);
-  }
-};
-
 export const subscribeBillRecalculate: MiddlewareFunction = async (
   req,
   res,
@@ -308,7 +286,7 @@ export const postBillParticipant: MiddlewareFunction = async (req, res) => {
   const participantService = getParticipantService();
 
   try {
-    const participant = sessionToken
+    const detailedBill = sessionToken
       ? await participantService.createBillParticipant(
           parseBillIdResult.data,
           parseCreateResult.data,
@@ -316,8 +294,8 @@ export const postBillParticipant: MiddlewareFunction = async (req, res) => {
         )
       : undefined;
 
-    return participant
-      ? jsonSuccessResponse(participant, res)
+    return detailedBill
+      ? jsonSuccessResponse(detailedBill, res)
       : jsonForbiddenResponse(res);
   } catch (e) {
     logger.error(e);
@@ -374,7 +352,7 @@ export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
   const participantService = getParticipantService();
 
   try {
-    const idRecord = sessionToken
+    const detailedBill = sessionToken
       ? await participantService.deleteBillParticipant(
           parseBillIdResult.data,
           parseIdResult.data,
@@ -382,40 +360,8 @@ export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
         )
       : undefined;
 
-    return idRecord
-      ? jsonSuccessResponse(idRecord, res)
-      : jsonForbiddenResponse(res);
-  } catch (e) {
-    logger.error(e);
-    return jsonServerErrorResponse(res);
-  }
-};
-export const postBillLineItemParticipant: MiddlewareFunction = async (
-  req,
-  res,
-) => {
-  const body = await parseJsonBody(req);
-  const parseBillIdResult = intId.safeParse(req.params.billId);
-  const parseCreateResult = LineItemParticipantCreateRequest.safeParse(body);
-
-  if (!parseBillIdResult.success || !parseCreateResult.success) {
-    return jsonBadRequestResponse(res);
-  }
-
-  try {
-    const { sessionToken } = parseCookies(req);
-    const participantService = getParticipantService();
-
-    const idRecord = sessionToken
-      ? await participantService.createLineItemParticipant(
-          parseBillIdResult.data,
-          parseCreateResult.data,
-          sessionToken,
-        )
-      : undefined;
-
-    return idRecord
-      ? jsonSuccessResponse(idRecord, res)
+    return detailedBill
+      ? jsonSuccessResponse(detailedBill, res)
       : jsonForbiddenResponse(res);
   } catch (e) {
     logger.error(e);
@@ -423,14 +369,19 @@ export const postBillLineItemParticipant: MiddlewareFunction = async (
   }
 };
 
-export const deleteBillLineItemParticipant: MiddlewareFunction = async (
+export const postBillParticipantLineItem: MiddlewareFunction = async (
   req,
   res,
 ) => {
-  const parseIdResult = intId.safeParse(req.params.id);
   const parseBillIdResult = intId.safeParse(req.params.billId);
+  const parseParticipantIdResult = intId.safeParse(req.params.participantId);
+  const parseLineItemIdResult = intId.safeParse(req.params.lineItemId);
 
-  if (!parseIdResult.success || !parseBillIdResult.success) {
+  if (
+    !parseBillIdResult.success ||
+    !parseParticipantIdResult.success ||
+    !parseLineItemIdResult.success
+  ) {
     return jsonBadRequestResponse(res);
   }
 
@@ -438,16 +389,54 @@ export const deleteBillLineItemParticipant: MiddlewareFunction = async (
     const { sessionToken } = parseCookies(req);
     const participantService = getParticipantService();
 
-    const idRecord = sessionToken
-      ? await participantService.deleteLineItemParticipant(
-          parseIdResult.data,
+    const detailedBill = sessionToken
+      ? await participantService.createParticipantLineItem(
           parseBillIdResult.data,
+          parseParticipantIdResult.data,
+          parseLineItemIdResult.data,
           sessionToken,
         )
       : undefined;
 
-    return idRecord
-      ? jsonSuccessResponse(idRecord, res)
+    return detailedBill
+      ? jsonSuccessResponse(detailedBill, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
+};
+export const deleteBillParticipantLineItem: MiddlewareFunction = async (
+  req,
+  res,
+) => {
+  const parseBillIdResult = intId.safeParse(req.params.billId);
+  const parseParticipantIdResult = intId.safeParse(req.params.participantId);
+  const parseLineItemIdResult = intId.safeParse(req.params.lineItemId);
+
+  if (
+    !parseBillIdResult.success ||
+    !parseParticipantIdResult.success ||
+    !parseLineItemIdResult.success
+  ) {
+    return jsonBadRequestResponse(res);
+  }
+
+  try {
+    const { sessionToken } = parseCookies(req);
+    const participantService = getParticipantService();
+
+    const detailedBill = sessionToken
+      ? await participantService.deleteParticipantLineItem(
+          parseBillIdResult.data,
+          parseParticipantIdResult.data,
+          parseLineItemIdResult.data,
+          sessionToken,
+        )
+      : undefined;
+
+    return detailedBill
+      ? jsonSuccessResponse(detailedBill, res)
       : jsonForbiddenResponse(res);
   } catch (e) {
     logger.error(e);

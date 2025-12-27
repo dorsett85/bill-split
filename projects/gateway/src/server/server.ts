@@ -4,19 +4,18 @@ import { App } from './App.ts';
 import { env } from './config.ts';
 import {
   deleteAccessToken,
-  deleteBillLineItemParticipant,
   deleteBillParticipant,
+  deleteBillParticipantLineItem,
   getAccessTokens,
   getBill,
-  getBillRecalculate,
   patchAccessToken,
   patchBill,
   patchBillParticipant,
   postAccessToken,
   postBill,
   postBillCreateAccess,
-  postBillLineItemParticipant,
   postBillParticipant,
+  postBillParticipantLineItem,
   subscribeBillRecalculate,
 } from './controllers/apiControllers.ts';
 import {
@@ -118,7 +117,6 @@ const startServer = async () => {
   app.get(`${billApiPath}/:billId`, getBill);
   app.patch(`${billApiPath}/:billId`, patchBill);
   app.post(`${billApiPath}:create-access`, postBillCreateAccess);
-  app.get(`${billApiPath}/:billId/recalculate`, getBillRecalculate);
   app.get(
     `${billApiPath}/:billId/recalculate/subscribe`,
     subscribeBillRecalculate,
@@ -128,13 +126,14 @@ const startServer = async () => {
   app.patch(`${billApiPath}/:billId/participants/:id`, patchBillParticipant);
   app.delete(`${billApiPath}/:billId/participants/:id`, deleteBillParticipant);
 
+  // NEW participant/line-items intent url
   app.post(
-    `${billApiPath}/:billId/line-item-participants`,
-    postBillLineItemParticipant,
+    `${billApiPath}/:billId/participants/:participantId/line-items/:lineItemId`,
+    postBillParticipantLineItem,
   );
   app.delete(
-    `${billApiPath}/:billId/line-item-participants/:id`,
-    deleteBillLineItemParticipant,
+    `${billApiPath}/:billId/participants/:participantId/line-items/:lineItemId`,
+    deleteBillParticipantLineItem,
   );
 
   app.listen(port, () => {

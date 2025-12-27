@@ -7,7 +7,7 @@ import {
 import { IconCheck, IconEdit } from '@tabler/icons-react';
 import type React from 'react';
 import { type FormEvent, useState } from 'react';
-import { updateParticipant } from '../api/api.ts';
+import { updateBillParticipant } from '../api/api.ts';
 
 interface BillParticipantEditNameProps {
   billId: number;
@@ -39,7 +39,7 @@ export const BillParticipantEditName: React.FC<
     setError(undefined);
 
     try {
-      await updateParticipant(billId, participantId, newName);
+      await updateBillParticipant(billId, participantId, newName);
       onNameChange(newName);
     } catch (e) {
       console.log(e);

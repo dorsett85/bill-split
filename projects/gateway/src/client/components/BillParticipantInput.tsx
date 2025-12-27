@@ -1,11 +1,7 @@
 import { Loader, TagsInput } from '@mantine/core';
 import type React from 'react';
 import { useState } from 'react';
-import {
-  createBillParticipant,
-  deleteBillParticipant,
-  fetchRecalculateBill,
-} from '../api/api.ts';
+import { createBillParticipant, deleteBillParticipant } from '../api/api.ts';
 import type {
   BillRecalculateData,
   Participant,
@@ -38,10 +34,7 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
     try {
       const json = await createBillParticipant(billId, name);
       if ('data' in json) {
-        onCreateParticipant([
-          ...participants,
-          { id: json.data.id, name, lineItemParticipants: [], owes: 0 },
-        ]);
+        onCreateParticipant(json.data.participants);
       }
     } catch {
       // no-op
@@ -64,8 +57,7 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
       try {
         // TODO we probably want to create a modal here to warn users of the
         //  consequences of deleting a participant.
-        await deleteBillParticipant(billId, deleteId);
-        const json = await fetchRecalculateBill(billId);
+        const json = await deleteBillParticipant(billId, deleteId);
         if ('data' in json) {
           onDeleteParticipant(json.data);
         }

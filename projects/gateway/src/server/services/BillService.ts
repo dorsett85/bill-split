@@ -5,7 +5,6 @@ import type { ParticipantDao } from '../dao/ParticipantDao.ts';
 import {
   BillCreate,
   type BillReadDetailed,
-  type BillRecalculateResponse,
   type BillUpdate,
 } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
@@ -161,35 +160,6 @@ export class BillService {
     return {
       bill,
       token,
-    };
-  }
-
-  /**
-   * Same as the read method, but returns only the bill properties requiring
-   * calculation.
-   */
-  public async recalculate(
-    billId: number,
-    sessionToken: string,
-  ): Promise<BillRecalculateResponse | undefined> {
-    if (!this.hasBillAccess(billId, sessionToken)) {
-      return undefined;
-    }
-
-    const detailedBill = await this.billDao.readDetailed(billId);
-
-    if (!detailedBill) {
-      return undefined;
-    }
-
-    return {
-      discount: detailedBill.discount,
-      subTotal: detailedBill.subTotal,
-      gratuity: detailedBill.gratuity,
-      tax: detailedBill.tax,
-      total: detailedBill.total,
-      lineItems: detailedBill.lineItems,
-      participants: detailedBill.participants,
     };
   }
 

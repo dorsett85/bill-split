@@ -63,13 +63,6 @@ export const fetchBill = async (billId: number): Promise<BillResponse> => {
   return BillResponse.parse(await res.json());
 };
 
-export const fetchRecalculateBill = async (
-  billId: number,
-): Promise<BillRecalculateResponse> => {
-  const res = await fetch(`/api/bills/${billId}/recalculate`, baseOptions);
-  return BillRecalculateResponse.parse(await res.json());
-};
-
 export const subscribeRecalculateBill = (billId: number): EventSource => {
   const url = `/api/bills/${billId}/recalculate/subscribe`;
   return new EventSource(url);
@@ -78,54 +71,16 @@ export const subscribeRecalculateBill = (billId: number): EventSource => {
 export const createBillParticipant = async (
   billId: number,
   name: string,
-): Promise<IdResponse> => {
+): Promise<BillRecalculateResponse> => {
   const res = await fetch(`/api/bills/${billId}/participants`, {
     ...baseOptions,
     method: 'POST',
     body: JSON.stringify({ name }),
   });
-  return IdResponse.parse(await res.json());
+  return BillRecalculateResponse.parse(await res.json());
 };
 
-export const deleteBillParticipant = async (
-  billId: number,
-  participantId: number,
-): Promise<IdResponse> => {
-  const res = await fetch(
-    `/api/bills/${billId}/participants/${participantId}`,
-    {
-      ...baseOptions,
-      method: 'DELETE',
-    },
-  );
-  return IdResponse.parse(await res.json());
-};
-
-export const createLineItemParticipant = async (
-  billId: number,
-  lineItemId: number,
-  participantId: number,
-): Promise<IdResponse> => {
-  const res = await fetch(`/api/bills/${billId}/line-item-participants`, {
-    ...baseOptions,
-    method: 'POST',
-    body: JSON.stringify({ lineItemId, participantId }),
-  });
-  return IdResponse.parse(await res.json());
-};
-
-export const deleteLineItemParticipant = async (
-  billId: number,
-  id: number,
-): Promise<IdResponse> => {
-  const res = await fetch(`/api/bills/${billId}/line-item-participants/${id}`, {
-    ...baseOptions,
-    method: 'DELETE',
-  });
-  return IdResponse.parse(await res.json());
-};
-
-export const updateParticipant = async (
+export const updateBillParticipant = async (
   billId: number,
   participantId: number,
   name: string,
@@ -139,4 +94,49 @@ export const updateParticipant = async (
     },
   );
   return IdResponse.parse(await res.json());
+};
+
+export const deleteBillParticipant = async (
+  billId: number,
+  participantId: number,
+): Promise<BillRecalculateResponse> => {
+  const res = await fetch(
+    `/api/bills/${billId}/participants/${participantId}`,
+    {
+      ...baseOptions,
+      method: 'DELETE',
+    },
+  );
+  return BillRecalculateResponse.parse(await res.json());
+};
+
+export const createParticipantLineItem = async (
+  billId: number,
+  participantId: number,
+  lineItemId: number,
+): Promise<BillRecalculateResponse> => {
+  const res = await fetch(
+    `/api/bills/${billId}/participants/${participantId}/line-items/${lineItemId}`,
+    {
+      ...baseOptions,
+      method: 'POST',
+      body: JSON.stringify({ lineItemId, participantId }),
+    },
+  );
+  return BillRecalculateResponse.parse(await res.json());
+};
+
+export const deleteParticipantLineItem = async (
+  billId: number,
+  participantId: number,
+  lineItemId: number,
+): Promise<BillRecalculateResponse> => {
+  const res = await fetch(
+    `/api/bills/${billId}/participants/${participantId}/line-items/${lineItemId}`,
+    {
+      ...baseOptions,
+      method: 'DELETE',
+    },
+  );
+  return BillRecalculateResponse.parse(await res.json());
 };
