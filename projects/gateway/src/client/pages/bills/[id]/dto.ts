@@ -11,7 +11,7 @@ const LineItem = IdRecord.extend({
 
 const Participant = IdRecord.extend({
   name: z.string(),
-  lineItemParticipants: z.array(
+  participantLineItems: z.array(
     z.object({
       id: z.number(),
       lineItemId: z.number(),

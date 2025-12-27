@@ -51,7 +51,7 @@ export const BillReadDetailedStorage = BillReadStorage.extend({
       z.object({
         id: z.number(),
         name: z.string(),
-        line_item_participants: z.array(
+        participant_line_items: z.array(
           z.object({
             id: z.number(),
             line_item_id: z.number(),
@@ -115,9 +115,9 @@ export const toBillReadDetailed = (
   participants: bill.participants.map((p) => ({
     id: p.id,
     name: p.name,
-    lineItemParticipants: p.line_item_participants.map((lip) => ({
-      id: lip.id,
-      lineItemId: lip.line_item_id,
+    participantLineItems: p.participant_line_items.map((pli) => ({
+      id: pli.id,
+      lineItemId: pli.line_item_id,
     })),
     owes: p.owes,
   })),

@@ -1,7 +1,7 @@
 import type { BillDao } from '../dao/BillDao.ts';
 import type { BillParticipantDao } from '../dao/BillParticipantDao.ts';
-import type { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
+import type { ParticipantLineItemDao } from '../dao/ParticipantLineItemDao.ts';
 import type { BillReadDetailed } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
 import type {
@@ -15,7 +15,7 @@ import type { KafkaProducerService } from './KafkaProducerService.ts';
 interface ParticipantServiceConstructor {
   billDao: BillDao;
   billParticipantDao: BillParticipantDao;
-  lineItemParticipantDao: LineItemParticipantDao;
+  participantLineItemDao: ParticipantLineItemDao;
   participantDao: ParticipantDao;
   cryptoService: CryptoService;
   kafkaProducerService: KafkaProducerService;
@@ -24,7 +24,7 @@ interface ParticipantServiceConstructor {
 export class ParticipantService {
   private readonly billDao: BillDao;
   private readonly billParticipantDao: BillParticipantDao;
-  private readonly lineItemParticipantDao: LineItemParticipantDao;
+  private readonly participantLineItemDao: ParticipantLineItemDao;
   private readonly participantDao: ParticipantDao;
   private readonly cryptoService: CryptoService;
   private readonly kafkaProducerService: KafkaProducerService;
@@ -32,14 +32,14 @@ export class ParticipantService {
   constructor({
     billDao,
     billParticipantDao,
-    lineItemParticipantDao,
+    participantLineItemDao,
     participantDao,
     cryptoService,
     kafkaProducerService,
   }: ParticipantServiceConstructor) {
     this.billDao = billDao;
     this.billParticipantDao = billParticipantDao;
-    this.lineItemParticipantDao = lineItemParticipantDao;
+    this.participantLineItemDao = participantLineItemDao;
     this.participantDao = participantDao;
     this.cryptoService = cryptoService;
     this.kafkaProducerService = kafkaProducerService;
@@ -122,8 +122,8 @@ export class ParticipantService {
     }
 
     const detailed = await this.participantDao.tx(async (client) => {
-      const lineItemParticipants =
-        await this.lineItemParticipantDao.searchByLineItemIdUsingBillAndParticipant(
+      const participantLineItems =
+        await this.participantLineItemDao.searchByLineItemIdUsingBillAndParticipant(
           billId,
           participantId,
           client,
@@ -131,18 +131,18 @@ export class ParticipantService {
 
       const result = calculateRemainingPctOwes(
         participantId,
-        lineItemParticipants,
+        participantLineItems,
       );
 
       // Balance what the remaining participants owe
       for (const { owes, ids } of result) {
-        await this.lineItemParticipantDao.addOwesByIds(owes, ids, client);
+        await this.participantLineItemDao.addOwesByIds(owes, ids, client);
       }
 
       // Delete the line items associated with the participant
-      for (const lineItem of lineItemParticipants) {
+      for (const lineItem of participantLineItems) {
         if (lineItem.participantId === participantId) {
-          await this.lineItemParticipantDao.delete(lineItem.id);
+          await this.participantLineItemDao.delete(lineItem.id);
         }
       }
 
@@ -176,25 +176,25 @@ export class ParticipantService {
       return undefined;
     }
 
-    const detailed = await this.lineItemParticipantDao.tx(async (client) => {
-      const lineItemParticipants = await this.lineItemParticipantDao.search(
+    const detailed = await this.participantLineItemDao.tx(async (client) => {
+      const participantLineItems = await this.participantLineItemDao.search(
         {
           lineItemId,
         },
         client,
       );
       // Evenly split the percent owes across all line item participants
-      const newPctOwes = 100 / (lineItemParticipants.length + 1);
+      const newPctOwes = 100 / (participantLineItems.length + 1);
 
-      if (lineItemParticipants.length > 0) {
-        await this.lineItemParticipantDao.updateOwesByIds(
+      if (participantLineItems.length > 0) {
+        await this.participantLineItemDao.updateOwesByIds(
           newPctOwes,
-          lineItemParticipants.map((lip) => lip.id),
+          participantLineItems.map((pli) => pli.id),
           client,
         );
       }
 
-      await this.lineItemParticipantDao.create(
+      await this.participantLineItemDao.create(
         { lineItemId, participantId, pctOwes: newPctOwes },
         client,
       );
@@ -221,28 +221,28 @@ export class ParticipantService {
       return undefined;
     }
 
-    const detailed = await this.lineItemParticipantDao.tx(async (client) => {
-      const lineItemParticipants =
-        await this.lineItemParticipantDao.searchByRelatedLineItemIds(
+    const detailed = await this.participantLineItemDao.tx(async (client) => {
+      const participantLineItems =
+        await this.participantLineItemDao.searchByRelatedLineItemIds(
           participantId,
           lineItemId,
           client,
         );
 
       const result = calculateRemainingPctOwes(
-        lineItemParticipants.filter(
-          (lip) =>
-            lip.participantId === participantId &&
-            lip.lineItemId === lineItemId,
+        participantLineItems.filter(
+          (pli) =>
+            pli.participantId === participantId &&
+            pli.lineItemId === lineItemId,
         )[0].participantId,
-        lineItemParticipants,
+        participantLineItems,
       );
 
       for (const { owes, ids } of result) {
-        await this.lineItemParticipantDao.addOwesByIds(owes, ids, client);
+        await this.participantLineItemDao.addOwesByIds(owes, ids, client);
       }
 
-      await this.lineItemParticipantDao.deleteByParticipantAndLineItemIds(
+      await this.participantLineItemDao.deleteByParticipantAndLineItemIds(
         participantId,
         lineItemId,
         client,

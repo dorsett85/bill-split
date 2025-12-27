@@ -2,34 +2,34 @@ import type { Pool, PoolClient } from 'pg';
 import type { CountRecord } from '../dto/count.ts';
 import { IdRecord } from '../dto/id.ts';
 import {
-  type LineItemParticipantCreate,
-  type LineItemParticipantRead,
-  LineItemParticipantReadStorage,
-  type LineItemParticipantSearch,
-  type LineItemParticipantUpdate,
-  toLineItemParticipantRead,
-  toLineItemParticipantStorage,
-} from '../dto/lineItemParticipant.ts';
+  type ParticipantLineItemCreate,
+  type ParticipantLineItemRead,
+  ParticipantLineItemReadStorage,
+  type ParticipantLineItemSearch,
+  type ParticipantLineItemUpdate,
+  toParticipantLineItemRead,
+  toParticipantLineItemStorage,
+} from '../dto/participantLineItem.ts';
 import { BaseDao } from '../types/baseDao.ts';
 
-export class LineItemParticipantDao extends BaseDao<
-  LineItemParticipantCreate,
-  LineItemParticipantRead,
-  LineItemParticipantUpdate
+export class ParticipantLineItemDao extends BaseDao<
+  ParticipantLineItemCreate,
+  ParticipantLineItemRead,
+  ParticipantLineItemUpdate
 > {
   public constructor(db: Pool) {
-    super(db, 'line_item_participant');
+    super(db, 'participant_line_item');
   }
 
   public async create(
-    data: LineItemParticipantCreate,
+    data: ParticipantLineItemCreate,
     client?: PoolClient,
   ): Promise<IdRecord> {
-    const insertItem = toLineItemParticipantStorage(data);
+    const insertItem = toParticipantLineItemStorage(data);
     return this.createRecord(insertItem, client);
   }
 
-  public async read(): Promise<LineItemParticipantRead> {
+  public async read(): Promise<ParticipantLineItemRead> {
     // TODO
     throw new Error('Not implemented');
   }
@@ -40,15 +40,15 @@ export class LineItemParticipantDao extends BaseDao<
   }
 
   public async search(
-    searchParams: LineItemParticipantSearch,
+    searchParams: ParticipantLineItemSearch,
     client?: PoolClient,
-  ): Promise<LineItemParticipantRead[]> {
-    const cols = LineItemParticipantReadStorage.keyof().options;
-    const lineItemSearch = toLineItemParticipantStorage(searchParams);
+  ): Promise<ParticipantLineItemRead[]> {
+    const cols = ParticipantLineItemReadStorage.keyof().options;
+    const lineItemSearch = toParticipantLineItemStorage(searchParams);
 
     const { rows } = await this.searchRecords(lineItemSearch, cols, client);
     return rows.map((row) =>
-      LineItemParticipantReadStorage.transform(toLineItemParticipantRead).parse(
+      ParticipantLineItemReadStorage.transform(toParticipantLineItemRead).parse(
         row,
       ),
     );
@@ -62,19 +62,19 @@ export class LineItemParticipantDao extends BaseDao<
     participantId: number,
     lineItemId: number,
     client?: PoolClient,
-  ): Promise<LineItemParticipantRead[]> {
+  ): Promise<ParticipantLineItemRead[]> {
     const { rows } = await (client ?? this.db).query(
       `
-      SELECT lip2.*
-      FROM ${this.tableName} lip
-      JOIN line_item_participant lip2 ON lip.line_item_id = lip2.line_item_id
-      WHERE lip.participant_id = $1 AND lip.line_item_id = $2
+      SELECT pli2.*
+      FROM ${this.tableName} pli
+      JOIN participant_line_item pli2 ON pli.line_item_id = pli2.line_item_id
+      WHERE pli.participant_id = $1 AND pli.line_item_id = $2
       `,
       [participantId, lineItemId],
     );
 
     return rows.map((row) =>
-      LineItemParticipantReadStorage.transform(toLineItemParticipantRead).parse(
+      ParticipantLineItemReadStorage.transform(toParticipantLineItemRead).parse(
         row,
       ),
     );
@@ -91,8 +91,8 @@ export class LineItemParticipantDao extends BaseDao<
   ): Promise<CountRecord> {
     const { rowCount } = await (client ?? this.db).query(
       `
-      UPDATE line_item_participant lip SET pct_owes = pct_owes + $1
-      WHERE lip.id = ANY ($2)
+      UPDATE participant_line_item pli SET pct_owes = pct_owes + $1
+      WHERE pli.id = ANY ($2)
       `,
       [pct, ids],
     );
@@ -110,8 +110,8 @@ export class LineItemParticipantDao extends BaseDao<
   ): Promise<CountRecord> {
     const { rowCount } = await (client ?? this.db).query(
       `
-        UPDATE line_item_participant lip SET pct_owes = $1
-        WHERE lip.id = ANY ($2)
+        UPDATE participant_line_item pli SET pct_owes = $1
+        WHERE pli.id = ANY ($2)
       `,
       [pct, ids],
     );
@@ -127,21 +127,21 @@ export class LineItemParticipantDao extends BaseDao<
     billId: number,
     participantId: number,
     client?: PoolClient,
-  ): Promise<LineItemParticipantRead[]> {
+  ): Promise<ParticipantLineItemRead[]> {
     const { rows } = await (client ?? this.db).query(
       `
-      SELECT lip2.* 
-      FROM ${this.tableName} lip
-      JOIN line_item_participant lip2 ON lip.line_item_id = lip2.line_item_id
-      JOIN line_item li ON lip.line_item_id = li.id 
+      SELECT pli2.* 
+      FROM ${this.tableName} pli
+      JOIN participant_line_item pli2 ON pli.line_item_id = pli2.line_item_id
+      JOIN line_item li ON pli.line_item_id = li.id 
       JOIN bill b ON li.bill_id = b.id
-      WHERE lip.participant_id = $1 AND b.id = $2
+      WHERE pli.participant_id = $1 AND b.id = $2
       `,
       [participantId, billId],
     );
 
     return rows.map((row) =>
-      LineItemParticipantReadStorage.transform(toLineItemParticipantRead).parse(
+      ParticipantLineItemReadStorage.transform(toParticipantLineItemRead).parse(
         row,
       ),
     );

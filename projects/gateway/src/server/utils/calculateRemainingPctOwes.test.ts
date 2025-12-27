@@ -1,25 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import type { LineItemParticipantRead } from '../dto/lineItemParticipant.ts';
+import type { ParticipantLineItemRead } from '../dto/participantLineItem.ts';
 import { calculateRemainingPctOwes } from './calculateRemainingPctOwes.ts';
 
 /**
- * Helper to build a LineItemParticipantRead entry quickly.
+ * Helper to build a ParticipantLineItemRead entry quickly.
  */
-const lip = (
+const pli = (
   id: number,
   lineItemId: number,
   participantId: number,
   pctOwes: number,
-): LineItemParticipantRead => ({ id, lineItemId, participantId, pctOwes });
+): ParticipantLineItemRead => ({ id, lineItemId, participantId, pctOwes });
 
 describe('calculateRemainingPctOwes', () => {
   it('splits outstanding pct evenly among remaining participants for a single line item', () => {
     const line = 100; // lineItemId
     const removedParticipantId = 2;
-    const inputs: LineItemParticipantRead[] = [
-      lip(1, line, 1, 0.4), // remaining
-      lip(2, line, removedParticipantId, 0.3), // to remove
-      lip(3, line, 3, 0.3), // remaining
+    const inputs: ParticipantLineItemRead[] = [
+      pli(1, line, 1, 0.4), // remaining
+      pli(2, line, removedParticipantId, 0.3), // to remove
+      pli(3, line, 3, 0.3), // remaining
     ];
 
     const result = calculateRemainingPctOwes(removedParticipantId, inputs);
@@ -31,14 +31,14 @@ describe('calculateRemainingPctOwes', () => {
 
   it('handles multiple line items with different outstanding percentages', () => {
     const removedParticipantId = 10;
-    const inputs: LineItemParticipantRead[] = [
+    const inputs: ParticipantLineItemRead[] = [
       // Line item A
-      lip(101, 1000, removedParticipantId, 0.2),
-      lip(102, 1000, 2, 0.5),
-      lip(103, 1000, 3, 0.3),
+      pli(101, 1000, removedParticipantId, 0.2),
+      pli(102, 1000, 2, 0.5),
+      pli(103, 1000, 3, 0.3),
       // Line item B
-      lip(201, 2000, 4, 0.6),
-      lip(202, 2000, removedParticipantId, 0.4),
+      pli(201, 2000, 4, 0.6),
+      pli(202, 2000, removedParticipantId, 0.4),
     ];
 
     const result = calculateRemainingPctOwes(removedParticipantId, inputs);
@@ -58,8 +58,8 @@ describe('calculateRemainingPctOwes', () => {
 
   it('returns the full outstanding pct when the removed participant is the only one on a line item', () => {
     const removedParticipantId = 5;
-    const inputs: LineItemParticipantRead[] = [
-      lip(50, 500, removedParticipantId, 1.0),
+    const inputs: ParticipantLineItemRead[] = [
+      pli(50, 500, removedParticipantId, 1.0),
     ];
 
     const result = calculateRemainingPctOwes(removedParticipantId, inputs);
@@ -69,9 +69,9 @@ describe('calculateRemainingPctOwes', () => {
 
   it('yields zero owes when the participant to remove is not found in the list', () => {
     const removedParticipantId = 999; // not present
-    const inputs: LineItemParticipantRead[] = [
-      lip(1, 10, 1, 0.6),
-      lip(2, 10, 2, 0.4),
+    const inputs: ParticipantLineItemRead[] = [
+      pli(1, 10, 1, 0.6),
+      pli(2, 10, 2, 0.4),
     ];
 
     const result = calculateRemainingPctOwes(removedParticipantId, inputs);
@@ -83,11 +83,11 @@ describe('calculateRemainingPctOwes', () => {
 
   it('correctly handles three remaining participants sharing the outstanding pct', () => {
     const removedParticipantId = 7;
-    const inputs: LineItemParticipantRead[] = [
-      lip(11, 77, 1, 0.2),
-      lip(12, 77, 2, 0.2),
-      lip(13, 77, 3, 0.2),
-      lip(14, 77, removedParticipantId, 0.4),
+    const inputs: ParticipantLineItemRead[] = [
+      pli(11, 77, 1, 0.2),
+      pli(12, 77, 2, 0.2),
+      pli(13, 77, 3, 0.2),
+      pli(14, 77, removedParticipantId, 0.4),
     ];
 
     const result = calculateRemainingPctOwes(removedParticipantId, inputs);

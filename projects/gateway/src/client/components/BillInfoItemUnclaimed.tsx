@@ -16,7 +16,7 @@ export const BillInfoItemUnclaimed: React.FC<BillInfoItemUnclaimedProps> = ({
 }) => {
   const participantLineItemIds = new Set(
     participants
-      .flatMap((p) => p.lineItemParticipants)
+      .flatMap((p) => p.participantLineItems)
       .map((pli) => pli.lineItemId),
   );
 

@@ -1,4 +1,4 @@
-import type { LineItemParticipantRead } from '../dto/lineItemParticipant.ts';
+import type { ParticipantLineItemRead } from '../dto/participantLineItem.ts';
 
 /**
  * Given a participant id and a list of line item participants, calculate how
@@ -6,7 +6,7 @@ import type { LineItemParticipantRead } from '../dto/lineItemParticipant.ts';
  */
 export const calculateRemainingPctOwes = (
   participantId: number,
-  lineItemParticipants: LineItemParticipantRead[],
+  participantLineItems: ParticipantLineItemRead[],
 ): { ids: number[]; owes: number }[] => {
   // Here we'll group by each line item with the outstanding pct the deleted
   // participant owes and the ids of the remaining people to distribute it
@@ -16,16 +16,16 @@ export const calculateRemainingPctOwes = (
     { outstandingPct: number; ids: number[] }
   > = {};
 
-  for (const lip of lineItemParticipants) {
-    participantOwesByLineItem[lip.lineItemId] ??= {
+  for (const pli of participantLineItems) {
+    participantOwesByLineItem[pli.lineItemId] ??= {
       outstandingPct: 0,
       ids: [],
     };
 
-    if (lip.participantId === participantId) {
-      participantOwesByLineItem[lip.lineItemId].outstandingPct = lip.pctOwes;
+    if (pli.participantId === participantId) {
+      participantOwesByLineItem[pli.lineItemId].outstandingPct = pli.pctOwes;
     } else {
-      participantOwesByLineItem[lip.lineItemId].ids.push(lip.id);
+      participantOwesByLineItem[pli.lineItemId].ids.push(pli.id);
     }
   }
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { type IdRecord, id } from './id.ts';
-import type { LineItemParticipantRead } from './lineItemParticipant.ts';
+import type { ParticipantLineItemRead } from './participantLineItem.ts';
 
 export const ParticipantCreate = z.object({
   name: z.string(),
@@ -24,7 +24,7 @@ export type ParticipantRead = {
 export type ParticipantReadStorage = z.infer<typeof ParticipantReadStorage>;
 export type ParticipantUpdate = z.infer<typeof ParticipantUpdate>;
 export type ParticipantResponse = (ParticipantRead & {
-  lineItemsParticipants: Omit<LineItemParticipantRead, 'participantId'>[];
+  lineItemsParticipants: Omit<ParticipantLineItemRead, 'participantId'>[];
   owes: number;
 })[];
 

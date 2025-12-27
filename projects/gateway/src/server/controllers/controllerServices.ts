@@ -4,8 +4,8 @@ import { env } from '../config.ts';
 import { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import { BillDao } from '../dao/BillDao.ts';
 import { BillParticipantDao } from '../dao/BillParticipantDao.ts';
-import { LineItemParticipantDao } from '../dao/LineItemParticipantDao.ts';
 import { ParticipantDao } from '../dao/ParticipantDao.ts';
+import { ParticipantLineItemDao } from '../dao/ParticipantLineItemDao.ts';
 import { getDb } from '../db/getDb.ts';
 import { AdminService } from '../services/AdminService.ts';
 import { BillService } from '../services/BillService.ts';
@@ -77,7 +77,7 @@ export const getParticipantService = () => {
     billDao: new BillDao(getDb()),
     participantDao: new ParticipantDao(getDb()),
     billParticipantDao: new BillParticipantDao(getDb()),
-    lineItemParticipantDao: new LineItemParticipantDao(getDb()),
+    participantLineItemDao: new ParticipantLineItemDao(getDb()),
     cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
     kafkaProducerService: new KafkaProducerService({
       kafka: getKafka(),

@@ -79,11 +79,11 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
         -- We use bill_stats here to ensure we only look at items for this specific bill
         SELECT 
             p.id as participant_id,
-            SUM(li.price * (lip.pct_owes / 100)) as individual_raw_subtotal
+            SUM(li.price * (pli.pct_owes / 100)) as individual_raw_subtotal
         FROM participant p
         JOIN bill_participant bp ON p.id = bp.participant_id
-        LEFT JOIN line_item_participant lip ON p.id = lip.participant_id
-        LEFT JOIN line_item li ON lip.line_item_id = li.id AND li.bill_id = bp.bill_id
+        LEFT JOIN participant_line_item pli ON p.id = pli.participant_id
+        LEFT JOIN line_item li ON pli.line_item_id = li.id AND li.bill_id = bp.bill_id
         WHERE bp.bill_id = $1
         GROUP BY p.id
       )
@@ -109,9 +109,9 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
                       li.*,
                       COALESCE(
                         (
-                          SELECT json_agg(lip.participant_id)
-                          FROM line_item_participant lip
-                          WHERE lip.line_item_id = li.id
+                          SELECT json_agg(pli.participant_id)
+                          FROM participant_line_item pli
+                          WHERE pli.line_item_id = li.id
                         ),
                         '[]'::json
                       ) as participant_ids
@@ -129,17 +129,17 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
                       p.name,
                       COALESCE(
                         (
-                          SELECT json_agg(lip_nested)
+                          SELECT json_agg(pli_nested)
                           FROM (
-                            SELECT lip.id, lip.line_item_id
-                            FROM line_item_participant lip
-                            WHERE lip.participant_id = p.id
-                            AND EXISTS (SELECT 1 FROM line_item li WHERE li.id = lip.line_item_id AND li.bill_id = bs.id)
-                            ORDER BY lip.line_item_id
-                          ) lip_nested
+                            SELECT pli.id, pli.line_item_id
+                            FROM participant_line_item pli
+                            WHERE pli.participant_id = p.id
+                            AND EXISTS (SELECT 1 FROM line_item li WHERE li.id = pli.line_item_id AND li.bill_id = bs.id)
+                            ORDER BY pli.line_item_id
+                          ) pli_nested
                         ),
                         '[]'::json
-                      ) as line_item_participants,
+                      ) as participant_line_items,
                       -- Calculate 'owes' using the same logic as calculateBill.ts
                       COALESCE(
                         (
