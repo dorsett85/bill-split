@@ -25,7 +25,7 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
    */
   abstract create(data: C, client?: PoolClient): Promise<IdRecord>;
 
-  abstract read(id: number, client?: PoolClient): Promise<R>;
+  abstract read(id: number, client?: PoolClient): Promise<R | undefined>;
 
   abstract update(id: number, updates: U): Promise<IdRecord>;
 

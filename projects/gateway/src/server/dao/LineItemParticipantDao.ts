@@ -54,27 +54,6 @@ export class LineItemParticipantDao extends BaseDao<
     );
   }
 
-  public async searchByBillId(
-    billId: number,
-    client?: PoolClient,
-  ): Promise<LineItemParticipantRead[]> {
-    const { rows } = await (client ?? this.db).query(
-      `
-      SELECT lip.*
-      FROM ${this.tableName} lip
-      JOIN line_item li ON lip.line_item_id = li.id
-      WHERE li.bill_id = $1
-      `,
-      [billId],
-    );
-
-    return rows.map((row) =>
-      LineItemParticipantReadStorage.transform(toLineItemParticipantRead).parse(
-        row,
-      ),
-    );
-  }
-
   /**
    * This query gets all the records from a line item id that are associated
    * with an id (pk).

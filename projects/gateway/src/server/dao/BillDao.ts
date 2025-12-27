@@ -23,7 +23,10 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
     return this.createRecord(billToInsert);
   }
 
-  public async read(id: number, client?: PoolClient): Promise<BillRead> {
+  public async read(
+    id: number,
+    client?: PoolClient,
+  ): Promise<BillRead | undefined> {
     const cols = BillReadStorage.keyof().options.join(',');
 
     const result = await (client ?? this.db).query(
@@ -35,7 +38,13 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
       [id],
     );
 
-    return BillReadStorage.transform(toBillRead).parse(result.rows[0]);
+    const record = result.rows[0];
+
+    if (!record) {
+      return undefined;
+    }
+
+    return BillReadStorage.transform(toBillRead).parse(record);
   }
 
   public async update(id: number, billUpdates: BillUpdate): Promise<IdRecord> {
@@ -159,7 +168,13 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
       [id],
     );
 
-    return BillReadDetailedStorage.transform(toBillReadDetailed).parse(rows[0]);
+    const record = rows[0];
+
+    if (!record) {
+      return undefined;
+    }
+
+    return BillReadDetailedStorage.transform(toBillReadDetailed).parse(record);
   }
 
   public async search(): Promise<BillRead[]> {

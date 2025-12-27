@@ -3,9 +3,7 @@ import type { IdRecord } from '../dto/id.ts';
 import {
   type ParticipantCreate,
   type ParticipantRead,
-  ParticipantReadStorage,
   type ParticipantUpdate,
-  toParticipantRead,
   toParticipantStorage,
 } from '../dto/participant.ts';
 import { BaseDao } from '../types/baseDao.ts';
@@ -43,29 +41,6 @@ export class ParticipantDao extends BaseDao<
   public async search(): Promise<ParticipantRead[]> {
     // TODO
     throw new Error('Not implemented');
-  }
-
-  public async searchByBillId(
-    billId: number,
-    client?: PoolClient,
-  ): Promise<ParticipantRead[]> {
-    const cols = ParticipantReadStorage.keyof()
-      .options.map((col) => `${this.tableName}.${col}`)
-      .join(',');
-
-    const { rows } = await (client ?? this.db).query(
-      `
-        SELECT ${cols}
-        FROM ${this.tableName}
-        INNER JOIN bill_participant bp ON ${this.tableName}.id = bp.participant_id 
-        WHERE bp.bill_id = $1
-      `,
-      [billId],
-    );
-
-    return rows.map((row) =>
-      ParticipantReadStorage.transform(toParticipantRead).parse(row),
-    );
   }
 
   public async nameAlreadyExistsByBillId(

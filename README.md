@@ -7,14 +7,10 @@ Easily upload a bill/receipt and split it between friends and family
 TODO
 
 1. Api
-   1. Live updates
-      1. Add SSE FE code
-      2. Add publish events
-   2. Return optional union in dao methods
-   3. Send back recalculated bill for endpoints that call for recalculation
-   4. Add dao tests (mock testing db)
-   5. Lazy load classes
-   6. Encode bill page url
+   1. Send back recalculated bill for endpoints that call for recalculation
+   2. Add dao tests (mock testing db)
+   3. Lazy load classes
+   4. Encode bill page url
 2. UI
    1. Handle api error responses (only checking for 'data' property right now)
    2. Home page
