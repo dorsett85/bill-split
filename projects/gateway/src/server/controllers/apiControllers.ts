@@ -304,9 +304,9 @@ export const deleteBillParticipant: BillMiddlewareFunction = async (
   req,
   res,
 ) => {
-  const parseIdResult = intId.safeParse(req.params.id);
+  const parseParticipantIdResult = intId.safeParse(req.params.participantId);
 
-  if (!parseIdResult.success) {
+  if (!parseParticipantIdResult.success) {
     return jsonBadRequestResponse(res);
   }
 
@@ -315,7 +315,7 @@ export const deleteBillParticipant: BillMiddlewareFunction = async (
   try {
     const detailedBill = await participantService.deleteBillParticipant(
       req.billId,
-      parseIdResult.data,
+      parseParticipantIdResult.data,
       req.sessionToken,
     );
 
