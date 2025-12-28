@@ -15,7 +15,7 @@ export default defineConfig({
             // The dao modules require db setup that we'll test separately
             './src/server/dao/**/*.test.ts',
           ],
-        }
+        },
       },
       {
         test: {
@@ -25,8 +25,7 @@ export default defineConfig({
           setupFiles: ['./test/vitest-db-suite-setup.ts'],
           pool: 'threads',
         },
-      }
-    ]
-
+      },
+    ],
   },
 });
