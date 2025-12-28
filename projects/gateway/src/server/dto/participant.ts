@@ -1,20 +1,24 @@
 import { z } from 'zod';
 import { type IdRecord, id } from './id.ts';
-import type { ParticipantLineItemRead } from './participantLineItem.ts';
 
 export const ParticipantCreate = z.object({
+  billId: z.number(),
   name: z.string(),
 });
 
 export const ParticipantReadStorage = z
   .object({
     id,
+    bill_id: ParticipantCreate.shape.billId,
     name: ParticipantCreate.shape.name,
   })
   .strict();
 
 export const ParticipantUpdate = z.object({
   name: z.string(),
+});
+export const ParticipantCreateRequest = ParticipantCreate.pick({
+  name: true,
 });
 
 export type ParticipantCreate = z.infer<typeof ParticipantCreate>;
@@ -23,20 +27,19 @@ export type ParticipantRead = {
 } & IdRecord;
 export type ParticipantReadStorage = z.infer<typeof ParticipantReadStorage>;
 export type ParticipantUpdate = z.infer<typeof ParticipantUpdate>;
-export type ParticipantResponse = (ParticipantRead & {
-  lineItemsParticipants: Omit<ParticipantLineItemRead, 'participantId'>[];
-  owes: number;
-})[];
+export type ParticipantCreateRequest = z.infer<typeof ParticipantCreateRequest>;
 
 export const toParticipantStorage = (
   participant: ParticipantCreate | ParticipantUpdate,
 ) => ({
+  bill_id: 'billId' in participant ? participant.billId : undefined,
   name: participant.name,
 });
 
 export const toParticipantRead = (
-  Participant: ParticipantReadStorage,
+  participant: ParticipantReadStorage,
 ): ParticipantRead => ({
-  id: Participant.id,
-  name: Participant.name,
+  id: participant.id,
+  billId: participant.bill_id,
+  name: participant.name,
 });

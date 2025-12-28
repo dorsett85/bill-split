@@ -7,7 +7,10 @@ import {
 import { VerifyAccessRequest } from '../dto/auth.ts';
 import { BillUpdate } from '../dto/bill.ts';
 import { intId } from '../dto/id.ts';
-import { ParticipantCreate, ParticipantUpdate } from '../dto/participant.ts';
+import {
+  ParticipantCreateRequest,
+  ParticipantUpdate,
+} from '../dto/participant.ts';
 import type { MiddlewareFunction } from '../types/serverRequest.ts';
 import { parseCookies } from '../utils/parseCookies.ts';
 import { parseJsonBody } from '../utils/parseJsonBody.ts';
@@ -276,7 +279,7 @@ export const subscribeBillRecalculate: MiddlewareFunction = async (
 export const postBillParticipant: MiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
   const parseBillIdResult = intId.safeParse(req.params.billId);
-  const parseCreateResult = ParticipantCreate.safeParse(body);
+  const parseCreateResult = ParticipantCreateRequest.safeParse(body);
 
   if (!parseBillIdResult.success || !parseCreateResult.success) {
     return jsonBadRequestResponse(res);

@@ -81,10 +81,9 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
             p.id as participant_id,
             SUM(li.price * (pli.pct_owes / 100)) as individual_raw_subtotal
         FROM participant p
-        JOIN bill_participant bp ON p.id = bp.participant_id
         LEFT JOIN participant_line_item pli ON p.id = pli.participant_id
-        LEFT JOIN line_item li ON pli.line_item_id = li.id AND li.bill_id = bp.bill_id
-        WHERE bp.bill_id = $1
+        LEFT JOIN line_item li ON pli.line_item_id = li.id AND li.bill_id = p.bill_id
+        WHERE p.bill_id = $1
         GROUP BY p.id
       )
       SELECT 
@@ -158,8 +157,7 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
                         0
                       ) as owes
                   FROM participant p
-                  JOIN bill_participant bp ON p.id = bp.participant_id
-                  WHERE bp.bill_id = bs.id
+                  WHERE p.bill_id = bs.id
                   ORDER BY p.id
               ) p_final
           ) as participants

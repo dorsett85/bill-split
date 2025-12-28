@@ -1,11 +1,11 @@
+import { DatabaseError } from 'pg';
 import type { BillDao } from '../dao/BillDao.ts';
-import type { BillParticipantDao } from '../dao/BillParticipantDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
 import type { ParticipantLineItemDao } from '../dao/ParticipantLineItemDao.ts';
 import type { BillReadDetailed } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
 import type {
-  ParticipantCreate,
+  ParticipantCreateRequest,
   ParticipantUpdate,
 } from '../dto/participant.ts';
 import { calculateRemainingPctOwes } from '../utils/calculateRemainingPctOwes.ts';
@@ -14,7 +14,6 @@ import type { KafkaProducerService } from './KafkaProducerService.ts';
 
 interface ParticipantServiceConstructor {
   billDao: BillDao;
-  billParticipantDao: BillParticipantDao;
   participantLineItemDao: ParticipantLineItemDao;
   participantDao: ParticipantDao;
   cryptoService: CryptoService;
@@ -23,7 +22,6 @@ interface ParticipantServiceConstructor {
 
 export class ParticipantService {
   private readonly billDao: BillDao;
-  private readonly billParticipantDao: BillParticipantDao;
   private readonly participantLineItemDao: ParticipantLineItemDao;
   private readonly participantDao: ParticipantDao;
   private readonly cryptoService: CryptoService;
@@ -31,14 +29,12 @@ export class ParticipantService {
 
   constructor({
     billDao,
-    billParticipantDao,
     participantLineItemDao,
     participantDao,
     cryptoService,
     kafkaProducerService,
   }: ParticipantServiceConstructor) {
     this.billDao = billDao;
-    this.billParticipantDao = billParticipantDao;
     this.participantLineItemDao = participantLineItemDao;
     this.participantDao = participantDao;
     this.cryptoService = cryptoService;
@@ -50,7 +46,7 @@ export class ParticipantService {
    */
   public async createBillParticipant(
     billId: number,
-    participant: ParticipantCreate,
+    participant: ParticipantCreateRequest,
     sessionToken: string,
   ): Promise<BillReadDetailed | undefined> {
     if (!this.hasBillAccess(billId, sessionToken)) {
@@ -59,32 +55,23 @@ export class ParticipantService {
 
     return await this.participantDao.tx(async (client) => {
       // Check if the name already exists for a bill
-      const exists = await this.participantDao.nameAlreadyExistsByBillId(
-        billId,
-        participant.name,
-        client,
-      );
-
-      if (exists) {
-        throw new Error(`Participant '${participant.name}' already exists`);
-      }
-
-      // Create both the participant and the bill_participant
-      const detailed = await this.billParticipantDao.tx(async (client) => {
-        const idRecord = await this.participantDao.create(participant, client);
-        await this.billParticipantDao.create(
-          {
-            billId,
-            participantId: idRecord.id,
-          },
+      try {
+        await this.participantDao.create(
+          { billId, name: participant.name },
           client,
         );
+      } catch (e) {
+        if (e instanceof DatabaseError && e.code === '23505') {
+          throw new Error(`Participant '${participant.name}' already exists`);
+        } else {
+          throw new Error('Something went wrong creating participant');
+        }
+      }
 
-        // TODO this is heavy handed for creating a new user, but we need other
-        //  users to see this change and this is the only object our SSE topic
-        //  supports at the moment.
-        return this.billDao.readDetailed(billId, client);
-      });
+      // TODO this is heavy handed for creating a new user, but we need other
+      //  users to see this change and this is the only object our SSE topic
+      //  supports at the moment.
+      const detailed = await this.billDao.readDetailed(billId, client);
 
       if (!detailed) {
         return;
@@ -147,12 +134,7 @@ export class ParticipantService {
       }
 
       // And finally delete the bill participant
-      const [billParticipant] = await this.billParticipantDao.search(
-        { billId, participantId },
-        client,
-      );
-
-      await this.billParticipantDao.delete(billParticipant.id, client);
+      await this.participantDao.delete(participantId, client);
 
       return this.billDao.readDetailed(billId, client);
     });

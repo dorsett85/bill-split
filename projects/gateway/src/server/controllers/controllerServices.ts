@@ -3,7 +3,6 @@ import { Kafka } from 'kafkajs';
 import { env } from '../config.ts';
 import { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import { BillDao } from '../dao/BillDao.ts';
-import { BillParticipantDao } from '../dao/BillParticipantDao.ts';
 import { ParticipantDao } from '../dao/ParticipantDao.ts';
 import { ParticipantLineItemDao } from '../dao/ParticipantLineItemDao.ts';
 import { getDb } from '../db/getDb.ts';
@@ -76,7 +75,6 @@ export const getParticipantService = () => {
   return new ParticipantService({
     billDao: new BillDao(getDb()),
     participantDao: new ParticipantDao(getDb()),
-    billParticipantDao: new BillParticipantDao(getDb()),
     participantLineItemDao: new ParticipantLineItemDao(getDb()),
     cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
     kafkaProducerService: new KafkaProducerService({
