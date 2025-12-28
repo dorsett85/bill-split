@@ -60,4 +60,4 @@ export class AccessTokenDao extends BaseDao<
   }
 }
 
-console.log('testing for ci');
+console.log('testing for ci 2');
