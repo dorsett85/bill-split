@@ -1,11 +1,10 @@
 import type { Pool, PoolClient } from 'pg';
 import type { CountRecord } from '../dto/count.ts';
 import type { IdRecord } from '../dto/id.ts';
-import {
-  type ParticipantLineItemCreate,
-  type ParticipantLineItemRead,
-  type ParticipantLineItemUpdate,
-  toParticipantLineItemStorage,
+import type {
+  ParticipantLineItemCreate,
+  ParticipantLineItemRead,
+  ParticipantLineItemUpdate,
 } from '../dto/participantLineItem.ts';
 import { BaseDao } from '../types/baseDao.ts';
 
@@ -19,24 +18,34 @@ export class ParticipantLineItemDao extends BaseDao<
   }
 
   public async create(
-    data: ParticipantLineItemCreate,
-    client?: PoolClient,
+    _data: ParticipantLineItemCreate,
+    _client?: PoolClient,
   ): Promise<IdRecord> {
-    const insertItem = toParticipantLineItemStorage(data);
-    return this.createRecord(insertItem, client);
-  }
-
-  public async read(): Promise<ParticipantLineItemRead> {
     // TODO
     throw new Error('Not implemented');
   }
 
-  public async update(): Promise<IdRecord> {
+  public async read(
+    _id: number,
+    _client?: PoolClient,
+  ): Promise<ParticipantLineItemRead | undefined> {
     // TODO
     throw new Error('Not implemented');
   }
 
-  public async search(): Promise<ParticipantLineItemRead[]> {
+  public async update(
+    _id: number,
+    _updates: ParticipantLineItemUpdate,
+    _client?: PoolClient,
+  ): Promise<CountRecord> {
+    // TODO
+    throw new Error('Not implemented');
+  }
+
+  public async search(
+    _searchParams: Record<string, number | string>,
+    _client?: PoolClient,
+  ): Promise<ParticipantLineItemRead[]> {
     // TODO
     throw new Error('Not implemented');
   }

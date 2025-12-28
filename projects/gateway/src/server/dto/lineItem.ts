@@ -7,13 +7,13 @@ export const LineItemCreate = z.object({
   price: z.number(),
 });
 
-export const LineItemUpdate = LineItemCreate.pick({
-  name: true,
-  price: true,
-});
-
 export type LineItemCreate = z.infer<typeof LineItemCreate>;
 export type LineItemRead = {
   [K in keyof LineItemCreate]: Exclude<LineItemCreate[K], null>;
 } & IdRecord;
-export type LineItemUpdate = z.infer<typeof LineItemUpdate>;
+
+export const toLineItemStorage = (data: LineItemCreate) => ({
+  bill_id: 'billId' in data ? data.billId : undefined,
+  name: data.name,
+  price: data.price,
+});

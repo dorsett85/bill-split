@@ -16,6 +16,10 @@ parameters:
   kafka_is_changed:
     type: boolean
     default: false
+  # A project subdirectory where our DAOs live
+  dao_is_changed:
+    type: boolean
+    default: false
 
 orbs:
   node: circleci/node@6.3.0
@@ -33,7 +37,7 @@ commands:
     steps:
       - run:
           name: Type checking
-          command: pnpm tsc
+          command: pnpm type-check
   lint:
     steps:
       - run:
@@ -102,6 +106,15 @@ jobs:
       - type-check
       - lint
       - test
+      - when:
+          condition:
+            or:
+              - << pipeline.parameters.db_is_changed >>
+              - << pipeline.parameters.dao_is_changed >>
+          steps:
+            - run:
+                name: Run DAO tests
+                command: pnpm test:db
   test-db:
     executor:
       name: node/default

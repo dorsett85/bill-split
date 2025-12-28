@@ -8,13 +8,14 @@ import {
   toAccessTokenRead,
   toAccessTokenStorage,
 } from '../dto/accessToken.ts';
+import type { CountRecord } from '../dto/count.ts';
 import type { IdRecord } from '../dto/id.ts';
 import { BaseDao } from '../types/baseDao.ts';
 
 export class AccessTokenDao extends BaseDao<
   AccessTokenCreate,
   AccessTokenRead,
-  {}
+  AccessTokenUpdate
 > {
   public constructor(db: Pool) {
     super(db, 'access_token');
@@ -28,7 +29,10 @@ export class AccessTokenDao extends BaseDao<
     return this.createRecord(insertItem, client);
   }
 
-  public async read(): Promise<AccessTokenRead> {
+  public async read(
+    _id: number,
+    _client?: PoolClient,
+  ): Promise<AccessTokenRead | undefined> {
     // TODO
     throw new Error('Not implemented');
   }
@@ -37,7 +41,7 @@ export class AccessTokenDao extends BaseDao<
     id: number,
     update: AccessTokenUpdate,
     client?: PoolClient,
-  ): Promise<IdRecord> {
+  ): Promise<CountRecord> {
     const dbUpdates = toAccessTokenStorage(update);
     return this.updateRecord(id, dbUpdates, client);
   }

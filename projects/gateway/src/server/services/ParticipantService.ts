@@ -3,7 +3,7 @@ import type { BillDao } from '../dao/BillDao.ts';
 import type { ParticipantDao } from '../dao/ParticipantDao.ts';
 import type { ParticipantLineItemDao } from '../dao/ParticipantLineItemDao.ts';
 import type { BillReadDetailed } from '../dto/bill.ts';
-import type { IdRecord } from '../dto/id.ts';
+import type { CountRecord } from '../dto/count.ts';
 import type {
   ParticipantCreateRequest,
   ParticipantUpdateRequest,
@@ -77,7 +77,7 @@ export class ParticipantService {
     participantId: number,
     billId: number,
     update: ParticipantUpdateRequest,
-  ): Promise<IdRecord | undefined> {
+  ): Promise<CountRecord | undefined> {
     return await this.participantDao.update(participantId, {
       billId,
       name: update.name,
@@ -101,7 +101,11 @@ export class ParticipantService {
       );
 
       // And finally delete the bill participant
-      await this.participantDao.delete(participantId, client);
+      await this.participantDao.deleteBillParticipant(
+        participantId,
+        billId,
+        client,
+      );
 
       return this.billDao.readDetailed(billId, client);
     });

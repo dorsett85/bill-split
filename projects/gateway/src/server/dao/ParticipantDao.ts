@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from 'pg';
+import type { CountRecord } from '../dto/count.ts';
 import type { IdRecord } from '../dto/id.ts';
 import {
   type ParticipantCreate,
@@ -11,7 +12,7 @@ import { BaseDao } from '../types/baseDao.ts';
 export class ParticipantDao extends BaseDao<
   ParticipantCreate,
   ParticipantRead,
-  {}
+  ParticipantUpdate
 > {
   public constructor(db: Pool) {
     super(db, 'participant');
@@ -25,7 +26,10 @@ export class ParticipantDao extends BaseDao<
     return this.createRecord(insertItem, client);
   }
 
-  public async read(): Promise<ParticipantRead> {
+  public async read(
+    _id: number,
+    _client?: PoolClient,
+  ): Promise<ParticipantRead | undefined> {
     // TODO
     throw new Error('Not implemented');
   }
@@ -33,13 +37,36 @@ export class ParticipantDao extends BaseDao<
   public async update(
     id: number,
     update: ParticipantUpdate,
-  ): Promise<IdRecord> {
+    client?: PoolClient,
+  ): Promise<CountRecord> {
     const dbUpdates = toParticipantStorage(update);
-    return this.updateRecord(id, dbUpdates);
+    return this.updateRecord(id, dbUpdates, client);
   }
 
-  public async search(): Promise<ParticipantRead[]> {
+  public async search(
+    _searchParams: Record<string, number | string>,
+    _client?: PoolClient,
+  ): Promise<ParticipantRead[]> {
     // TODO
     throw new Error('Not implemented');
+  }
+
+  public async delete(_id: number, _client?: PoolClient): Promise<CountRecord> {
+    // TODO
+    throw new Error('Not implemented');
+  }
+
+  public async deleteBillParticipant(
+    participantId: number,
+    billId: number,
+    client?: PoolClient,
+  ): Promise<CountRecord> {
+    const result = await (client ?? this.db).query(
+      `
+      DELETE FROM ${this.tableName}
+      WHERE id = $1 AND bill_id = $2`,
+      [participantId, billId],
+    );
+    return { count: result.rowCount ?? 0 };
   }
 }

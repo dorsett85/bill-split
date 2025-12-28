@@ -21,7 +21,7 @@ export const AccessTokenReadStorage = z
     encrypted_token: AccessTokenCreate.shape.encryptedToken,
     initialization_vector: AccessTokenCreate.shape.initializationVector,
     active: AccessTokenCreate.shape.active,
-    no_of_uses: AccessTokenCreate.shape.noOfUses,
+    no_of_uses: z.coerce.number(),
     created_at: z.date(),
   })
   .strict();

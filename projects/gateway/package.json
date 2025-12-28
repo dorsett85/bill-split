@@ -6,8 +6,10 @@
     "build": "rsbuild build",
     "build:prod": "pnpm build --mode=production",
     "dev": "node --env-file=.env --experimental-vm-modules --watch src/server/server.ts src/server/server.ts",
-    "test": "vitest --config test/vitest.config.mts",
+    "test": "vitest --config test/vitest.config.mts --project unit",
+    "test:db": "vitest --config test/vitest.config.mts --project db",
     "type-check": "tsc",
+    "prepreview": "pnpm build:prod",
     "preview": "node --env-file=.env --env-file=.env.prod src/server/server.ts"
   },
   "dependencies": {
@@ -28,6 +30,7 @@
     "@biomejs/biome": "2.3.10",
     "@rsbuild/core": "1.6.15",
     "@rsbuild/plugin-react": "1.4.2",
+    "@testcontainers/postgresql": "^11.11.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@types/formidable": "^3.4.6",
@@ -38,6 +41,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
     "jsdom": "^27.3.0",
+    "testcontainers": "^11.11.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"
   },

@@ -16,7 +16,7 @@ export const ParticipantReadStorage = z
 
 export const ParticipantUpdate = z.object({
   billId: ParticipantCreate.shape.billId,
-  name: ParticipantCreate.shape.name,
+  name: ParticipantCreate.shape.name.optional(),
 });
 
 export const ParticipantCreateRequest = ParticipantCreate.pick({

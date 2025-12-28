@@ -1,4 +1,5 @@
 import type { Pool, PoolClient, QueryResult } from 'pg';
+import type { CountRecord } from '../dto/count.ts';
 import { IdRecord } from '../dto/id.ts';
 
 type StorageValue = string | null | number | boolean;
@@ -11,8 +12,8 @@ type StorageRecordWithUndefined = Record<string, StorageValue | undefined>;
  * Base data access object
  */
 export abstract class BaseDao<C, R extends IdRecord, U> {
-  protected db: Pool;
-  protected tableName: string;
+  protected readonly db: Pool;
+  public readonly tableName: string;
 
   protected constructor(pool: Pool, tableName: string) {
     this.db = pool;
@@ -27,19 +28,22 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
 
   abstract read(id: number, client?: PoolClient): Promise<R | undefined>;
 
-  abstract update(id: number, updates: U): Promise<IdRecord>;
+  abstract update(
+    id: number,
+    updates: U,
+    client?: PoolClient,
+  ): Promise<CountRecord>;
 
-  public async delete(id: number, client?: PoolClient): Promise<IdRecord> {
-    const { rows } = await (client ?? this.db).query(
+  public async delete(id: number, client?: PoolClient): Promise<CountRecord> {
+    const { rowCount } = await (client ?? this.db).query(
       `
       DELETE FROM ${this.tableName}
       WHERE id = $1
-      RETURNING id
       `,
       [id],
     );
 
-    return IdRecord.parse(rows[0]);
+    return { count: rowCount ?? 0 };
   }
 
   abstract search(
@@ -104,7 +108,7 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
     id: number,
     data: StorageRecordWithUndefined,
     client?: PoolClient,
-  ): Promise<IdRecord> {
+  ): Promise<CountRecord> {
     const dbData = this.stripUndefined(data);
 
     const keys: string[] = [];
@@ -115,16 +119,19 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
       values.push(value);
     }
 
+    if (keys.length === 0) {
+      return { count: 0 };
+    }
+
     const result = await (client ?? this.db).query(
       `
       UPDATE ${this.tableName} set ${keys.join(',')}
       WHERE id = $${paramCount++}
-      RETURNING id
       `,
       [...values, id],
     );
 
-    return IdRecord.parse(result.rows[0]);
+    return { count: result.rowCount ?? 0 };
   }
 
   protected async searchRecords(

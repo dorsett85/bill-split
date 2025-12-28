@@ -4,6 +4,7 @@ import {
   type AccessTokenResponse,
   type AccessTokenUpdate,
 } from '../dto/accessToken.ts';
+import type { CountRecord } from '../dto/count.ts';
 import type { IdRecord } from '../dto/id.ts';
 import type { CryptoService } from './CryptoService.ts';
 
@@ -105,7 +106,7 @@ export class AdminService {
     pin: string,
     update: AccessTokenUpdate,
     sessionToken: string,
-  ): Promise<IdRecord | undefined> {
+  ): Promise<CountRecord | undefined> {
     if (!this.isAdmin(sessionToken)) {
       return undefined;
     }
@@ -126,7 +127,7 @@ export class AdminService {
   public async deleteAccessToken(
     pin: string,
     sessionToken: string,
-  ): Promise<IdRecord | undefined> {
+  ): Promise<CountRecord | undefined> {
     if (!this.isAdmin(sessionToken)) {
       return undefined;
     }

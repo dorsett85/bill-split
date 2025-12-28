@@ -17,3 +17,5 @@ workflows:
             projects/gateway/.* gateway_is_changed true
             projects/db/.* db_is_changed true
             projects/kafka/.* kafka_is_changed true
+
+            projects/gateway/src/server/dao/.* dao_is_changed true

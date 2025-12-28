@@ -7,6 +7,7 @@ import {
   type BillReadDetailed,
   type BillUpdate,
 } from '../dto/bill.ts';
+import type { CountRecord } from '../dto/count.ts';
 import type { IdRecord } from '../dto/id.ts';
 import type { FileStorageService } from '../types/fileStorageService.ts';
 import type { ServerRequest } from '../types/serverRequest.ts';
@@ -159,7 +160,7 @@ export class BillService {
   public async update(
     id: number,
     update: BillUpdate,
-  ): Promise<IdRecord | undefined> {
+  ): Promise<CountRecord | undefined> {
     return await this.billDao.update(id, update);
   }
 

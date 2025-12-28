@@ -68,6 +68,7 @@ export const BillReadDetailedStorage = BillReadStorage.extend({
 export const BillUpdate = z.object({});
 
 export type BillCreate = z.infer<typeof BillCreate>;
+export type BillReadStorage = z.infer<typeof BillReadStorage>;
 export type BillRead = {
   [K in keyof BillCreate]: Exclude<BillCreate[K], null>;
 } & IdRecord;

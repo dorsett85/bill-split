@@ -10,6 +10,7 @@ import {
   toBillReadDetailed,
   toBillStorage,
 } from '../dto/bill.ts';
+import type { CountRecord } from '../dto/count.ts';
 import type { IdRecord } from '../dto/id.ts';
 import { BaseDao } from '../types/baseDao.ts';
 
@@ -44,12 +45,16 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
       return undefined;
     }
 
-    return BillReadStorage.transform(toBillRead).parse(record);
+    return toBillRead(BillReadStorage.parse(record));
   }
 
-  public async update(id: number, billUpdates: BillUpdate): Promise<IdRecord> {
+  public async update(
+    id: number,
+    billUpdates: BillUpdate,
+    client?: PoolClient,
+  ): Promise<CountRecord> {
     const billToUpdate = toBillStorage(billUpdates);
-    return this.updateRecord(id, billToUpdate);
+    return this.updateRecord(id, billToUpdate, client);
   }
 
   /**
@@ -175,7 +180,10 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
     return BillReadDetailedStorage.transform(toBillReadDetailed).parse(record);
   }
 
-  public async search(): Promise<BillRead[]> {
+  public async search(
+    _searchParams: Record<string, number | string>,
+    _client?: PoolClient,
+  ): Promise<BillRead[]> {
     // TODO
     throw new Error('Not implemented');
   }
