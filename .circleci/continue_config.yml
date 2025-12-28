@@ -156,9 +156,17 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
+      - run: find src/server -name "*.test.ts"
       - run:
-          name: Run DAO tests
-          command: pnpm test:db
+          name: Debug File Paths
+          command: ls -R src/server/dao
+      # 2. Run Vitest with the --list flag to see matched files
+      - run:
+          name: Vitest List
+          command: pnpm vitest --list --project=db
+#      - run:
+#          name: Run DAO tests
+#          command: pnpm test:db
   deploy:
     # This is an example deploy job, not actually used by the workflow
     docker:
