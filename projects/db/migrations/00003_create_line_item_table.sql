@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS line_item (
     id SERIAL PRIMARY KEY,
-    bill_id INT,
+    bill_id INT NOT NULL,
     name VARCHAR,
     price NUMERIC,
     FOREIGN KEY (bill_id) REFERENCES bill(id) ON DELETE CASCADE

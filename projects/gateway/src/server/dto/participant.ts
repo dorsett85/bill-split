@@ -15,9 +15,15 @@ export const ParticipantReadStorage = z
   .strict();
 
 export const ParticipantUpdate = z.object({
-  name: z.string(),
+  billId: ParticipantCreate.shape.billId,
+  name: ParticipantCreate.shape.name,
 });
+
 export const ParticipantCreateRequest = ParticipantCreate.pick({
+  name: true,
+});
+
+export const ParticipantUpdateRequest = ParticipantCreate.pick({
   name: true,
 });
 
@@ -28,6 +34,7 @@ export type ParticipantRead = {
 export type ParticipantReadStorage = z.infer<typeof ParticipantReadStorage>;
 export type ParticipantUpdate = z.infer<typeof ParticipantUpdate>;
 export type ParticipantCreateRequest = z.infer<typeof ParticipantCreateRequest>;
+export type ParticipantUpdateRequest = z.infer<typeof ParticipantUpdateRequest>;
 
 export const toParticipantStorage = (
   participant: ParticipantCreate | ParticipantUpdate,

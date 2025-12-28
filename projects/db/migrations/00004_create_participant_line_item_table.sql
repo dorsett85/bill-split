@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS participant_line_item (
     id SERIAL PRIMARY KEY,
-    line_item_id INT,
-    participant_id INT,
+    line_item_id INT NOT NULL,
+    participant_id INT NOT NULL,
     pct_owes REAL,
     FOREIGN KEY (line_item_id) REFERENCES line_item(id) ON DELETE CASCADE,
     FOREIGN KEY (participant_id) REFERENCES participant(id) ON DELETE CASCADE,

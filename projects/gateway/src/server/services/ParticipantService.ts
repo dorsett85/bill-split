@@ -6,7 +6,7 @@ import type { BillReadDetailed } from '../dto/bill.ts';
 import type { IdRecord } from '../dto/id.ts';
 import type {
   ParticipantCreateRequest,
-  ParticipantUpdate,
+  ParticipantUpdateRequest,
 } from '../dto/participant.ts';
 import { calculateRemainingPctOwes } from '../utils/calculateRemainingPctOwes.ts';
 import type { CryptoService } from './CryptoService.ts';
@@ -86,14 +86,17 @@ export class ParticipantService {
   public async updateBillParticipant(
     participantId: number,
     billId: number,
-    update: ParticipantUpdate,
+    update: ParticipantUpdateRequest,
     sessionToken: string,
   ): Promise<IdRecord | undefined> {
     if (!this.hasBillAccess(billId, sessionToken)) {
       return undefined;
     }
 
-    return await this.participantDao.update(participantId, update);
+    return await this.participantDao.update(participantId, {
+      billId,
+      name: update.name,
+    });
   }
 
   /**

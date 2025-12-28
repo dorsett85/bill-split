@@ -9,7 +9,7 @@ import { BillUpdate } from '../dto/bill.ts';
 import { intId } from '../dto/id.ts';
 import {
   ParticipantCreateRequest,
-  ParticipantUpdate,
+  ParticipantUpdateRequest,
 } from '../dto/participant.ts';
 import type { MiddlewareFunction } from '../types/serverRequest.ts';
 import { parseCookies } from '../utils/parseCookies.ts';
@@ -311,7 +311,7 @@ export const patchBillParticipant: MiddlewareFunction = async (req, res) => {
 
   const parseIdResult = intId.safeParse(req.params.id);
   const parseBillIdResult = intId.safeParse(req.params.billId);
-  const parseUpdatesResult = ParticipantUpdate.safeParse(body);
+  const parseUpdatesResult = ParticipantUpdateRequest.safeParse(body);
 
   if (
     !parseIdResult.success ||
