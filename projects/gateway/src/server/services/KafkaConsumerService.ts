@@ -1,7 +1,6 @@
 import EventEmitter from 'node:events';
 import type { Consumer, Kafka, KafkaMessage } from 'kafkajs';
 import type { BillRecalculateResponse } from '../dto/bill.ts';
-import type { CryptoService } from './CryptoService.ts';
 
 const CONSUMER_EVENT_CHANNEL = 'bill-recalculate';
 
@@ -9,22 +8,15 @@ interface KafkaServiceConstructor {
   /** Passed to the brokers array */
   kafka: Kafka;
   billRecalculateTopic: string;
-  cryptoService: CryptoService;
 }
 
 export class KafkaConsumerService {
   private readonly consumerEventEmitter = new EventEmitter();
   private readonly consumer: Consumer;
   private readonly billRecalculateTopic: string;
-  private readonly cryptoService: CryptoService;
 
-  constructor({
-    billRecalculateTopic,
-    kafka,
-    cryptoService,
-  }: KafkaServiceConstructor) {
+  constructor({ billRecalculateTopic, kafka }: KafkaServiceConstructor) {
     this.billRecalculateTopic = billRecalculateTopic;
-    this.cryptoService = cryptoService;
 
     this.consumer = kafka.consumer({
       groupId: 'bill-recalculate',
@@ -54,11 +46,7 @@ export class KafkaConsumerService {
     billId: number,
     sessionToken: string,
     onRecalculate: (bill: BillRecalculateResponse) => void,
-  ): Promise<{ unsubscribe: () => void } | undefined> {
-    if (!this.hasBillAccess(billId, sessionToken)) {
-      return undefined;
-    }
-
+  ): Promise<{ unsubscribe: () => void }> {
     const eventHandler = (message: KafkaMessage) => {
       // Check if it's coming from another user and it's the right bill! We can
       // do a simple session token comparison here as we've already verified the
@@ -78,10 +66,5 @@ export class KafkaConsumerService {
       unsubscribe: () =>
         this.consumerEventEmitter.off(CONSUMER_EVENT_CHANNEL, eventHandler),
     };
-  }
-
-  private hasBillAccess(billId: number, sessionToken: string) {
-    const payload = this.cryptoService.verifySessionJwt(sessionToken);
-    return payload?.isAdmin || payload?.billAccessIds?.includes(billId);
   }
 }

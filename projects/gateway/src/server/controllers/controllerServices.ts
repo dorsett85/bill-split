@@ -14,6 +14,10 @@ import { KafkaProducerService } from '../services/KafkaProducerService.ts';
 import { ParticipantService } from '../services/ParticipantService.ts';
 import { S3FileStorageService } from '../services/S3FileStorageService.ts';
 
+export const getCryptoService = () => {
+  return new CryptoService({ key: env.ADMIN_SECRET_KEY });
+};
+
 let kafka: Kafka;
 const getKafka = (): Kafka => {
   if (!kafka) {
@@ -31,9 +35,6 @@ export const getKafkaConsumerService = (): KafkaConsumerService => {
     kafkaConsumerService = new KafkaConsumerService({
       kafka: getKafka(),
       billRecalculateTopic: env.KAFKA_BILL_RECALCULATE_TOPIC,
-      cryptoService: new CryptoService({
-        key: env.ADMIN_SECRET_KEY,
-      }),
     });
   }
   return kafkaConsumerService;
@@ -43,7 +44,7 @@ export const getAdminService = () => {
   return new AdminService({
     accessTokenDao: new AccessTokenDao(getDb()),
     adminPassword: env.ADMIN_PASSWORD,
-    cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
+    cryptoService: getCryptoService(),
   });
 };
 
@@ -52,7 +53,7 @@ export const getBillService = () => {
     accessTokenDao: new AccessTokenDao(getDb()),
     billDao: new BillDao(getDb()),
     participantDao: new ParticipantDao(getDb()),
-    cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
+    cryptoService: getCryptoService(),
     fileStorageService: new S3FileStorageService({
       bucketName: env.AWS_BILL_IMAGE_S3_BUCKET,
       s3Client: new S3Client({
@@ -76,7 +77,6 @@ export const getParticipantService = () => {
     billDao: new BillDao(getDb()),
     participantDao: new ParticipantDao(getDb()),
     participantLineItemDao: new ParticipantLineItemDao(getDb()),
-    cryptoService: new CryptoService({ key: env.ADMIN_SECRET_KEY }),
     kafkaProducerService: new KafkaProducerService({
       kafka: getKafka(),
       billCreateTopic: env.KAFKA_BILL_PROCESSING_TOPIC,

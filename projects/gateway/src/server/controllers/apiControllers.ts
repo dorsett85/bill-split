@@ -22,6 +22,7 @@ import {
   jsonSuccessResponse,
   setSessionCookie,
 } from '../utils/responseHelpers.ts';
+import type { BillMiddlewareFunction } from '../utils/withBillAuthMiddleware.ts';
 import {
   getAdminService,
   getBillService,
@@ -128,8 +129,8 @@ export const deleteAccessToken: MiddlewareFunction = async (req, res) => {
   }
 };
 
-export const getBill: MiddlewareFunction = async (req, res) => {
-  const parseResult = intId.safeParse(req.params.billId);
+export const postBillCreateAccess: MiddlewareFunction = async (req, res) => {
+  const parseResult = VerifyAccessRequest.safeParse(await parseJsonBody(req));
 
   if (!parseResult.success) {
     return jsonBadRequestResponse(res);
@@ -139,10 +140,15 @@ export const getBill: MiddlewareFunction = async (req, res) => {
   const billService = getBillService();
 
   try {
-    const bill = sessionToken
-      ? await billService.read(parseResult.data, sessionToken)
-      : undefined;
-    return bill ? jsonSuccessResponse(bill, res) : jsonNotFoundResponse(res);
+    const token = await billService.signBillCreateToken(
+      parseResult.data.pin,
+      sessionToken,
+    );
+    if (token) {
+      setSessionCookie(token, res);
+      return jsonSuccessResponse({ success: true }, res);
+    }
+    return jsonBadRequestResponse(res, 'Could not verify access');
   } catch (e) {
     logger.error(e);
     return jsonServerErrorResponse(res);
@@ -167,25 +173,32 @@ export const postBill: MiddlewareFunction = async (req, res) => {
   }
 };
 
-export const patchBill: MiddlewareFunction = async (req, res) => {
-  const parseBillIdResult = intId.safeParse(req.params.billId);
-  const parseUpdatesResult = BillUpdate.safeParse(await parseJsonBody(req));
-
-  if (!parseBillIdResult.success || !parseUpdatesResult.success) {
-    return jsonBadRequestResponse(res);
-  }
-
-  const { sessionToken } = parseCookies(req);
+export const getBill: BillMiddlewareFunction = async (req, res) => {
   const billService = getBillService();
 
   try {
-    const idRecord = sessionToken
-      ? await billService.update(
-          parseBillIdResult.data,
-          parseUpdatesResult.data,
-          sessionToken,
-        )
-      : undefined;
+    const bill = await billService.read(req.billId);
+    return bill ? jsonSuccessResponse(bill, res) : jsonNotFoundResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
+};
+
+export const patchBill: BillMiddlewareFunction = async (req, res) => {
+  const parseUpdatesResult = BillUpdate.safeParse(await parseJsonBody(req));
+
+  if (!parseUpdatesResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
+  const billService = getBillService();
+
+  try {
+    const idRecord = await billService.update(
+      req.billId,
+      parseUpdatesResult.data,
+    );
 
     return idRecord
       ? jsonSuccessResponse(idRecord, res)
@@ -196,106 +209,56 @@ export const patchBill: MiddlewareFunction = async (req, res) => {
   }
 };
 
-export const postBillCreateAccess: MiddlewareFunction = async (req, res) => {
-  const parseResult = VerifyAccessRequest.safeParse(await parseJsonBody(req));
-
-  if (!parseResult.success) {
-    return jsonBadRequestResponse(res);
-  }
-
-  const { sessionToken } = parseCookies(req);
-  const billService = getBillService();
-
-  try {
-    const token = await billService.signBillCreateToken(
-      parseResult.data.pin,
-      sessionToken,
-    );
-    if (token) {
-      setSessionCookie(token, res);
-      return jsonSuccessResponse({ success: true }, res);
-    }
-    jsonBadRequestResponse(res, 'Could not verify access');
-  } catch (e) {
-    logger.error(e);
-    return jsonServerErrorResponse(res);
-  }
-};
-
-export const subscribeBillRecalculate: MiddlewareFunction = async (
+export const subscribeBillRecalculate: BillMiddlewareFunction = async (
   req,
   res,
 ) => {
-  const parseResult = intId.safeParse(req.params.billId);
-
-  if (!parseResult.success) {
-    logger.log('ENDED - could not parse bill id');
-    return jsonBadRequestResponse(res);
-  }
-
-  const { sessionToken } = parseCookies(req);
   const kafkaConsumerService = getKafkaConsumerService();
 
   try {
-    if (sessionToken) {
-      res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
-        'X-Accel-Buffering': 'no', // Essential for Nginx/Cloudflare
-      });
-      // Avoid connection timeouts with a heartbeat
-      const interval = setInterval(() => res.write(`heartbeat:\n\n`), 15000);
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no', // Essential for Nginx/Cloudflare
+    });
+    // Avoid connection timeouts with a heartbeat
+    const interval = setInterval(() => res.write(`heartbeat:\n\n`), 15000);
 
-      const subscribed = await kafkaConsumerService.subscribeRecalculate(
-        parseResult.data,
-        sessionToken,
-        (bill) => {
-          res.write(`data: ${JSON.stringify(bill)}\n\n`);
-        },
-      );
+    const subscribed = await kafkaConsumerService.subscribeRecalculate(
+      req.billId,
+      req.sessionToken,
+      (bill) => {
+        res.write(`data: ${JSON.stringify(bill)}\n\n`);
+      },
+    );
 
-      if (!subscribed) {
-        res.write(
-          `data: you are not authorized for recalculate subscription\n\n`,
-        );
-        return res.end();
-      }
-
-      req.on('close', () => {
-        clearInterval(interval);
-        subscribed.unsubscribe();
-      });
-    } else {
-      logger.log('ENDED - no session token');
-      return jsonNotFoundResponse(res);
-    }
+    req.on('close', () => {
+      clearInterval(interval);
+      subscribed.unsubscribe();
+    });
   } catch (e) {
     logger.error(e);
     return jsonServerErrorResponse(res);
   }
 };
 
-export const postBillParticipant: MiddlewareFunction = async (req, res) => {
+export const postBillParticipant: BillMiddlewareFunction = async (req, res) => {
   const body = await parseJsonBody(req);
-  const parseBillIdResult = intId.safeParse(req.params.billId);
   const parseCreateResult = ParticipantCreateRequest.safeParse(body);
 
-  if (!parseBillIdResult.success || !parseCreateResult.success) {
+  if (!parseCreateResult.success) {
     return jsonBadRequestResponse(res);
   }
 
-  const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
 
   try {
-    const detailedBill = sessionToken
-      ? await participantService.createBillParticipant(
-          parseBillIdResult.data,
-          parseCreateResult.data,
-          sessionToken,
-        )
-      : undefined;
+    const detailedBill = await participantService.createBillParticipant(
+      req.billId,
+      parseCreateResult.data,
+      req.sessionToken,
+    );
 
     return detailedBill
       ? jsonSuccessResponse(detailedBill, res)
@@ -306,33 +269,27 @@ export const postBillParticipant: MiddlewareFunction = async (req, res) => {
   }
 };
 
-export const patchBillParticipant: MiddlewareFunction = async (req, res) => {
+export const patchBillParticipant: BillMiddlewareFunction = async (
+  req,
+  res,
+) => {
   const body = await parseJsonBody(req);
 
-  const parseIdResult = intId.safeParse(req.params.id);
-  const parseBillIdResult = intId.safeParse(req.params.billId);
+  const parseParticipantIdResult = intId.safeParse(req.params.participantId);
   const parseUpdatesResult = ParticipantUpdateRequest.safeParse(body);
 
-  if (
-    !parseIdResult.success ||
-    !parseBillIdResult.success ||
-    !parseUpdatesResult.success
-  ) {
+  if (!parseParticipantIdResult.success || !parseUpdatesResult.success) {
     return jsonBadRequestResponse(res);
   }
 
-  const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
 
   try {
-    const idRecord = sessionToken
-      ? await participantService.updateBillParticipant(
-          parseIdResult.data,
-          parseBillIdResult.data,
-          parseUpdatesResult.data,
-          sessionToken,
-        )
-      : undefined;
+    const idRecord = await participantService.updateBillParticipant(
+      parseParticipantIdResult.data,
+      req.billId,
+      parseUpdatesResult.data,
+    );
 
     return idRecord
       ? jsonSuccessResponse(idRecord, res)
@@ -343,25 +300,24 @@ export const patchBillParticipant: MiddlewareFunction = async (req, res) => {
   }
 };
 
-export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
-  const parseBillIdResult = intId.safeParse(req.params.billId);
+export const deleteBillParticipant: BillMiddlewareFunction = async (
+  req,
+  res,
+) => {
   const parseIdResult = intId.safeParse(req.params.id);
 
-  if (!parseBillIdResult.success || !parseIdResult.success) {
+  if (!parseIdResult.success) {
     return jsonBadRequestResponse(res);
   }
 
-  const { sessionToken } = parseCookies(req);
   const participantService = getParticipantService();
 
   try {
-    const detailedBill = sessionToken
-      ? await participantService.deleteBillParticipant(
-          parseBillIdResult.data,
-          parseIdResult.data,
-          sessionToken,
-        )
-      : undefined;
+    const detailedBill = await participantService.deleteBillParticipant(
+      req.billId,
+      parseIdResult.data,
+      req.sessionToken,
+    );
 
     return detailedBill
       ? jsonSuccessResponse(detailedBill, res)
@@ -372,34 +328,26 @@ export const deleteBillParticipant: MiddlewareFunction = async (req, res) => {
   }
 };
 
-export const postBillParticipantLineItem: MiddlewareFunction = async (
+export const postBillParticipantLineItem: BillMiddlewareFunction = async (
   req,
   res,
 ) => {
-  const parseBillIdResult = intId.safeParse(req.params.billId);
   const parseParticipantIdResult = intId.safeParse(req.params.participantId);
   const parseLineItemIdResult = intId.safeParse(req.params.lineItemId);
 
-  if (
-    !parseBillIdResult.success ||
-    !parseParticipantIdResult.success ||
-    !parseLineItemIdResult.success
-  ) {
+  if (!parseParticipantIdResult.success || !parseLineItemIdResult.success) {
     return jsonBadRequestResponse(res);
   }
 
-  try {
-    const { sessionToken } = parseCookies(req);
-    const participantService = getParticipantService();
+  const participantService = getParticipantService();
 
-    const detailedBill = sessionToken
-      ? await participantService.createParticipantLineItem(
-          parseBillIdResult.data,
-          parseParticipantIdResult.data,
-          parseLineItemIdResult.data,
-          sessionToken,
-        )
-      : undefined;
+  try {
+    const detailedBill = await participantService.createParticipantLineItem(
+      req.billId,
+      parseParticipantIdResult.data,
+      parseLineItemIdResult.data,
+      req.sessionToken,
+    );
 
     return detailedBill
       ? jsonSuccessResponse(detailedBill, res)
@@ -409,34 +357,26 @@ export const postBillParticipantLineItem: MiddlewareFunction = async (
     return jsonServerErrorResponse(res);
   }
 };
-export const deleteBillParticipantLineItem: MiddlewareFunction = async (
+export const deleteBillParticipantLineItem: BillMiddlewareFunction = async (
   req,
   res,
 ) => {
-  const parseBillIdResult = intId.safeParse(req.params.billId);
   const parseParticipantIdResult = intId.safeParse(req.params.participantId);
   const parseLineItemIdResult = intId.safeParse(req.params.lineItemId);
 
-  if (
-    !parseBillIdResult.success ||
-    !parseParticipantIdResult.success ||
-    !parseLineItemIdResult.success
-  ) {
+  if (!parseParticipantIdResult.success || !parseLineItemIdResult.success) {
     return jsonBadRequestResponse(res);
   }
 
-  try {
-    const { sessionToken } = parseCookies(req);
-    const participantService = getParticipantService();
+  const participantService = getParticipantService();
 
-    const detailedBill = sessionToken
-      ? await participantService.deleteParticipantLineItem(
-          parseBillIdResult.data,
-          parseParticipantIdResult.data,
-          parseLineItemIdResult.data,
-          sessionToken,
-        )
-      : undefined;
+  try {
+    const detailedBill = await participantService.deleteParticipantLineItem(
+      req.billId,
+      parseParticipantIdResult.data,
+      parseLineItemIdResult.data,
+      req.sessionToken,
+    );
 
     return detailedBill
       ? jsonSuccessResponse(detailedBill, res)

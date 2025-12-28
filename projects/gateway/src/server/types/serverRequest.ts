@@ -26,4 +26,4 @@ export type MiddlewareFunction = (
   req: ServerRequest,
   res: ServerResponse,
   next: NextFunction,
-) => Promise<unknown> | unknown;
+) => void;

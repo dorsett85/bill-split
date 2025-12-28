@@ -83,14 +83,7 @@ export class BillService {
     return { id, signature };
   }
 
-  public async read(
-    billId: number,
-    sessionToken: string,
-  ): Promise<BillReadDetailed | undefined> {
-    if (!this.hasBillAccess(billId, sessionToken)) {
-      return undefined;
-    }
-
+  public async read(billId: number): Promise<BillReadDetailed | undefined> {
     const bill = await this.billDao.readDetailed(billId);
 
     if (!bill) {
@@ -166,12 +159,7 @@ export class BillService {
   public async update(
     id: number,
     update: BillUpdate,
-    sessionToken: string,
   ): Promise<IdRecord | undefined> {
-    if (!this.hasBillAccess(id, sessionToken)) {
-      return undefined;
-    }
-
     return await this.billDao.update(id, update);
   }
 

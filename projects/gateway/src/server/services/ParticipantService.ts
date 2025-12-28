@@ -9,14 +9,12 @@ import type {
   ParticipantUpdateRequest,
 } from '../dto/participant.ts';
 import { calculateRemainingPctOwes } from '../utils/calculateRemainingPctOwes.ts';
-import type { CryptoService } from './CryptoService.ts';
 import type { KafkaProducerService } from './KafkaProducerService.ts';
 
 interface ParticipantServiceConstructor {
   billDao: BillDao;
   participantLineItemDao: ParticipantLineItemDao;
   participantDao: ParticipantDao;
-  cryptoService: CryptoService;
   kafkaProducerService: KafkaProducerService;
 }
 
@@ -24,20 +22,17 @@ export class ParticipantService {
   private readonly billDao: BillDao;
   private readonly participantLineItemDao: ParticipantLineItemDao;
   private readonly participantDao: ParticipantDao;
-  private readonly cryptoService: CryptoService;
   private readonly kafkaProducerService: KafkaProducerService;
 
   constructor({
     billDao,
     participantLineItemDao,
     participantDao,
-    cryptoService,
     kafkaProducerService,
   }: ParticipantServiceConstructor) {
     this.billDao = billDao;
     this.participantLineItemDao = participantLineItemDao;
     this.participantDao = participantDao;
-    this.cryptoService = cryptoService;
     this.kafkaProducerService = kafkaProducerService;
   }
 
@@ -49,10 +44,6 @@ export class ParticipantService {
     participant: ParticipantCreateRequest,
     sessionToken: string,
   ): Promise<BillReadDetailed | undefined> {
-    if (!this.hasBillAccess(billId, sessionToken)) {
-      return undefined;
-    }
-
     return await this.participantDao.tx(async (client) => {
       // Check if the name already exists for a bill
       try {
@@ -87,12 +78,7 @@ export class ParticipantService {
     participantId: number,
     billId: number,
     update: ParticipantUpdateRequest,
-    sessionToken: string,
   ): Promise<IdRecord | undefined> {
-    if (!this.hasBillAccess(billId, sessionToken)) {
-      return undefined;
-    }
-
     return await this.participantDao.update(participantId, {
       billId,
       name: update.name,
@@ -107,10 +93,6 @@ export class ParticipantService {
     participantId: number,
     sessionToken: string,
   ): Promise<BillReadDetailed | undefined> {
-    if (!this.hasBillAccess(billId, sessionToken)) {
-      return undefined;
-    }
-
     const detailed = await this.participantDao.tx(async (client) => {
       const participantLineItems =
         await this.participantLineItemDao.searchByLineItemIdUsingBillAndParticipant(
@@ -157,10 +139,6 @@ export class ParticipantService {
     lineItemId: number,
     sessionToken: string,
   ): Promise<BillReadDetailed | undefined> {
-    if (!this.hasBillAccess(billId, sessionToken)) {
-      return undefined;
-    }
-
     const detailed = await this.participantLineItemDao.tx(async (client) => {
       const participantLineItems = await this.participantLineItemDao.search(
         {
@@ -202,10 +180,6 @@ export class ParticipantService {
     lineItemId: number,
     sessionToken: string,
   ): Promise<BillReadDetailed | undefined> {
-    if (!this.hasBillAccess(billId, sessionToken)) {
-      return undefined;
-    }
-
     const detailed = await this.participantLineItemDao.tx(async (client) => {
       const participantLineItems =
         await this.participantLineItemDao.searchByRelatedLineItemIds(
@@ -243,11 +217,6 @@ export class ParticipantService {
     void this.publishRecalculatedBill(detailed, sessionToken);
 
     return detailed;
-  }
-
-  private hasBillAccess(billId: number, sessionToken: string) {
-    const payload = this.cryptoService.verifySessionJwt(sessionToken);
-    return payload?.isAdmin || payload?.billAccessIds?.includes(billId);
   }
 
   private publishRecalculatedBill(

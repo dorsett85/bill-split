@@ -33,6 +33,7 @@ import {
   writeToHtml,
 } from './utils/responseHelpers.ts';
 import { staticMiddleware } from './utils/staticMiddleware.ts';
+import { withBillAuthMiddleware } from './utils/withBillAuthMiddleware.ts';
 
 const startServer = async () => {
   const { content } = await loadConfig({});
@@ -114,26 +115,35 @@ const startServer = async () => {
 
   const billApiPath = '/api/bills';
   app.post(billApiPath, postBill);
-  app.get(`${billApiPath}/:billId`, getBill);
-  app.patch(`${billApiPath}/:billId`, patchBill);
   app.post(`${billApiPath}:create-access`, postBillCreateAccess);
+  app.get(`${billApiPath}/:billId`, withBillAuthMiddleware(getBill));
+  app.patch(`${billApiPath}/:billId`, withBillAuthMiddleware(patchBill));
   app.get(
     `${billApiPath}/:billId/recalculate/subscribe`,
-    subscribeBillRecalculate,
+    withBillAuthMiddleware(subscribeBillRecalculate),
   );
 
-  app.post(`${billApiPath}/:billId/participants`, postBillParticipant);
-  app.patch(`${billApiPath}/:billId/participants/:id`, patchBillParticipant);
-  app.delete(`${billApiPath}/:billId/participants/:id`, deleteBillParticipant);
+  app.post(
+    `${billApiPath}/:billId/participants`,
+    withBillAuthMiddleware(postBillParticipant),
+  );
+  app.patch(
+    `${billApiPath}/:billId/participants/:participantId`,
+    withBillAuthMiddleware(patchBillParticipant),
+  );
+  app.delete(
+    `${billApiPath}/:billId/participants/:id`,
+    withBillAuthMiddleware(deleteBillParticipant),
+  );
 
   // NEW participant/line-items intent url
   app.post(
     `${billApiPath}/:billId/participants/:participantId/line-items/:lineItemId`,
-    postBillParticipantLineItem,
+    withBillAuthMiddleware(postBillParticipantLineItem),
   );
   app.delete(
     `${billApiPath}/:billId/participants/:participantId/line-items/:lineItemId`,
-    deleteBillParticipantLineItem,
+    withBillAuthMiddleware(deleteBillParticipantLineItem),
   );
 
   app.listen(port, () => {
