@@ -10,7 +10,9 @@ TODO
    1. For adding participants, create a new topic that just sends the new
       participant for SSE. Right now we're recalculating the whole bill.
    2. Add dao tests (mock testing db)
-   3. Encode bill page url
+   3. Optimize db queries related to selecting/deselecting items and removing
+      participants.
+   4. Encode bill page url
 2. UI
    1. Handle api error responses (only checking for 'data' property right now)
    2. Home page
