@@ -106,15 +106,6 @@ jobs:
       - type-check
       - lint
       - test
-      - when:
-          condition:
-            or:
-              - << pipeline.parameters.db_is_changed >>
-              - << pipeline.parameters.dao_is_changed >>
-          steps:
-            - run:
-                name: Run DAO tests
-                command: pnpm test:db
   test-db:
     executor:
       name: node/default
@@ -149,6 +140,25 @@ jobs:
           paths:
             - node_modules
       - lint
+  test-db-integration:
+    executor:
+      name: node/default
+      tag: *node_version
+    working_directory: ~/project/projects/gateway
+    steps:
+      - checkout:
+          path: ~/project
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+      - pnpm-install
+      - save_cache:
+          key: v1-dependencies-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: Run DAO tests
+          command: pnpm test:db
   deploy:
     # This is an example deploy job, not actually used by the workflow
     docker:
@@ -183,3 +193,11 @@ workflows:
     when: << pipeline.parameters.kafka_is_changed >>
     jobs:
       - test-kafka
+  db-integration:
+    when:
+      condition:
+        or:
+          - << pipeline.parameters.db_is_changed >>
+          - << pipeline.parameters.dao_is_changed >>
+    jobs:
+      - test-db-integration
