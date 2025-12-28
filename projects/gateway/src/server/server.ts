@@ -132,7 +132,7 @@ const startServer = async () => {
     withBillAuthMiddleware(patchBillParticipant),
   );
   app.delete(
-    `${billApiPath}/:billId/participants/:id`,
+    `${billApiPath}/:billId/participants/:participantId`,
     withBillAuthMiddleware(deleteBillParticipant),
   );
 
