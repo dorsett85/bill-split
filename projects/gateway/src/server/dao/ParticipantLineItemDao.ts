@@ -1,13 +1,10 @@
 import type { Pool, PoolClient } from 'pg';
 import type { CountRecord } from '../dto/count.ts';
-import { IdRecord } from '../dto/id.ts';
+import type { IdRecord } from '../dto/id.ts';
 import {
   type ParticipantLineItemCreate,
   type ParticipantLineItemRead,
-  ParticipantLineItemReadStorage,
-  type ParticipantLineItemSearch,
   type ParticipantLineItemUpdate,
-  toParticipantLineItemRead,
   toParticipantLineItemStorage,
 } from '../dto/participantLineItem.ts';
 import { BaseDao } from '../types/baseDao.ts';
@@ -39,128 +36,125 @@ export class ParticipantLineItemDao extends BaseDao<
     throw new Error('Not implemented');
   }
 
-  public async search(
-    searchParams: ParticipantLineItemSearch,
-    client?: PoolClient,
-  ): Promise<ParticipantLineItemRead[]> {
-    const cols = ParticipantLineItemReadStorage.keyof().options;
-    const lineItemSearch = toParticipantLineItemStorage(searchParams);
-
-    const { rows } = await this.searchRecords(lineItemSearch, cols, client);
-    return rows.map((row) =>
-      ParticipantLineItemReadStorage.transform(toParticipantLineItemRead).parse(
-        row,
-      ),
-    );
+  public async search(): Promise<ParticipantLineItemRead[]> {
+    // TODO
+    throw new Error('Not implemented');
   }
 
   /**
-   * This query gets all the records with a line item id that are associated
-   * with a given line item id and participant id.
+   * For a given participant and bill, redistributes pct_owes and deletes the
+   * participant from ALL associated line items.
    */
-  public async searchByRelatedLineItemIds(
+  public async deleteByParticipantIdAndRebalance(
     participantId: number,
-    lineItemId: number,
-    client?: PoolClient,
-  ): Promise<ParticipantLineItemRead[]> {
-    const { rows } = await (client ?? this.db).query(
-      `
-      SELECT pli2.*
-      FROM ${this.tableName} pli
-      JOIN participant_line_item pli2 ON pli.line_item_id = pli2.line_item_id
-      WHERE pli.participant_id = $1 AND pli.line_item_id = $2
-      `,
-      [participantId, lineItemId],
-    );
-
-    return rows.map((row) =>
-      ParticipantLineItemReadStorage.transform(toParticipantLineItemRead).parse(
-        row,
-      ),
-    );
-  }
-
-  /**
-   * Use this method to add a split amount to each record for a given list of
-   * ids.
-   */
-  public async addOwesByIds(
-    pct: number,
-    ids: number[],
-    client?: PoolClient,
-  ): Promise<CountRecord> {
-    const { rowCount } = await (client ?? this.db).query(
-      `
-      UPDATE participant_line_item pli SET pct_owes = pct_owes + $1
-      WHERE pli.id = ANY ($2)
-      `,
-      [pct, ids],
-    );
-
-    return { count: rowCount ?? 0 };
-  }
-
-  /**
-   * Update pct_owes for a given list of ids
-   */
-  public async updateOwesByIds(
-    pct: number,
-    ids: number[],
-    client?: PoolClient,
-  ): Promise<CountRecord> {
-    const { rowCount } = await (client ?? this.db).query(
-      `
-        UPDATE participant_line_item pli SET pct_owes = $1
-        WHERE pli.id = ANY ($2)
-      `,
-      [pct, ids],
-    );
-
-    return { count: rowCount ?? 0 };
-  }
-
-  /**
-   * For a given bill id and participant id, find all the records of a line item
-   * id that was matched by the bill and participant ids.
-   */
-  public async searchByLineItemIdUsingBillAndParticipant(
     billId: number,
-    participantId: number,
     client?: PoolClient,
-  ): Promise<ParticipantLineItemRead[]> {
-    const { rows } = await (client ?? this.db).query(
+  ): Promise<CountRecord> {
+    const result = await (client ?? this.db).query(
       `
-      SELECT pli2.* 
-      FROM ${this.tableName} pli
-      JOIN participant_line_item pli2 ON pli.line_item_id = pli2.line_item_id
-      JOIN line_item li ON pli.line_item_id = li.id 
-      JOIN bill b ON li.bill_id = b.id
-      WHERE pli.participant_id = $1 AND b.id = $2
+      WITH target_line_items AS (
+          SELECT li.id
+          FROM line_item li
+          JOIN participant_line_item pli ON li.id = pli.line_item_id
+          WHERE li.bill_id = $2 AND pli.participant_id = $1
+      ),
+      remaining_counts AS (
+          SELECT pli.line_item_id, COUNT(*) - 1 as total_remaining
+          FROM participant_line_item pli
+          JOIN target_line_items tli ON pli.line_item_id = tli.id
+          GROUP BY pli.line_item_id
+          HAVING COUNT(*) > 1
+      ),
+      update_remaining AS (
+          UPDATE participant_line_item pli
+          SET pct_owes = 100.0 / rc.total_remaining
+          FROM remaining_counts rc
+          WHERE pli.line_item_id = rc.line_item_id
+            AND pli.participant_id != $1
+          RETURNING pli.line_item_id
+      )
+      DELETE FROM participant_line_item pli
+      WHERE pli.participant_id = $1
+        AND EXISTS (
+          SELECT 1 FROM target_line_items tli
+          WHERE tli.id = pli.line_item_id
+        )
       `,
       [participantId, billId],
     );
 
-    return rows.map((row) =>
-      ParticipantLineItemReadStorage.transform(toParticipantLineItemRead).parse(
-        row,
-      ),
-    );
+    return { count: result.rowCount ?? 0 };
   }
 
-  public async deleteByParticipantAndLineItemIds(
+  /**
+   * Adds a participant to a line item and rebalances everyone's pct_owes to
+   * be equal (100 / total_participants).
+   */
+  public async createByLineItemIdAndRebalance(
     participantId: number,
     lineItemId: number,
     client?: PoolClient,
-  ): Promise<IdRecord> {
-    const { rows } = await (client ?? this.db).query(
+  ): Promise<CountRecord> {
+    // 1. Count existing participants
+    // 2. Insert new participant with correct pct_owes
+    // 3. Update existing participants with correct pct_owes
+    const result = await (client ?? this.db).query(
       `
-      DELETE FROM ${this.tableName}
-      WHERE participant_id = $1 AND line_item_id = $2
-      RETURNING id
+      WITH count_existing AS (
+          SELECT COUNT(*) as existing_count
+          FROM ${this.tableName}
+          WHERE line_item_id = $2
+      ),
+      update_existing AS (
+          UPDATE ${this.tableName} pli
+          SET pct_owes = 100.0 / (ce.existing_count + 1)
+          FROM count_existing ce
+          WHERE pli.line_item_id = $2
+          RETURNING pli.id
+      )
+      INSERT INTO ${this.tableName} (participant_id, line_item_id, pct_owes)
+      SELECT $1, $2, 100.0 / (ce.existing_count + 1)
+      FROM count_existing ce
       `,
       [participantId, lineItemId],
     );
 
-    return IdRecord.parse(rows[0]);
+    return { count: result.rowCount ?? 0 };
+  }
+
+  /**
+   * Redistributes pct_owes from a participant being removed to the remaining
+   * participants for the SPECIFIED line item, and then deletes the participant
+   * from those line items.
+   */
+  public async deleteByLineItemIdsAndRebalance(
+    participantId: number,
+    lineItemIds: number[],
+    client?: PoolClient,
+  ): Promise<CountRecord> {
+    const result = await (client ?? this.db).query(
+      `
+      WITH remaining_counts AS (
+          SELECT line_item_id, COUNT(*) - 1 as total_remaining
+          FROM participant_line_item
+          WHERE line_item_id = ANY($2)
+          GROUP BY line_item_id
+          HAVING COUNT(*) > 1
+      ),
+      update_remaining AS (
+          UPDATE participant_line_item pli
+          SET pct_owes = 100.0 / rc.total_remaining
+          FROM remaining_counts rc
+          WHERE pli.line_item_id = rc.line_item_id
+            AND pli.participant_id != $1
+          RETURNING pli.line_item_id
+      )
+      DELETE FROM participant_line_item
+      WHERE participant_id = $1 AND line_item_id = ANY($2)
+      `,
+      [participantId, lineItemIds],
+    );
+
+    return { count: result.rowCount ?? 0 };
   }
 }

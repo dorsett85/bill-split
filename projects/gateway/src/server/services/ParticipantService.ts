@@ -8,7 +8,6 @@ import type {
   ParticipantCreateRequest,
   ParticipantUpdateRequest,
 } from '../dto/participant.ts';
-import { calculateRemainingPctOwes } from '../utils/calculateRemainingPctOwes.ts';
 import type { KafkaProducerService } from './KafkaProducerService.ts';
 
 interface ParticipantServiceConstructor {
@@ -94,29 +93,12 @@ export class ParticipantService {
     sessionToken: string,
   ): Promise<BillReadDetailed | undefined> {
     const detailed = await this.participantDao.tx(async (client) => {
-      const participantLineItems =
-        await this.participantLineItemDao.searchByLineItemIdUsingBillAndParticipant(
-          billId,
-          participantId,
-          client,
-        );
-
-      const result = calculateRemainingPctOwes(
+      // Balance what the remaining participants owe and delete the line items
+      await this.participantLineItemDao.deleteByParticipantIdAndRebalance(
         participantId,
-        participantLineItems,
+        billId,
+        client,
       );
-
-      // Balance what the remaining participants owe
-      for (const { owes, ids } of result) {
-        await this.participantLineItemDao.addOwesByIds(owes, ids, client);
-      }
-
-      // Delete the line items associated with the participant
-      for (const lineItem of participantLineItems) {
-        if (lineItem.participantId === participantId) {
-          await this.participantLineItemDao.delete(lineItem.id);
-        }
-      }
 
       // And finally delete the bill participant
       await this.participantDao.delete(participantId, client);
@@ -140,25 +122,9 @@ export class ParticipantService {
     sessionToken: string,
   ): Promise<BillReadDetailed | undefined> {
     const detailed = await this.participantLineItemDao.tx(async (client) => {
-      const participantLineItems = await this.participantLineItemDao.search(
-        {
-          lineItemId,
-        },
-        client,
-      );
-      // Evenly split the percent owes across all line item participants
-      const newPctOwes = 100 / (participantLineItems.length + 1);
-
-      if (participantLineItems.length > 0) {
-        await this.participantLineItemDao.updateOwesByIds(
-          newPctOwes,
-          participantLineItems.map((pli) => pli.id),
-          client,
-        );
-      }
-
-      await this.participantLineItemDao.create(
-        { lineItemId, participantId, pctOwes: newPctOwes },
+      await this.participantLineItemDao.createByLineItemIdAndRebalance(
+        participantId,
+        lineItemId,
         client,
       );
 
@@ -181,29 +147,9 @@ export class ParticipantService {
     sessionToken: string,
   ): Promise<BillReadDetailed | undefined> {
     const detailed = await this.participantLineItemDao.tx(async (client) => {
-      const participantLineItems =
-        await this.participantLineItemDao.searchByRelatedLineItemIds(
-          participantId,
-          lineItemId,
-          client,
-        );
-
-      const result = calculateRemainingPctOwes(
-        participantLineItems.filter(
-          (pli) =>
-            pli.participantId === participantId &&
-            pli.lineItemId === lineItemId,
-        )[0].participantId,
-        participantLineItems,
-      );
-
-      for (const { owes, ids } of result) {
-        await this.participantLineItemDao.addOwesByIds(owes, ids, client);
-      }
-
-      await this.participantLineItemDao.deleteByParticipantAndLineItemIds(
+      await this.participantLineItemDao.deleteByLineItemIdsAndRebalance(
         participantId,
-        lineItemId,
+        [lineItemId],
         client,
       );
 
