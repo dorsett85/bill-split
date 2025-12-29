@@ -19,7 +19,8 @@ export async function setup() {
   };
 
   // Run migrations using the db project's migrate script
-  execSync('pnpm --filter db run migrate', {
+  execSync('pnpm migrate', {
+    cwd: '../db',
     env: {
       ...process.env,
       ...dbConfig,
