@@ -3,6 +3,7 @@ import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
+import path from 'path';
 import { Pool } from 'pg';
 
 let container: StartedPostgreSqlContainer;
@@ -19,8 +20,9 @@ export async function setup() {
   };
 
   // Run migrations using the db project's migrate script
+  const dbFolder = path.resolve(__dirname, '../../db');
   execSync('pnpm migrate', {
-    cwd: '../db',
+    cwd: dbFolder,
     env: {
       ...process.env,
       ...dbConfig,
