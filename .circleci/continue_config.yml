@@ -157,7 +157,8 @@ jobs:
 workflows:
   bill-split:
     jobs:
-      - test-bill-processor
+      - test-bill-processor:
+          filters: pipeline.parameters.bill_processor_is_changed
       - test-bill-consumer
       - test-gateway
       - test-db
