@@ -3,6 +3,8 @@ import { accessTokenCreateFixture } from '../../../test/fixtures/accessTokenFixt
 import { testPool } from '../../../test/vitest-db-suite-setup.ts';
 import { AccessTokenDao } from './AccessTokenDao.ts';
 
+// one more TEST IN CI
+
 describe('AccessTokenDao', () => {
   afterEach(async () => {
     await testPool.query(
