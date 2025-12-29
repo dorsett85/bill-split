@@ -21,7 +21,7 @@ export async function setup() {
 
   // Run migrations using the db project's migrate script
   const dbFolder = path.resolve(__dirname, '../../db');
-  execSync('pnpm migrate', {
+  execSync('pnpm install && pnpm migrate', {
     cwd: dbFolder,
     env: {
       ...process.env,
