@@ -41,7 +41,7 @@ commands:
       - save_cache:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
-            - node_modulessetup
+            - node_modules
   type-check:
     steps:
       - run:
@@ -65,6 +65,7 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/bill-processor
     steps:
+      - run: echo "Checking for changes in bill-processor..."
       - when:
           condition: << pipeline.parameters.bill_processor_is_changed >>
           steps:
@@ -78,6 +79,7 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/bill-processor
     steps:
+      - run: echo "Checking for changes in bill-consumer..."
       - when:
           condition: << pipeline.parameters.bill_consumer_is_changed >>
           steps:
@@ -90,6 +92,7 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/gateway
     steps:
+      - run: echo "Checking for changes in gateway..."
       - when:
           condition: << pipeline.parameters.gateway_is_changed >>
           steps:
@@ -103,6 +106,7 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/db
     steps:
+      - run: echo "Checking for changes in db..."
       - when:
           condition: << pipeline.parameters.db_is_changed >>
           steps:
@@ -114,6 +118,7 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/kafka
     steps:
+      - run: echo "Checking for changes in kafka..."
       - when:
           condition: << pipeline.parameters.kafka_is_changed >>
           steps:
@@ -125,6 +130,7 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/gateway
     steps:
+      - run: echo "Checking for changes in gateway/db-integration..."
       - when:
           condition:
             or:
