@@ -128,34 +128,24 @@ jobs:
           command: '#e.g. ./deploy.sh'
 
 workflows:
-  bill-processor:
-    when: << pipeline.parameters.bill_processor_is_changed >>
+  bill-split:
     jobs:
-      - test-bill-processor
-  bill-consumer:
-    when: << pipeline.parameters.bill_consumer_is_changed >>
-    jobs:
-      - test-bill-consumer
-  gateway:
-    when: << pipeline.parameters.gateway_is_changed >>
-    jobs:
-      - test-gateway
+      - test-bill-processor:
+          when: << pipeline.parameters.bill_processor_is_changed >>
+      - test-bill-consumer:
+          when: << pipeline.parameters.bill_consumer_is_changed >>
+      - test-gateway:
+          when: << pipeline.parameters.gateway_is_changed >>
+      - test-db:
+          when: << pipeline.parameters.db_is_changed >>
+      - test-kafka:
+          when: << pipeline.parameters.kafka_is_changed >>
+      - test-db-integration:
+          when:
+            condition:
+              or:
+                - << pipeline.parameters.dao_is_changed >>
+                - << pipeline.parameters.db_is_changed >>
     # - deploy:
     #     requires:
     #       - test-node
-  db:
-    when: << pipeline.parameters.db_is_changed >>
-    jobs:
-      - test-db
-  kafka:
-    when: << pipeline.parameters.kafka_is_changed >>
-    jobs:
-      - test-kafka
-  db-integration:
-    when:
-      condition:
-        or:
-          - << pipeline.parameters.db_is_changed >>
-          - << pipeline.parameters.dao_is_changed >>
-    jobs:
-      - test-db-integration
