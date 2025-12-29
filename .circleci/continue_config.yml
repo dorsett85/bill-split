@@ -28,6 +28,21 @@ references:
   node_version: &node_version "24.12.0"
 
 commands:
+  checkout_project:
+    steps:
+      - checkout:
+          path: ~/project
+  restore-cache:
+    steps:
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+  save_cache:
+    steps:
+      - save_cache:
+          key: v1-dependencies-{{ checksum "package.json" }}
+          paths:
+            - node_modules
   pnpm-install:
     steps:
       - run:
@@ -56,16 +71,10 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/bill-processor
     steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
+      - checkout_project
+      - restore_cache
       - pnpm-install
-      - save_cache:
-          key: v1-dependencies-{{ checksum "package.json" }}
-          paths:
-            - node_modules
+      - save_cache
       - type-check
       - lint
       - test
@@ -75,16 +84,10 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/bill-processor
     steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
+      - checkout_project
+      - restore_cache
       - pnpm-install
-      - save_cache:
-          key: v1-dependencies-{{ checksum "package.json" }}
-          paths:
-            - node_modules
+      - save_cache
       - type-check
       - lint
   test-gateway:
@@ -93,16 +96,10 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/gateway
     steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
+      - checkout_project
+      - restore_cache
       - pnpm-install
-      - save_cache:
-          key: v1-dependencies-{{ checksum "package.json" }}
-          paths:
-            - node_modules
+      - save_cache
       - type-check
       - lint
       - test
@@ -112,16 +109,10 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/db
     steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
+      - checkout_project
+      - restore_cache
       - pnpm-install
-      - save_cache:
-          key: v1-dependencies-{{ checksum "package.json" }}
-          paths:
-            - node_modules
+      - save_cache
       - lint
   test-kafka:
     executor:
@@ -129,16 +120,10 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/kafka
     steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
+      - checkout_project
+      - restore_cache
       - pnpm-install
-      - save_cache:
-          key: v1-dependencies-{{ checksum "package.json" }}
-          paths:
-            - node_modules
+      - save_cache
       - lint
   test-db-integration:
     executor:
@@ -146,16 +131,10 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/gateway
     steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
+      - checkout_project
+      - restore_cache
       - pnpm-install
-      - save_cache:
-          key: v1-dependencies-{{ checksum "package.json" }}
-          paths:
-            - node_modules
+      - save_cache
       - setup_remote_docker:
           version: default
           docker_layer_caching: true
