@@ -23,7 +23,7 @@ export default defineConfig({
           include: ['./src/server/dao/**/*.test.ts'],
           globalSetup: ['./test/vitest-db-global-setup.ts'],
           setupFiles: ['./test/vitest-db-suite-setup.ts'],
-          pool: 'threads',
+          // pool: 'threads',
         },
       },
     ],
