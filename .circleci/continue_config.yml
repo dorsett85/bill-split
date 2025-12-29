@@ -157,13 +157,13 @@ jobs:
           paths:
             - node_modules
       - setup_remote_docker:
-          version: 29.1.3
+          version: 27.5.1
           docker_layer_caching: true
       - run:
           name: Run DAO tests
           command: pnpm test:db
   deploy:
-    # This is an example deploy job, not actually used by the workflow
+    # This is an example deploy job, not used by the workflow
     docker:
       - image: cimg/base:stable
     steps:
