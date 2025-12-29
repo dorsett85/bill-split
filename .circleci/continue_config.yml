@@ -41,7 +41,7 @@ commands:
       - save_cache:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
-            - node_modules
+            - node_modulessetup
   type-check:
     steps:
       - run:
@@ -128,24 +128,34 @@ jobs:
           command: '#e.g. ./deploy.sh'
 
 workflows:
-  bill-split:
+  bill-processor:
+    when: << pipeline.parameters.bill_processor_is_changed >>
     jobs:
-      - test-bill-processor:
-        filters: |
-          pipeline.parameters.bill_processor_is_changed
-          or pipeline.git.branch == "main"
-      - test-bill-consumer:
-          filters: pipeline.parameters.bill_consumer_is_changed
-      - test-gateway:
-          filters: pipeline.parameters.gateway_is_changed
-      - test-db:
-          filters: pipeline.parameters.db_is_changed
-      - test-kafka:
-          filters: pipeline.parameters.kafka_is_changed
-      - test-db-integration:
-          filters: |
-            pipeline.parameters.db_is_changed
-            or pipeline.parameters.dao_is_changed
+      - test-bill-processor
+  bill-consumer:
+    when: << pipeline.parameters.bill_consumer_is_changed >>
+    jobs:
+      - test-bill-consumer
+  gateway:
+    when: << pipeline.parameters.gateway_is_changed >>
+    jobs:
+      - test-gateway
     # - deploy:
     #     requires:
     #       - test-node
+  db:
+    when: << pipeline.parameters.db_is_changed >>
+    jobs:
+      - test-db
+  kafka:
+    when: << pipeline.parameters.kafka_is_changed >>
+    jobs:
+      - test-kafka
+  db-integration:
+    when:
+      condition:
+        or:
+          - << pipeline.parameters.db_is_changed >>
+          - << pipeline.parameters.dao_is_changed >>
+    jobs:
+      - test-db-integration
