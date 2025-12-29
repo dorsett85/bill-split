@@ -165,7 +165,7 @@ jobs:
           command: find . -type d -name "dao" -o -name "DAO"
       - run:
           name: Run DAO tests
-          command: DEBUG=vitest:config pnpm vitest run --project=db
+          command: DEBUG=vitest:config pnpm test:db --project=db
   deploy:
     # This is an example deploy job, not actually used by the workflow
     docker:
