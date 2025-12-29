@@ -1,21 +1,151 @@
 version: 2.1
 
-setup: true
+parameters:
+  bill_processor_is_changed:
+    type: boolean
+    default: false
+  bill_consumer_is_changed:
+    type: boolean
+    default: false
+  gateway_is_changed:
+    type: boolean
+    default: false
+  db_is_changed:
+    type: boolean
+    default: false
+  kafka_is_changed:
+    type: boolean
+    default: false
+  # A project subdirectory where our DAOs live
+  dao_is_changed:
+    type: boolean
+    default: false
 
 orbs:
-  path-filtering: circleci/path-filtering@3.0.0
+  node: circleci/node@6.3.0
+
+references:
+  node_version: &node_version "24.12.0"
+
+commands:
+  setup:
+    steps:
+      - checkout:
+          path: ~/project
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+      - run:
+          name: Install dependencies
+          command: pnpm install
+      - save_cache:
+          key: v1-dependencies-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+  type-check:
+    steps:
+      - run:
+          name: Type checking
+          command: pnpm type-check
+  lint:
+    steps:
+      - run:
+          name: Linting
+          command: pnpm biome ci
+  test:
+    steps:
+      - run:
+          name: Run tests
+          command: pnpm test
+
+jobs:
+  test-bill-processor:
+    executor:
+      name: node/default
+      tag: *node_version
+    working_directory: ~/project/projects/bill-processor
+    steps:
+      - setup
+      - type-check
+      - lint
+      - test
+  test-bill-consumer:
+    executor:
+      name: node/default
+      tag: *node_version
+    working_directory: ~/project/projects/bill-processor
+    steps:
+      - setup
+      - type-check
+      - lint
+  test-gateway:
+    executor:
+      name: node/default
+      tag: *node_version
+    working_directory: ~/project/projects/gateway
+    steps:
+      - setup
+      - type-check
+      - lint
+      - test
+  test-db:
+    executor:
+      name: node/default
+      tag: *node_version
+    working_directory: ~/project/projects/db
+    steps:
+      - setup
+      - lint
+  test-kafka:
+    executor:
+      name: node/default
+      tag: *node_version
+    working_directory: ~/project/projects/kafka
+    steps:
+      - setup
+      - lint
+  test-db-integration:
+    executor:
+      name: node/default
+      tag: *node_version
+    working_directory: ~/project/projects/gateway
+    steps:
+      - setup
+      - setup_remote_docker:
+          version: default
+          docker_layer_caching: true
+      - run:
+          name: Run DAO tests
+          command: pnpm test:db
+  deploy:
+    # This is an example deploy job, not used by the workflow
+    docker:
+      - image: cimg/base:stable
+    steps:
+      # Replace this with steps to deploy to users
+      - run:
+          name: deploy
+          command: '#e.g. ./deploy.sh'
 
 workflows:
-  setup-workflow:
+  bill-split:
     jobs:
-      - path-filtering/filter:
-          base-revision: main
-          config-path: .circleci/continue_config.yml
-          mapping: |
-            projects/bill-processor/.* bill_processor_is_changed true
-            projects/bill-consumer/.* bill_consumer_is_changed true
-            projects/gateway/.* gateway_is_changed true
-            projects/db/.* db_is_changed true
-            projects/kafka/.* kafka_is_changed true
-
-            projects/gateway/src/server/dao/.* dao_is_changed true
+      - test-bill-processor:
+        filters: |
+          pipeline.parameters.bill_processor_is_changed
+          or pipeline.git.branch == "main"
+      - test-bill-consumer:
+          filters: pipeline.parameters.bill_consumer_is_changed
+      - test-gateway:
+          filters: pipeline.parameters.gateway_is_changed
+      - test-db:
+          filters: pipeline.parameters.db_is_changed
+      - test-kafka:
+          filters: pipeline.parameters.kafka_is_changed
+      - test-db-integration:
+          filters: |
+            pipeline.parameters.db_is_changed
+            or pipeline.parameters.dao_is_changed
+    # - deploy:
+    #     requires:
+    #       - test-node
