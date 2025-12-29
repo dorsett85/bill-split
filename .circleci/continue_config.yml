@@ -156,13 +156,9 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
-      - run: find src/server -name "*.test.ts"
-      - run:
-          name: Debug File Paths
-          command: ls -R src/server/dao
-      - run:
-          name: Check dao file casing
-          command: find . -type d -name "dao" -o -name "DAO"
+      - setup_remote_docker:
+          version: 29.1.3
+          docker_layer_caching: true
       - run:
           name: Run DAO tests
           command: pnpm test:db
