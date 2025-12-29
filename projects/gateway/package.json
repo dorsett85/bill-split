@@ -13,9 +13,9 @@
     "preview": "node --env-file=.env --env-file=.env.prod src/server/server.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.956.0",
-    "@aws-sdk/lib-storage": "^3.956.0",
-    "@aws-sdk/s3-request-presigner": "^3.956.0",
+    "@aws-sdk/client-s3": "^3.958.0",
+    "@aws-sdk/lib-storage": "^3.958.0",
+    "@aws-sdk/s3-request-presigner": "^3.958.0",
     "@mantine/core": "^8.3.10",
     "@tabler/icons-react": "^3.36.0",
     "formidable": "^3.5.4",
@@ -40,7 +40,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
-    "jsdom": "^27.3.0",
+    "jsdom": "^27.4.0",
     "testcontainers": "^11.11.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"

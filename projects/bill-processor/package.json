@@ -19,7 +19,7 @@
     "vitest": "^4.0.16"
   },
   "dependencies": {
-    "@aws-sdk/client-textract": "^3.956.0",
+    "@aws-sdk/client-textract": "^3.958.0",
     "@types/pg": "^8.16.0",
     "pg": "^8.16.3"
   },
