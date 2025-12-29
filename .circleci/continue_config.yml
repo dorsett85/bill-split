@@ -157,10 +157,10 @@ jobs:
 workflows:
   bill-split:
     jobs:
-      - test-bill-processor:
-          filters: pipeline.parameters.bill_processor_is_changed == true
+      - test-bill-processor
       - test-bill-consumer
-      - test-gateway
+      - test-gateway:
+        filters: pipeline.parameters.gateway_is_changed == true
       - test-db
       - test-kafka
       - test-db-integration
