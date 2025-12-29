@@ -131,7 +131,9 @@ workflows:
   bill-split:
     jobs:
       - test-bill-processor:
-        filters: pipeline.parameters.bill_processor_is_changed
+        filters: |
+          pipeline.parameters.bill_processor_is_changed
+          or pipeline.git.branch == "main"
       - test-bill-consumer:
           filters: pipeline.parameters.bill_consumer_is_changed
       - test-gateway:
