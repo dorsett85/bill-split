@@ -65,85 +65,58 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/bill-processor
     steps:
-      - run: echo "bill-processor has changes << pipeline.parameters.bill_processor_is_changed >>"
-      - when:
-          condition: << pipeline.parameters.bill_processor_is_changed >>
-          steps:
-            - setup
-            - type-check
-            - lint
-            - test
+      - setup
+      - type-check
+      - lint
+      - test
   test-bill-consumer:
     executor:
       name: node/default
       tag: *node_version
     working_directory: ~/project/projects/bill-processor
     steps:
-      - run: echo "Checking for changes in bill-consumer..."
-      - when:
-          condition: << pipeline.parameters.bill_consumer_is_changed >>
-          steps:
-            - setup
-            - type-check
-            - lint
+      - setup
+      - type-check
+      - lint
   test-gateway:
     executor:
       name: node/default
       tag: *node_version
     working_directory: ~/project/projects/gateway
     steps:
-      - run: echo "Checking for changes in gateway..."
-      - when:
-          condition: << pipeline.parameters.gateway_is_changed >>
-          steps:
-            - setup
-            - type-check
-            - lint
-            - test
+      - setup
+      - type-check
+      - lint
+      - test
   test-db:
     executor:
       name: node/default
       tag: *node_version
     working_directory: ~/project/projects/db
     steps:
-      - run: echo "Checking for changes in db..."
-      - when:
-          condition: << pipeline.parameters.db_is_changed >>
-          steps:
-            - setup
-            - lint
+      - setup
+      - lint
   test-kafka:
     executor:
       name: node/default
       tag: *node_version
     working_directory: ~/project/projects/kafka
     steps:
-      - run: echo "Checking for changes in kafka..."
-      - when:
-          condition: << pipeline.parameters.kafka_is_changed >>
-          steps:
-            - setup
-            - lint
+      - setup
+      - lint
   test-db-integration:
     executor:
       name: node/default
       tag: *node_version
     working_directory: ~/project/projects/gateway
     steps:
-      - run: echo "Checking for changes in gateway/db-integration..."
-      - when:
-          condition:
-            or:
-              - << pipeline.parameters.dao_is_changed >>
-              - << pipeline.parameters.db_is_changed >>
-          steps:
-            - setup
-            - setup_remote_docker:
-                version: default
-                docker_layer_caching: true
-            - run:
-                name: Run DAO tests
-                command: pnpm test:db
+      - setup
+      - setup_remote_docker:
+          version: default
+          docker_layer_caching: true
+      - run:
+          name: Run DAO tests
+          command: pnpm test:db
   deploy:
     # This is an example deploy job, not used by the workflow
     docker:
@@ -158,12 +131,19 @@ workflows:
   bill-split:
     jobs:
       - test-bill-processor:
-          filters: pipeline.parameters.bill_processor_is_changed
-      - test-bill-consumer
-      - test-gateway
-      - test-db
-      - test-kafka
-      - test-db-integration
+        filters: pipeline.parameters.bill_processor_is_changed
+      - test-bill-consumer:
+          filters: pipeline.parameters.bill_consumer_is_changed
+      - test-gateway:
+          filters: pipeline.parameters.gateway_is_changed
+      - test-db:
+          filters: pipeline.parameters.db_is_changed
+      - test-kafka:
+          filters: pipeline.parameters.kafka_is_changed
+      - test-db-integration:
+          filters: |
+            pipeline.parameters.db_is_changed
+            or pipeline.parameters.dao_is_changed
     # - deploy:
     #     requires:
     #       - test-node
