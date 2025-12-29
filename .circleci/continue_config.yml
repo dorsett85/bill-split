@@ -65,6 +65,7 @@ jobs:
       tag: *node_version
     working_directory: ~/project/projects/bill-processor
     steps:
+      - run: echo "bill-processor has changes << pipeline.parameters.bill_processor_is_changed >>"
       - when:
           condition: << pipeline.parameters.bill_processor_is_changed >>
           steps:
