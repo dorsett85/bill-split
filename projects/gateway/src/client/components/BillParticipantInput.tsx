@@ -34,7 +34,10 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
     try {
       const json = await createBillParticipant(billId, name);
       if ('data' in json) {
-        onCreateParticipant(json.data.participants);
+        onCreateParticipant([
+          ...participants,
+          { id: json.data.id, name, owes: 0, participantLineItems: [] },
+        ]);
       }
     } catch {
       // no-op

@@ -39,7 +39,12 @@ export const BillParticipantEditName: React.FC<
     setError(undefined);
 
     try {
-      await updateBillParticipant(billId, participantId, newName);
+      const res = await updateBillParticipant(billId, participantId, newName);
+      if ('data' in res && res.data.count) {
+        onNameChange(newName);
+      } else {
+        setError('Something went wrong');
+      }
       onNameChange(newName);
     } catch (e) {
       console.log(e);

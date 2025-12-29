@@ -88,13 +88,13 @@ export const Home = () => {
   return (
     <Container mt={32}>
       <Title size={56} order={1} ta="center" mb="xl">
-        Welcome to Bill Split!
-      </Title>
-      <Title order={2} ta="center" mb="lg">
-        Quickly split the bill by uploading or scanning your receipt 🧾
+        Welcome to Check Mate!
       </Title>
       <Title order={2} ta="center" mb="xl">
-        Assign the items among your party and we&#39;ll do the math 🙌
+        Blazing fast bill splitting tool 🪄
+      </Title>
+      <Title order={2} ta="center" mb="xl">
+        Upload or scan your receipt
       </Title>
       <form ref={formRef}>
         <Group gap="md" grow>
@@ -104,7 +104,7 @@ export const Home = () => {
             disabled={uploading}
             leftSection={<IconFile />}
           >
-            Upload File
+            Upload
           </Button>
           <Button
             size="lg"
@@ -112,7 +112,7 @@ export const Home = () => {
             disabled={uploading}
             leftSection={<IconCamera />}
           >
-            Scan Photo
+            Take Photo
           </Button>
         </Group>
         <input

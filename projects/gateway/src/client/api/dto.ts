@@ -23,7 +23,13 @@ export const IdRecord = z.object({
   id,
 });
 
+const CountRecord = z.object({
+  count: z.number(),
+});
+
 export const IdResponse = createApiResponse(IdRecord);
+
+export const CountResponse = createApiResponse(CountRecord);
 
 export const SuccessResponse = createApiResponse(
   z.object({
@@ -33,3 +39,4 @@ export const SuccessResponse = createApiResponse(
 
 export type SuccessResponse = z.infer<typeof SuccessResponse>;
 export type IdResponse = z.infer<typeof IdResponse>;
+export type CountResponse = z.infer<typeof CountResponse>;

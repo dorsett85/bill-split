@@ -3,7 +3,7 @@ import {
   BillRecalculateResponse,
   BillResponse,
 } from '../pages/bills/[id]/dto.ts';
-import { IdResponse } from './dto.ts';
+import { CountResponse, IdResponse } from './dto.ts';
 
 const baseOptions: RequestInit = {
   headers: {
@@ -71,20 +71,20 @@ export const subscribeRecalculateBill = (billId: number): EventSource => {
 export const createBillParticipant = async (
   billId: number,
   name: string,
-): Promise<BillRecalculateResponse> => {
+): Promise<IdResponse> => {
   const res = await fetch(`/api/bills/${billId}/participants`, {
     ...baseOptions,
     method: 'POST',
     body: JSON.stringify({ name }),
   });
-  return BillRecalculateResponse.parse(await res.json());
+  return IdResponse.parse(await res.json());
 };
 
 export const updateBillParticipant = async (
   billId: number,
   participantId: number,
   name: string,
-): Promise<IdResponse> => {
+): Promise<CountResponse> => {
   const res = await fetch(
     `/api/bills/${billId}/participants/${participantId}`,
     {
@@ -93,7 +93,7 @@ export const updateBillParticipant = async (
       body: JSON.stringify({ name }),
     },
   );
-  return IdResponse.parse(await res.json());
+  return CountResponse.parse(await res.json());
 };
 
 export const deleteBillParticipant = async (

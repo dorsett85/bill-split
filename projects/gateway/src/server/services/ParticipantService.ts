@@ -4,6 +4,7 @@ import type { ParticipantDao } from '../dao/ParticipantDao.ts';
 import type { ParticipantLineItemDao } from '../dao/ParticipantLineItemDao.ts';
 import type { BillReadDetailed } from '../dto/bill.ts';
 import type { CountRecord } from '../dto/count.ts';
+import type { IdRecord } from '../dto/id.ts';
 import type {
   ParticipantCreateRequest,
   ParticipantUpdateRequest,
@@ -42,14 +43,22 @@ export class ParticipantService {
     billId: number,
     participant: ParticipantCreateRequest,
     sessionToken: string,
-  ): Promise<BillReadDetailed | undefined> {
+  ): Promise<IdRecord> {
     return await this.participantDao.tx(async (client) => {
-      // Check if the name already exists for a bill
       try {
-        await this.participantDao.create(
+        const idRecord = await this.participantDao.create(
           { billId, name: participant.name },
           client,
         );
+
+        // TODO this is heavy handed for creating a new user, but we need other
+        //  users to see this change and this is the only object our SSE topic
+        //  supports at the moment.
+        const detailedBill = await this.billDao.readDetailed(billId, client);
+        if (detailedBill) {
+          void this.publishRecalculatedBill(detailedBill, sessionToken);
+        }
+        return idRecord;
       } catch (e) {
         if (e instanceof DatabaseError && e.code === '23505') {
           throw new Error(`Participant '${participant.name}' already exists`);
@@ -57,19 +66,6 @@ export class ParticipantService {
           throw new Error('Something went wrong creating participant');
         }
       }
-
-      // TODO this is heavy handed for creating a new user, but we need other
-      //  users to see this change and this is the only object our SSE topic
-      //  supports at the moment.
-      const detailed = await this.billDao.readDetailed(billId, client);
-
-      if (!detailed) {
-        return;
-      }
-
-      void this.publishRecalculatedBill(detailed, sessionToken);
-
-      return detailed;
     });
   }
 
@@ -77,10 +73,23 @@ export class ParticipantService {
     participantId: number,
     billId: number,
     update: ParticipantUpdateRequest,
-  ): Promise<CountRecord | undefined> {
-    return await this.participantDao.update(participantId, {
-      billId,
-      name: update.name,
+    sessionToken: string,
+  ): Promise<CountRecord> {
+    return await this.participantDao.tx(async (client) => {
+      const countRecord = await this.participantDao.update(participantId, {
+        billId,
+        name: update.name,
+      });
+
+      // TODO this is heavy handed for creating a new user, but we need other
+      //  users to see this change and this is the only object our SSE topic
+      //  supports at the moment.
+      const detailedBill = await this.billDao.readDetailed(billId, client);
+      if (detailedBill) {
+        void this.publishRecalculatedBill(detailedBill, sessionToken);
+      }
+
+      return countRecord;
     });
   }
 

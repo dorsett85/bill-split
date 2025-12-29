@@ -285,14 +285,15 @@ export const patchBillParticipant: BillMiddlewareFunction = async (
   const participantService = getParticipantService();
 
   try {
-    const idRecord = await participantService.updateBillParticipant(
+    const countRecord = await participantService.updateBillParticipant(
       parseParticipantIdResult.data,
       req.billId,
       parseUpdatesResult.data,
+      req.sessionToken,
     );
 
-    return idRecord
-      ? jsonSuccessResponse(idRecord, res)
+    return countRecord
+      ? jsonSuccessResponse(countRecord, res)
       : jsonForbiddenResponse(res);
   } catch (e) {
     logger.error(e);
