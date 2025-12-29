@@ -157,7 +157,7 @@ jobs:
           paths:
             - node_modules
       - setup_remote_docker:
-          version: 27.5.1
+          version: default
           docker_layer_caching: true
       - run:
           name: Run DAO tests
