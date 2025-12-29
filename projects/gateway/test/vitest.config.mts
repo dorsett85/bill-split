@@ -20,7 +20,7 @@ export default defineConfig({
       {
         test: {
           name: 'db',
-          // include: [path.resolve(__dirname, 'src/server/dao/**/*.test.ts')],
+          include: ['./src/server/dao/**/*.test.ts'],
           globalSetup: ['./test/vitest-db-global-setup.ts'],
           setupFiles: ['./test/vitest-db-suite-setup.ts'],
           pool: 'threads',
