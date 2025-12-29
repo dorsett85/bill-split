@@ -160,7 +160,7 @@ workflows:
       - test-bill-processor
       - test-bill-consumer
       - test-gateway:
-        filters: pipeline.parameters.gateway_is_changed == true
+        filters: pipeline.parameters.gateway_is_changed == "true"
       - test-db
       - test-kafka
       - test-db-integration
