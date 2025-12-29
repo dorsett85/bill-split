@@ -51,12 +51,13 @@ export const Home = () => {
       }
 
       const json = BillCreateResponse.parse(await res.json());
+      setUploading(false);
       if ('data' in json) {
+        setError(undefined);
         const { id, signature } = json.data;
         // Redirect to the specific bills page
         return window.location.assign(`/bills/${id}?signature=${signature}`);
       }
-      setUploading(false);
       setError(json.error.message);
     } catch {
       setUploading(false);
