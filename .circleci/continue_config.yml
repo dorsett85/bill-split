@@ -130,27 +130,33 @@ jobs:
 workflows:
   bill-split:
     jobs:
-      - test-bill-processor:
-          when:
-            condition: << pipeline.parameters.bill_processor_is_changed >>
-      - test-bill-consumer:
-          when:
-            condition: << pipeline.parameters.bill_consumer_is_changed >>
-      - test-gateway:
-          when:
-            condition: << pipeline.parameters.gateway_is_changed >>
-      - test-db:
-          when:
-            condition: << pipeline.parameters.db_is_changed >>
-      - test-kafka:
-          when:
-            condition: << pipeline.parameters.kafka_is_changed >>
-      - test-db-integration:
-          when:
-            condition:
-              or:
-                - << pipeline.parameters.dao_is_changed >>
-                - << pipeline.parameters.db_is_changed >>
+      - when:
+          condition: << pipeline.parameters.bill_processor_is_changed >>
+          jobs:
+            - test-bill-processor
+      - when:
+          condition: << pipeline.parameters.bill_consumer_is_changed >>
+          jobs:
+            - test-bill-consumer
+      - when:
+          condition: << pipeline.parameters.gateway_is_changed >>
+          jobs:
+            - test-gateway
+      - when:
+          condition: << pipeline.parameters.db_is_changed >>
+          jobs:
+            - test-db
+      - when:
+          condition: << pipeline.parameters.kafka_is_changed >>
+          jobs:
+            - test-kafka
+      - when:
+          condition:
+            or:
+              - << pipeline.parameters.dao_is_changed >>
+              - << pipeline.parameters.db_is_changed >>
+          jobs:
+            - test-db-integration
     # - deploy:
     #     requires:
     #       - test-node
