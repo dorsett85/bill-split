@@ -131,15 +131,20 @@ workflows:
   bill-split:
     jobs:
       - test-bill-processor:
-          when: << pipeline.parameters.bill_processor_is_changed >>
+          when:
+            condition: << pipeline.parameters.bill_processor_is_changed >>
       - test-bill-consumer:
-          when: << pipeline.parameters.bill_consumer_is_changed >>
+          when:
+            condition: << pipeline.parameters.bill_consumer_is_changed >>
       - test-gateway:
-          when: << pipeline.parameters.gateway_is_changed >>
+          when:
+            condition: << pipeline.parameters.gateway_is_changed >>
       - test-db:
-          when: << pipeline.parameters.db_is_changed >>
+          when:
+            condition: << pipeline.parameters.db_is_changed >>
       - test-kafka:
-          when: << pipeline.parameters.kafka_is_changed >>
+          when:
+            condition: << pipeline.parameters.kafka_is_changed >>
       - test-db-integration:
           when:
             condition:
