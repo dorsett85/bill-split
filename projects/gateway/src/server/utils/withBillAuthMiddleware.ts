@@ -23,7 +23,7 @@ export type BillMiddlewareFunction = (
 
 /**
  * Higher-order function that wraps a controller with bill authentication
- *and billId parsing. The wrapped handler receives a BillServerRequest with
+ * and billId parsing. The wrapped handler receives a BillServerRequest with
  * the validated billId already parsed and attached.
  */
 export const withBillAuthMiddleware = (

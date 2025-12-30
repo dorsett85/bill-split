@@ -16,6 +16,10 @@ import {
   postAccessToken,
 } from '../../api/api.ts';
 import { AdminAccessTokenTable } from '../../components/AdminAccessTokenTable.tsx';
+import {
+  errorNotification,
+  successNotification,
+} from '../../utils/notifications.ts';
 import type { AccessToken, AdminData } from './dto.ts';
 
 const byLatestDesc = (a: AccessToken, b: AccessToken) => {
@@ -33,48 +37,87 @@ export const Admin: React.FC<AdminProps> = ({ admin }) => {
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState<string | undefined>(undefined);
 
-  const fetchAndSetAccessTokens = async () => {
-    const json = await getAccessTokens();
-    if ('data' in json) {
-      setAccessTokens(json.data.accessTokens.sort(byLatestDesc));
-    }
-  };
-
   const handleOnSubmitToken = async (e: FormEvent) => {
     e.preventDefault();
 
-    let pinError: undefined | string = 'Unable to generate a pin';
+    let newPinError: undefined | string;
     try {
-      const res = await postAccessToken(pin);
-      if (res.ok) {
-        pinError = undefined;
-        void fetchAndSetAccessTokens();
+      const json = await postAccessToken(pin);
+      if ('data' in json) {
+        successNotification({
+          title: 'Successfully generated pin',
+          message: `Pin: ${pin}`,
+        });
+
+        // refetch tokens to update the table
+        try {
+          const tokenJson = await getAccessTokens();
+          if ('data' in tokenJson) {
+            setAccessTokens(tokenJson.data.accessTokens.sort(byLatestDesc));
+          } else {
+            errorNotification({
+              title: 'Failed to refetch access tokens',
+              message: tokenJson.error.message,
+            });
+          }
+        } catch (e) {
+          console.error(e);
+          errorNotification({
+            title: 'Failed to refetch access tokens',
+            message: 'Try refreshing the page',
+          });
+        }
+      } else {
+        newPinError = json.error.message;
       }
-    } catch {
-      // no-op
+    } catch (e) {
+      console.error(e);
+      newPinError = 'Unable to generate a pin';
     }
-    setPinError(pinError);
+    setPinError(newPinError);
   };
 
   const handleOnTokenActiveToggle = async (pin: string, active: boolean) => {
     try {
-      const res = await patchAccessToken(pin, active);
-      if (res.ok) {
-        void fetchAndSetAccessTokens();
+      const json = await patchAccessToken(pin, active);
+      if ('data' in json && json.data.count) {
+        return setAccessTokens((oldTokens) =>
+          oldTokens?.map((token) =>
+            token.pin === pin ? { ...token, active } : token,
+          ),
+        );
       }
-    } catch {
-      //
+      errorNotification({
+        title: `Could not ${active ? 'activate' : 'deactivate'} token`,
+        message: 'error' in json ? json.error.message : '',
+      });
+    } catch (e) {
+      console.error(e);
+      errorNotification({
+        title: `Could not ${active ? 'activate' : 'deactivate'} token`,
+        message: 'Please refresh the page and try again',
+      });
     }
   };
 
   const handleOnDeleteToken = async (pin: string) => {
     try {
-      const res = await deleteAccessToken(pin);
-      if (res.ok) {
-        void fetchAndSetAccessTokens();
+      const json = await deleteAccessToken(pin);
+      if ('data' in json && json.data.count) {
+        return setAccessTokens((oldTokens) =>
+          oldTokens?.filter((token) => token.pin !== pin),
+        );
       }
-    } catch {
-      //
+      errorNotification({
+        title: `Could not delete the token`,
+        message: 'error' in json ? json.error.message : '',
+      });
+    } catch (e) {
+      console.error(e);
+      errorNotification({
+        title: `Could not delete the token`,
+        message: 'Please refresh the page and try again',
+      });
     }
   };
 

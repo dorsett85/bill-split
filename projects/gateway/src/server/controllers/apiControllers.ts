@@ -22,6 +22,7 @@ import {
   jsonSuccessResponse,
   setSessionCookie,
 } from '../utils/responseHelpers.ts';
+import type { AdminMiddlewareFunction } from '../utils/withAdminAuthMiddleware.ts';
 import type { BillMiddlewareFunction } from '../utils/withBillAuthMiddleware.ts';
 import {
   getAdminService,
@@ -30,25 +31,20 @@ import {
   getParticipantService,
 } from './controllerServices.ts';
 
-export const getAccessTokens: MiddlewareFunction = async (req, res) => {
-  const { sessionToken } = parseCookies(req);
+export const getAccessTokens: AdminMiddlewareFunction = async (_, res) => {
   const adminService = getAdminService();
 
   try {
-    const accessTokens = sessionToken
-      ? await adminService.readAllAccessTokens(sessionToken)
-      : undefined;
+    const accessTokens = await adminService.readAllAccessTokens();
 
-    return accessTokens
-      ? jsonSuccessResponse({ accessTokens }, res)
-      : jsonNotFoundResponse(res);
+    return jsonSuccessResponse({ accessTokens }, res);
   } catch (e) {
     logger.error(e);
     return jsonServerErrorResponse(res);
   }
 };
 
-export const postAccessToken: MiddlewareFunction = async (req, res) => {
+export const postAccessToken: AdminMiddlewareFunction = async (req, res) => {
   const parseResult = AccessTokenCreateRequest.safeParse(
     await parseJsonBody(req),
   );
@@ -57,24 +53,19 @@ export const postAccessToken: MiddlewareFunction = async (req, res) => {
     return jsonBadRequestResponse(res);
   }
 
-  const { sessionToken } = parseCookies(req);
   const adminService = getAdminService();
 
   try {
-    const idRecord = sessionToken
-      ? await adminService.createAccessToken(parseResult.data.pin, sessionToken)
-      : undefined;
+    const idRecord = await adminService.createAccessToken(parseResult.data.pin);
 
-    return idRecord
-      ? jsonSuccessResponse(idRecord, res)
-      : jsonForbiddenResponse(res);
+    return jsonSuccessResponse(idRecord, res);
   } catch (e) {
     logger.error(e);
     return jsonServerErrorResponse(res);
   }
 };
 
-export const patchAccessToken: MiddlewareFunction = async (req, res) => {
+export const patchAccessToken: AdminMiddlewareFunction = async (req, res) => {
   const parsePinResult = pin.safeParse(req.params.pin);
   const parseUpdatesResult = AccessTokenUpdate.safeParse(
     await parseJsonBody(req),
@@ -84,45 +75,36 @@ export const patchAccessToken: MiddlewareFunction = async (req, res) => {
     return jsonBadRequestResponse(res);
   }
 
-  const { sessionToken } = parseCookies(req);
   const adminService = getAdminService();
 
   try {
-    const idRecord = sessionToken
-      ? await adminService.updateAccessToken(
-          parsePinResult.data,
-          parseUpdatesResult.data,
-          sessionToken,
-        )
-      : undefined;
+    const countRecord = await adminService.updateAccessToken(
+      parsePinResult.data,
+      parseUpdatesResult.data,
+    );
 
-    return idRecord
-      ? jsonSuccessResponse(idRecord, res)
-      : jsonForbiddenResponse(res);
+    return jsonSuccessResponse(countRecord, res);
   } catch (e) {
     logger.error(e);
     return jsonServerErrorResponse(res);
   }
 };
 
-export const deleteAccessToken: MiddlewareFunction = async (req, res) => {
+export const deleteAccessToken: AdminMiddlewareFunction = async (req, res) => {
   const parsePinResult = pin.safeParse(req.params.pin);
 
   if (!parsePinResult.success) {
     return jsonBadRequestResponse(res);
   }
 
-  const { sessionToken } = parseCookies(req);
   const adminService = getAdminService();
 
   try {
-    const idRecord = sessionToken
-      ? await adminService.deleteAccessToken(parsePinResult.data, sessionToken)
-      : undefined;
+    const countRecord = await adminService.deleteAccessToken(
+      parsePinResult.data,
+    );
 
-    return idRecord
-      ? jsonSuccessResponse(idRecord, res)
-      : jsonForbiddenResponse(res);
+    return jsonSuccessResponse(countRecord, res);
   } catch (e) {
     logger.error(e);
     return jsonServerErrorResponse(res);
@@ -195,14 +177,12 @@ export const patchBill: BillMiddlewareFunction = async (req, res) => {
   const billService = getBillService();
 
   try {
-    const idRecord = await billService.update(
+    const countRecord = await billService.update(
       req.billId,
       parseUpdatesResult.data,
     );
 
-    return idRecord
-      ? jsonSuccessResponse(idRecord, res)
-      : jsonNotFoundResponse(res);
+    return jsonSuccessResponse(countRecord, res);
   } catch (e) {
     logger.error(e);
     return jsonServerErrorResponse(res);

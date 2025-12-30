@@ -13,7 +13,11 @@ import {
   writeRedirect,
   writeToHtml,
 } from '../utils/responseHelpers.ts';
-import { getAdminService, getBillService } from './controllerServices.ts';
+import {
+  getAdminService,
+  getBillService,
+  getCryptoService,
+} from './controllerServices.ts';
 
 const writeErrorPage = async (
   res: ServerResponse,
@@ -46,10 +50,13 @@ export const getAdminPage =
   async (req, res) => {
     const { sessionToken } = parseCookies(req);
     const adminService = getAdminService();
+    const cryptoService = getCryptoService();
 
     try {
-      const accessTokens = sessionToken
-        ? await adminService.readAllAccessTokens(sessionToken)
+      const isAdmin =
+        !!sessionToken && !!cryptoService.verifySessionJwt(sessionToken)?.isAdmin;
+      const accessTokens = isAdmin
+        ? await adminService.readAllAccessTokens()
         : undefined;
       const html = await htmlService.render(req.route, { accessTokens });
       return writeToHtml(html, res);

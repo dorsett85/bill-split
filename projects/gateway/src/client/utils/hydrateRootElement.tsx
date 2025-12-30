@@ -1,4 +1,5 @@
 import { createTheme, MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import { type ReactElement, StrictMode } from 'react';
 import ReactDomClient from 'react-dom/client';
 
@@ -16,6 +17,7 @@ export const hydrateRootElement = (elem: ReactElement): void => {
       root,
       <StrictMode>
         <MantineProvider defaultColorScheme="auto" theme={theme}>
+          <Notifications />
           {elem}
         </MantineProvider>
       </StrictMode>,

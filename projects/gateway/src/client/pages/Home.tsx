@@ -59,7 +59,8 @@ export const Home = () => {
         return window.location.assign(`/bills/${id}?signature=${signature}`);
       }
       setError(json.error.message);
-    } catch {
+    } catch (e) {
+      console.error(e);
       setUploading(false);
       setError(
         'We were unable to upload your bill. Please refresh and try again.',

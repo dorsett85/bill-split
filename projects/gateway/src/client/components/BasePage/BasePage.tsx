@@ -1,4 +1,5 @@
 import { ColorSchemeScript, createTheme, MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import type React from 'react';
 import type { ReactElement } from 'react';
 import packageJson from '../../../../package.json';
@@ -22,6 +23,9 @@ const mantineVersion = packageJson.dependencies['@mantine/core'].replace(
   /^\D+/,
   '',
 );
+const mantineNotificationsVersion = packageJson.dependencies[
+  '@mantine/notifications'
+].replace(/^\D+/, '');
 
 export const BasePage: React.FC<BasePageProps> = ({
   body,
@@ -63,6 +67,10 @@ export const BasePage: React.FC<BasePageProps> = ({
           rel="stylesheet"
           href={`https://unpkg.com/@mantine/core@${mantineVersion}/styles.css`}
         />
+        <link
+          rel="stylesheet"
+          href={`https://unpkg.com/@mantine/notifications@${mantineNotificationsVersion}/styles.css`}
+        />
         <script dangerouslySetInnerHTML={{ __html: bootstrapServerProps }} />
         {links.map((linkProps) => (
           <link key={linkProps.href} {...linkProps} />
@@ -72,6 +80,8 @@ export const BasePage: React.FC<BasePageProps> = ({
       <body style={{ margin: 0 }}>
         <div id={rootId}>
           <MantineProvider defaultColorScheme="auto" theme={theme}>
+            {/* Keeping this for consistency with the client side hydrating */}
+            <Notifications />
             {body}
           </MantineProvider>
         </div>

@@ -33,6 +33,7 @@ import {
   writeToHtml,
 } from './utils/responseHelpers.ts';
 import { staticMiddleware } from './utils/staticMiddleware.ts';
+import { withAdminAuthMiddleware } from './utils/withAdminAuthMiddleware.ts';
 import { withBillAuthMiddleware } from './utils/withBillAuthMiddleware.ts';
 
 const startServer = async () => {
@@ -108,10 +109,16 @@ const startServer = async () => {
 
   // Api routes
   const accessTokenApiPath = '/api/access-tokens';
-  app.get(accessTokenApiPath, getAccessTokens);
-  app.post(accessTokenApiPath, postAccessToken);
-  app.patch(`${accessTokenApiPath}/:pin`, patchAccessToken);
-  app.delete(`${accessTokenApiPath}/:pin`, deleteAccessToken);
+  app.get(accessTokenApiPath, withAdminAuthMiddleware(getAccessTokens));
+  app.post(accessTokenApiPath, withAdminAuthMiddleware(postAccessToken));
+  app.patch(
+    `${accessTokenApiPath}/:pin`,
+    withAdminAuthMiddleware(patchAccessToken),
+  );
+  app.delete(
+    `${accessTokenApiPath}/:pin`,
+    withAdminAuthMiddleware(deleteAccessToken),
+  );
 
   const billApiPath = '/api/bills';
   app.post(billApiPath, postBill);

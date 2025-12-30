@@ -157,10 +157,7 @@ export class BillService {
     };
   }
 
-  public async update(
-    id: number,
-    update: BillUpdate,
-  ): Promise<CountRecord | undefined> {
+  public async update(id: number, update: BillUpdate): Promise<CountRecord> {
     return await this.billDao.update(id, update);
   }
 

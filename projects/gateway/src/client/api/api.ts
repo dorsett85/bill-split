@@ -16,30 +16,35 @@ export const getAccessTokens = async (): Promise<AccessTokenApiResponse> => {
   return AccessTokenApiResponse.parse(await res.json());
 };
 
-export const postAccessToken = async (pin: string): Promise<Response> => {
-  return await fetch(`/api/access-tokens`, {
+export const postAccessToken = async (pin: string): Promise<IdResponse> => {
+  const res = await fetch(`/api/access-tokens`, {
     ...baseOptions,
     method: 'POST',
     body: JSON.stringify({ pin }),
   });
+  return IdResponse.parse(await res.json());
 };
 
 export const patchAccessToken = async (
   pin: string,
   active: boolean,
-): Promise<Response> => {
-  return await fetch(`/api/access-tokens/${pin}`, {
+): Promise<CountResponse> => {
+  const res = await fetch(`/api/access-tokens/${pin}`, {
     ...baseOptions,
     method: 'PATCH',
     body: JSON.stringify({ active }),
   });
+  return CountResponse.parse(await res.json());
 };
 
-export const deleteAccessToken = async (pin: string): Promise<Response> => {
-  return await fetch(`/api/access-tokens/${pin}`, {
+export const deleteAccessToken = async (
+  pin: string,
+): Promise<CountResponse> => {
+  const res = await fetch(`/api/access-tokens/${pin}`, {
     ...baseOptions,
     method: 'DELETE',
   });
+  return CountResponse.parse(await res.json());
 };
 
 export const postBillCreateAccess = async (pin: string): Promise<Response> => {
