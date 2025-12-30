@@ -62,10 +62,14 @@ export const Bill: React.FC<BillProps> = (props) => {
           // The backend will get a new presigned url on each request, but we
           // only need it on initial page load, otherwise it will rerequest the
           // image with the new presigned url.
-          setBill({ ...json.data, imagePath: bill.imagePath });
+          return setBill({ ...json.data, imagePath: bill.imagePath });
         }
-      } catch {
         // Any fetch errors we can just set the image status to error
+        setBill((prev) => ({
+          ...prev,
+          imageStatus: 'error',
+        }));
+      } catch {
         setBill((prev) => ({
           ...prev,
           imageStatus: 'error',

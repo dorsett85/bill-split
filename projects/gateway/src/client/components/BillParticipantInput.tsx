@@ -6,6 +6,7 @@ import type {
   BillRecalculateData,
   Participant,
 } from '../pages/bills/[id]/dto.ts';
+import { errorNotification } from '../utils/notifications.ts';
 
 export interface BillParticipantInputProps {
   billId: number;
@@ -38,9 +39,18 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
           ...participants,
           { id: json.data.id, name, owes: 0, participantLineItems: [] },
         ]);
+      } else {
+        errorNotification({
+          title: 'Unable to create participant',
+          message: json.error.message,
+        });
       }
-    } catch {
-      // no-op
+    } catch (e) {
+      console.error(e);
+      errorNotification({
+        title: 'Unable to create participant',
+        message: 'Please refresh the page and try again',
+      });
     }
 
     setUpdatingParticipants(false);
@@ -63,9 +73,18 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
         const json = await deleteBillParticipant(billId, deleteId);
         if ('data' in json) {
           onDeleteParticipant(json.data);
+        } else {
+          errorNotification({
+            title: 'Unable to delete participant',
+            message: json.error.message,
+          });
         }
-      } catch {
-        // no-op
+      } catch (e) {
+        console.error(e);
+        errorNotification({
+          title: 'Unable to delete participant',
+          message: 'Please refresh the page and try again',
+        });
       }
     }
 

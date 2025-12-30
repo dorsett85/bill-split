@@ -23,6 +23,7 @@ import type {
   LineItems,
   Participant,
 } from '../pages/bills/[id]/dto.ts';
+import { errorNotification } from '../utils/notifications.ts';
 import { BillParticipantCheckBoxCard } from './BillParticipantCheckBoxCard.tsx';
 import { BillParticipantEditName } from './BillParticipantEditName.tsx';
 
@@ -90,10 +91,18 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
 
       if ('data' in recalculatedBillResponse) {
         onChange(recalculatedBillResponse.data);
+      } else {
+        errorNotification({
+          title: `Unable to ${checked ? 'claim' : 'unclaim'} this item`,
+          message: recalculatedBillResponse.error.message,
+        });
       }
     } catch (e) {
-      // TODO error handling
       console.log(e);
+      errorNotification({
+        title: `Unable to ${checked ? 'claim' : 'unclaim'} this item`,
+        message: 'Please refresh the page and try again',
+      });
     }
   };
 
