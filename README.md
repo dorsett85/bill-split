@@ -9,7 +9,9 @@ TODO
 1. Api
    1. For adding participants, create a new topic that just sends the new
       participant for SSE. Right now we're recalculating the whole bill.
-   2. Encode bill page url
+   2. Catch handled errors in the backend and set those as the error message.
+   3. Encode bill page url
+   3. 
 2. UI
    1. Handle api error responses (only checking for 'data' property right now)
    2. Home page

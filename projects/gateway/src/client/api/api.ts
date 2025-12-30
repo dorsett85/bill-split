@@ -3,7 +3,7 @@ import {
   BillRecalculateResponse,
   BillResponse,
 } from '../pages/bills/[id]/dto.ts';
-import { CountResponse, IdResponse } from './dto.ts';
+import { CountResponse, IdResponse, SuccessResponse } from './dto.ts';
 
 const baseOptions: RequestInit = {
   headers: {
@@ -47,12 +47,15 @@ export const deleteAccessToken = async (
   return CountResponse.parse(await res.json());
 };
 
-export const postBillCreateAccess = async (pin: string): Promise<Response> => {
-  return await fetch(`/api/bills:create-access`, {
+export const postBillCreateAccess = async (
+  pin: string,
+): Promise<SuccessResponse> => {
+  const res = await fetch(`/api/bills:create-access`, {
     ...baseOptions,
     method: 'POST',
     body: JSON.stringify({ pin }),
   });
+  return SuccessResponse.parse(await res.json());
 };
 
 export const createBill = async (form: HTMLFormElement): Promise<Response> => {

@@ -1,5 +1,4 @@
 import {
-  Alert,
   Button,
   Center,
   Container,
@@ -8,10 +7,11 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { IconCamera, IconFile, IconInfoCircle } from '@tabler/icons-react';
+import { IconCamera, IconFile } from '@tabler/icons-react';
 import { type ChangeEvent, useRef, useState } from 'react';
 import { createBill } from '../api/api.ts';
 import { VerifyAccessModal } from '../components/VerifyAccessModal.tsx';
+import { errorNotification } from '../utils/notifications.ts';
 import { BillCreateResponse } from './dto.ts';
 
 export const Home = () => {
@@ -19,7 +19,6 @@ export const Home = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | undefined>(undefined);
   const [openVerifyModal, setOpenVerifyModal] = useState(false);
 
   const handleOnFileClick = async (capture: boolean) => {
@@ -53,18 +52,21 @@ export const Home = () => {
       const json = BillCreateResponse.parse(await res.json());
       setUploading(false);
       if ('data' in json) {
-        setError(undefined);
         const { id, signature } = json.data;
         // Redirect to the specific bills page
         return window.location.assign(`/bills/${id}?signature=${signature}`);
       }
-      setError(json.error.message);
+      errorNotification({
+        title: 'We were unable to upload your bill',
+        message: json.error.message,
+      });
     } catch (e) {
       console.error(e);
       setUploading(false);
-      setError(
-        'We were unable to upload your bill. Please refresh and try again.',
-      );
+      errorNotification({
+        title: 'We were unable to upload your bill',
+        message: 'Please refresh the page and try again',
+      });
     }
   };
 
@@ -135,16 +137,6 @@ export const Home = () => {
         <Center>
           <Loader color="yellow" type="bars" size="xl" mt="lg" />
         </Center>
-      )}
-      {error && (
-        <Alert
-          mt={'lg'}
-          icon={<IconInfoCircle />}
-          color={'red'}
-          title={'Something went wrong'}
-        >
-          {error}
-        </Alert>
       )}
       <VerifyAccessModal
         open={openVerifyModal}

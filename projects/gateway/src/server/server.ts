@@ -1,7 +1,7 @@
 import { createRsbuild, loadConfig, logger } from '@rsbuild/core';
 import path from 'path';
 import { App } from './App.ts';
-import { env } from './config.ts';
+import { env, isProd } from './config.ts';
 import {
   deleteAccessToken,
   deleteBillParticipant,
@@ -163,14 +163,14 @@ const startServer = async () => {
     logger.error(err);
     res.statusCode = 500;
 
-    let message = 'We experienced an unexpected issue, please try again later';
-    if (env.NODE_ENV !== 'production') {
-      message = err.stack ?? err.message;
+    // TODO check for errors that we've already handled and set those as the
+    //  error message.
+    const message =
+      'We experienced an unexpected issue, please try again later';
+    if (req.headers.accept === 'application/json') {
+      return jsonServerErrorResponse(res, isProd() ? message : err.message);
     }
-
-    return req.headers.accept === 'application/json'
-      ? jsonServerErrorResponse(res, message)
-      : writeToHtml(message, res);
+    return writeToHtml(isProd() ? message : (err.stack ?? err.message), res);
   });
 };
 

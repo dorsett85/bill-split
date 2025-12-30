@@ -5,7 +5,6 @@ import type { FormEvent } from 'react';
 
 import { useState } from 'react';
 import { postBillCreateAccess } from '../api/api.ts';
-import { SuccessResponse } from '../api/dto.ts';
 
 export interface VerifyAccessProps {
   open: boolean;
@@ -32,8 +31,7 @@ export const VerifyAccessModal: React.FC<VerifyAccessProps> = ({
     }
 
     try {
-      const res = await postBillCreateAccess(accessPin);
-      const json = SuccessResponse.parse(await res.json());
+      const json = await postBillCreateAccess(accessPin);
 
       if ('data' in json && json.data.success) {
         return onClose(true);
