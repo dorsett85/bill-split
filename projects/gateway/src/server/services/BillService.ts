@@ -1,3 +1,5 @@
+import { PassThrough } from 'node:stream';
+import formidable, { VolatileFile } from 'formidable';
 import path from 'path';
 import type { AccessTokenDao } from '../dao/AccessTokenDao.ts';
 import type { BillDao } from '../dao/BillDao.ts';
@@ -8,7 +10,7 @@ import {
   type BillUpdate,
 } from '../dto/bill.ts';
 import type { CountRecord } from '../dto/count.ts';
-import type { IdRecord } from '../dto/id.ts';
+import { type IdRecord, intId } from '../dto/id.ts';
 import type { FileStorageService } from '../types/fileStorageService.ts';
 import type { ServerRequest } from '../types/serverRequest.ts';
 import type { CryptoService } from './CryptoService.ts';
@@ -32,6 +34,7 @@ interface BillServiceConstructor {
 export class BillService {
   private readonly accessTokenDao: AccessTokenDao;
   private readonly billDao: BillDao;
+  private readonly participantDao: ParticipantDao;
   private readonly cryptoService: CryptoService;
   private readonly fileStorageService: FileStorageService;
   private readonly kafkaProducerService: KafkaProducerService;
@@ -39,12 +42,14 @@ export class BillService {
   constructor({
     accessTokenDao,
     billDao,
+    participantDao,
     cryptoService,
     fileStorageService,
     kafkaProducerService,
   }: BillServiceConstructor) {
     this.accessTokenDao = accessTokenDao;
     this.billDao = billDao;
+    this.participantDao = participantDao;
     this.cryptoService = cryptoService;
     this.fileStorageService = fileStorageService;
     this.kafkaProducerService = kafkaProducerService;
@@ -65,17 +70,66 @@ export class BillService {
       return undefined;
     }
 
-    const storedFiles = await this.fileStorageService.store(req);
-    const { id } = await this.billDao.create(
-      BillCreate.parse({
-        imagePath: storedFiles[0].path,
-        imageStatus: 'parsing',
-      }),
-    );
+    let newUploadPathPromise: Promise<string | undefined> | undefined =
+      Promise.resolve(undefined);
+
+    const form = formidable({
+      keepExtensions: true,
+      fileWriteStreamHandler: (file) => {
+        const pass = new PassThrough();
+        if (file instanceof VolatileFile) {
+          newUploadPathPromise = this.fileStorageService.store(
+            pass,
+            file.newFilename,
+          );
+        }
+
+        return pass;
+      },
+    });
+
+    const [fields] = await form.parse(req);
+
+    const parseNumPayeesResult = intId.safeParse(fields.numPayees?.[0]);
+
+    if (!parseNumPayeesResult.success) {
+      return undefined;
+    }
+
+    const storedFilePath = await newUploadPathPromise;
+
+    if (!storedFilePath) {
+      return undefined;
+    }
+
+    const { id } = await this.billDao.tx(async (client) => {
+      const idRecord = await this.billDao.create(
+        BillCreate.parse({
+          imagePath: storedFilePath,
+          imageStatus: 'parsing',
+        }),
+        client,
+      );
+
+      // TODO we can more efficiently prefill these participants in a single db
+      //  call.
+      for (let i = 1; i <= parseNumPayeesResult.data; i++) {
+        await this.participantDao.create(
+          {
+            // This will come out as "Participant A", "Participant B", etc.
+            name: `Participant ${String.fromCharCode(64 + i)}`,
+            billId: idRecord.id,
+          },
+          client,
+        );
+      }
+
+      return idRecord;
+    });
 
     await this.kafkaProducerService.publishBill({
       billId: id,
-      imageName: path.basename(storedFiles[0].path),
+      imageName: path.basename(storedFilePath),
     });
 
     // Create a hmac signature to allow sharing of the new bill url

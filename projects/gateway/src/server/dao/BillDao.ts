@@ -19,9 +19,12 @@ export class BillDao extends BaseDao<BillCreate, BillRead, BillUpdate> {
     super(db, 'bill');
   }
 
-  public async create(bill: BillCreate): Promise<IdRecord> {
+  public async create(
+    bill: BillCreate,
+    client?: PoolClient,
+  ): Promise<IdRecord> {
     const billToInsert = toBillStorage(bill);
-    return this.createRecord(billToInsert);
+    return this.createRecord(billToInsert, client);
   }
 
   public async read(

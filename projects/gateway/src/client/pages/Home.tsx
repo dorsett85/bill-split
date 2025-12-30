@@ -4,20 +4,21 @@ import {
   Container,
   Group,
   Loader,
-  Text,
+  NumberInput,
+  type NumberInputHandlers,
   Title,
 } from '@mantine/core';
-import { IconCamera, IconFile } from '@tabler/icons-react';
-import { type ChangeEvent, useRef, useState } from 'react';
+import { IconCamera, IconFile, IconMinus, IconPlus } from '@tabler/icons-react';
+import { useRef, useState } from 'react';
 import { createBill } from '../api/api.ts';
 import { VerifyAccessModal } from '../components/VerifyAccessModal.tsx';
 import { errorNotification } from '../utils/notifications.ts';
 import { BillCreateResponse } from './dto.ts';
 
 export const Home = () => {
-  const [filename, setFilename] = useState<string>();
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const numPayeesHandlerRef = useRef<NumberInputHandlers>(null);
   const [uploading, setUploading] = useState(false);
   const [openVerifyModal, setOpenVerifyModal] = useState(false);
 
@@ -39,7 +40,10 @@ export const Home = () => {
     fileInputRef.current.click();
   };
 
-  const requestCreateBill = async (form: HTMLFormElement) => {
+  const requestCreateBill = async () => {
+    if (!formRef.current) return;
+    const form = formRef.current;
+
     setUploading(true);
     try {
       const res = await createBill(form);
@@ -70,37 +74,68 @@ export const Home = () => {
     }
   };
 
-  const handleOnFileInputChange = async (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
-    if (!formRef.current) return;
-
-    setFilename(event.target.files?.[0].name);
-
-    // Validate here if needed
-    void requestCreateBill(formRef.current);
-  };
-
   const handleOnVerifyAccessClose = (accessVerified: boolean | undefined) => {
     setUploading(false);
     setOpenVerifyModal(false);
-    if (formRef.current && accessVerified) {
-      void requestCreateBill(formRef.current);
+    if (accessVerified) {
+      void requestCreateBill();
     }
   };
 
+  const NUMBER_OF_PAYEES_LABEL = 'number-of-payees-label';
+
   return (
     <Container mt={32}>
-      <Title size={56} order={1} ta="center" mb="xl">
+      <Title size={48} order={1} ta="center" mb="xl">
         Welcome to Check Mate!
       </Title>
       <Title order={2} ta="center" mb="xl">
-        Blazing fast bill splitting tool 🪄
+        Blazing fast bill splitting 🪄
       </Title>
-      <Title order={2} ta="center" mb="xl">
-        Upload or scan your receipt
-      </Title>
+
       <form ref={formRef}>
+        <Title id={NUMBER_OF_PAYEES_LABEL} order={2} ta="center" mb="lg">
+          How many people are paying?
+        </Title>
+        <Group justify={'center'} style={{ flexWrap: 'nowrap' }} mb={'lg'}>
+          <Button
+            size={'lg'}
+            onClick={() => numPayeesHandlerRef.current?.decrement()}
+            variant="outline"
+          >
+            <IconMinus />
+          </Button>
+          <NumberInput
+            id={'number-of-payees-input'}
+            name={'numPayees'}
+            aria-labelledby={NUMBER_OF_PAYEES_LABEL}
+            readOnly
+            handlersRef={numPayeesHandlerRef}
+            defaultValue={4}
+            min={2}
+            max={26}
+            hideControls
+            styles={(theme) => ({
+              input: {
+                width: 50,
+                border: 'none',
+                backgroundColor: 'transparent',
+                textAlign: 'center',
+                fontSize: theme.fontSizes.xl,
+              },
+            })}
+          />
+          <Button
+            size={'lg'}
+            onClick={() => numPayeesHandlerRef.current?.increment()}
+            variant="outline"
+          >
+            <IconPlus />
+          </Button>
+        </Group>
+        <Title order={2} ta="center" mb="lg">
+          Upload or scan your receipt
+        </Title>
         <Group gap="md" grow>
           <Button
             size="lg"
@@ -123,19 +158,14 @@ export const Home = () => {
           type="file"
           name="receipt"
           ref={fileInputRef}
-          onChange={handleOnFileInputChange}
+          onChange={requestCreateBill}
           hidden
           accept="image/*"
         />
       </form>
-      {filename && (
-        <Text size="xl" display="block" component="strong" ta="center" mt="lg">
-          {filename}
-        </Text>
-      )}
       {uploading && (
-        <Center>
-          <Loader color="yellow" type="bars" size="xl" mt="lg" />
+        <Center mt={'xl'}>
+          <Loader color="yellow" type="bars" size="xl" />
         </Center>
       )}
       <VerifyAccessModal

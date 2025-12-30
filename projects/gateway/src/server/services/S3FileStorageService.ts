@@ -1,17 +1,8 @@
-import { PassThrough } from 'node:stream';
-import {
-  type CompleteMultipartUploadCommandOutput,
-  GetObjectCommand,
-  type S3Client,
-} from '@aws-sdk/client-s3';
+import type { PassThrough } from 'node:stream';
+import { GetObjectCommand, type S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import formidable, { VolatileFile } from 'formidable';
-import type {
-  FileStorageOutput,
-  FileStorageService,
-} from '../types/fileStorageService.ts';
-import type { ServerRequest } from '../types/serverRequest.ts';
+import type { FileStorageService } from '../types/fileStorageService.ts';
 
 interface S3FileServiceConstructor {
   bucketName: string;
@@ -27,44 +18,20 @@ export class S3FileStorageService implements FileStorageService {
     this.s3Client = s3Client;
   }
 
-  async store(req: ServerRequest): Promise<FileStorageOutput[]> {
-    const newUploadPromises: Promise<CompleteMultipartUploadCommandOutput>[] =
-      [];
-
-    const form = formidable({
-      keepExtensions: true,
-      fileWriteStreamHandler: (file) => {
-        const pass = new PassThrough();
-        if (!(file instanceof VolatileFile)) {
-          return pass;
-        }
-
-        newUploadPromises.push(
-          new Upload({
-            client: this.s3Client,
-            params: {
-              Bucket: this.bucketName,
-              Key: file.newFilename,
-              Body: pass,
-            },
-          }).done(),
-        );
-
-        return pass;
+  async store(
+    pass: PassThrough,
+    fileName: string,
+  ): Promise<string | undefined> {
+    const finishedUpload = await new Upload({
+      client: this.s3Client,
+      params: {
+        Bucket: this.bucketName,
+        Key: fileName,
+        Body: pass,
       },
-    });
+    }).done();
 
-    // parse a file upload
-    await form.parse(req);
-
-    const storageOutput: FileStorageOutput[] = [];
-    for await (const uploadData of newUploadPromises) {
-      storageOutput.push({
-        path: uploadData.Location ?? '',
-      });
-    }
-
-    return storageOutput;
+    return finishedUpload.Location;
   }
 
   /**

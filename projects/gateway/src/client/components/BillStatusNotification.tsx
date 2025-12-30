@@ -35,7 +35,7 @@ export const BillStatusNotification: React.FC<BillStatusNotificationProps> = ({
           ),
           color: 'yellow',
           title:
-            "We're still analyzing your bill. You can add participants in the meantime below!",
+            "We're still analyzing your bill. You can update participant in the meantime below!",
         };
       case 'error':
         return {
@@ -49,9 +49,7 @@ export const BillStatusNotification: React.FC<BillStatusNotificationProps> = ({
         };
       case 'ready':
         return {
-          children: (
-            <Box m="sm">Add participants and assign bill items below</Box>
-          ),
+          children: <Box m="sm">Start by assigning bill items below</Box>,
           color: 'green',
           title: 'Your bill has been successfully analyzed!',
         };

@@ -1,4 +1,4 @@
-import type { ServerRequest } from './serverRequest.ts';
+import type { PassThrough } from 'node:stream';
 
 export interface FileStorageOutput {
   /**
@@ -12,7 +12,7 @@ export interface FileStorageOutput {
  */
 export interface FileStorageService {
   /**
-   * Store file(s) given a server request
+   * Store streaming file(s)
    */
-  store(req: ServerRequest): Promise<FileStorageOutput[]>;
+  store(pass: PassThrough, file: string): Promise<string | undefined>;
 }

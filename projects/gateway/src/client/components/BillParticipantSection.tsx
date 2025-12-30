@@ -21,24 +21,22 @@ import type {
 import { errorNotification } from '../utils/notifications.ts';
 import { BillParticipantCheckBoxCard } from './BillParticipantCheckBoxCard.tsx';
 import { BillParticipantEdit } from './BillParticipantEdit.tsx';
+import { BillParticipantOwes } from './BillParticipantOwes.tsx';
 
 interface BillParticipantSectionsProps {
   billId: number;
+  tip: number;
   lineItems: LineItems;
   participants: Participant[];
   onChange: (recalculatedBill: BillRecalculateData) => void;
-  /**
-   * Render the line calculating how much and individual participant owes
-   */
-  renderParticipantOwes: (participant: Participant) => React.ReactElement;
 }
 
 export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
   billId,
+  tip,
   lineItems,
   participants,
   onChange,
-  renderParticipantOwes,
 }) => {
   const handleOnNameChange = (participantId: number, name: string) => {
     const updatedParticipants = participants.map((participant) => {
@@ -99,6 +97,10 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
       chevronIconSize={20}
       multiple
       id={'participant-accordion'}
+      styles={{
+        chevron: { marginLeft: 4 },
+        content: { paddingLeft: 0, paddingRight: 0 },
+      }}
     >
       {participants.map((participant) => (
         <Accordion.Item key={participant.id} value={participant.id.toString()}>
@@ -108,7 +110,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                 <Title size={'xl'} tt="capitalize" order={2} mb="xs">
                   {participant.name}
                 </Title>
-                {renderParticipantOwes(participant)}
+                <BillParticipantOwes owes={participant.owes} tip={tip} />
               </Box>
             </Accordion.Control>
             <BillParticipantEdit

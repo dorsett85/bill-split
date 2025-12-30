@@ -14,7 +14,6 @@ import { BillInfoItem } from '../../../components/BillInfoItem.tsx';
 import { BillInfoItemUnclaimed } from '../../../components/BillInfoItemUnclaimed.tsx';
 import { BillItemValue } from '../../../components/BillItemValue.tsx';
 import { BillParticipantInput } from '../../../components/BillParticipantInput.tsx';
-import { BillParticipantOwes } from '../../../components/BillParticipantOwes.tsx';
 import { BillParticipantSection } from '../../../components/BillParticipantSection.tsx';
 import { BillStatusNotification } from '../../../components/BillStatusNotification.tsx';
 import { TipInput } from '../../../components/TipInput.tsx';
@@ -106,7 +105,7 @@ export const Bill: React.FC<BillProps> = (props) => {
   const totalWithTip = total * (tip / 100) + total;
 
   return (
-    <Container mt={32} mb={256}>
+    <Container mt={32} mb={128}>
       <Title size={48} order={1} ta="center" mb="xl">
         {props.bill.businessName
           ? `"${props.bill.businessName}" Bill`
@@ -177,12 +176,10 @@ export const Bill: React.FC<BillProps> = (props) => {
       />
       <BillParticipantSection
         billId={bill.id}
+        tip={tip}
         participants={bill.participants}
         lineItems={bill.lineItems}
         onChange={handleOnRecalculateBill}
-        renderParticipantOwes={(participant) => (
-          <BillParticipantOwes owes={participant.owes} tip={tip} />
-        )}
       />
     </Container>
   );

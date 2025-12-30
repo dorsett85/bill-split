@@ -1,11 +1,4 @@
-import {
-  ActionIcon,
-  Button,
-  Popover,
-  Stack,
-  Text,
-  TextInput,
-} from '@mantine/core';
+import { ActionIcon, Button, Popover, Text, TextInput } from '@mantine/core';
 import { IconCheck, IconDots } from '@tabler/icons-react';
 import type React from 'react';
 import { type FormEvent, useState } from 'react';
@@ -90,35 +83,33 @@ export const BillParticipantEdit: React.FC<BillParticipantEditProps> = ({
         </ActionIcon>
       </Popover.Target>
       <Popover.Dropdown>
-        <Stack>
-          <form onSubmit={handleOnSubmitNameChange}>
-            <TextInput
-              label="Edit name"
-              name={INPUT_NAME}
-              error={error}
-              defaultValue={name}
-              rightSection={
-                <ActionIcon aria-label="submit-name" type="submit">
-                  <IconCheck />
-                </ActionIcon>
-              }
-            />
-          </form>
-          <Text>
-            Delete Participant?{' '}
-            <Text component={'b'} span fw={'bold'}>
-              Careful!
-            </Text>
+        <form onSubmit={handleOnSubmitNameChange}>
+          <TextInput
+            label="Edit name"
+            name={INPUT_NAME}
+            error={error}
+            defaultValue={name}
+            rightSection={
+              <ActionIcon aria-label="submit-name" type="submit">
+                <IconCheck />
+              </ActionIcon>
+            }
+          />
+        </form>
+        <Text mt={'md'} mb={'xs'}>
+          Delete Participant?{' '}
+          <Text component={'b'} span fw={'bold'}>
+            Careful!
           </Text>
-          <Button
-            color="red"
-            size={'compact-md'}
-            style={{ maxWidth: 64 }}
-            onClick={() => handleOnDelete(participantId)}
-          >
-            Yes
-          </Button>
-        </Stack>
+        </Text>
+        <Button
+          color="red"
+          size={'compact-md'}
+          style={{ maxWidth: 64 }}
+          onClick={() => handleOnDelete(participantId)}
+        >
+          Yes
+        </Button>
       </Popover.Dropdown>
     </Popover>
   );
