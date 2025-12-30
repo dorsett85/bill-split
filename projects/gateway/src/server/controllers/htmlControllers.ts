@@ -54,7 +54,8 @@ export const getAdminPage =
 
     try {
       const isAdmin =
-        !!sessionToken && !!cryptoService.verifySessionJwt(sessionToken)?.isAdmin;
+        !!sessionToken &&
+        !!cryptoService.verifySessionJwt(sessionToken)?.isAdmin;
       const accessTokens = isAdmin
         ? await adminService.readAllAccessTokens()
         : undefined;

@@ -21,7 +21,6 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
   onDeleteParticipant,
   participants,
 }) => {
-  const [error, setError] = useState<string>();
   const [updatingParticipants, setUpdatingParticipants] = useState(false);
 
   const handleOnOptionSubmit = async (name: string) => {
@@ -30,7 +29,6 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
     }
 
     setUpdatingParticipants(true);
-    setError(undefined);
 
     try {
       const json = await createBillParticipant(billId, name);
@@ -62,7 +60,6 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
     }
 
     setUpdatingParticipants(true);
-    setError(undefined);
 
     const deleteId = participants.find((p) => p.name === name)?.id;
 
@@ -104,8 +101,12 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
       value={participants.map((participant) => participant.name)}
       onOptionSubmit={handleOnOptionSubmit}
       onRemove={handleOnRemove}
-      onDuplicate={(name) => setError(`There's already a "${name}"`)}
-      error={error}
+      onDuplicate={(name) =>
+        errorNotification({
+          title: 'Unable to add',
+          message: `There's already a "${name}"`,
+        })
+      }
     />
   );
 };

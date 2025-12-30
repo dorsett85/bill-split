@@ -1,18 +1,13 @@
 import {
-  ActionIcon,
+  Accordion,
   Box,
-  Collapse,
+  Center,
   Divider,
-  Group,
   ScrollArea,
-  Stack,
   Text,
   Title,
-  useComputedColorScheme,
 } from '@mantine/core';
-import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import type React from 'react';
-import { useState } from 'react';
 import {
   createParticipantLineItem,
   deleteParticipantLineItem,
@@ -25,7 +20,7 @@ import type {
 } from '../pages/bills/[id]/dto.ts';
 import { errorNotification } from '../utils/notifications.ts';
 import { BillParticipantCheckBoxCard } from './BillParticipantCheckBoxCard.tsx';
-import { BillParticipantEditName } from './BillParticipantEditName.tsx';
+import { BillParticipantEdit } from './BillParticipantEdit.tsx';
 
 interface BillParticipantSectionsProps {
   billId: number;
@@ -45,18 +40,6 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
   onChange,
   renderParticipantOwes,
 }) => {
-  const colorScheme = useComputedColorScheme();
-  const [openSection, setOpenSection] = useState<Set<number>>(new Set());
-
-  const handleOnToggleSection = (id: number) => {
-    if (openSection.has(id)) {
-      openSection.delete(id);
-    } else {
-      openSection.add(id);
-    }
-    setOpenSection(new Set(openSection));
-  };
-
   const handleOnNameChange = (participantId: number, name: string) => {
     const updatedParticipants = participants.map((participant) => {
       return {
@@ -66,6 +49,10 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
       };
     });
     onChange({ participants: updatedParticipants, lineItems });
+  };
+
+  const handleOnDeleteParticipant = (recalculatedData: BillRecalculateData) => {
+    onChange(recalculatedData);
   };
 
   const handleOnItemClick = async (
@@ -107,43 +94,33 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
   };
 
   return (
-    <Stack mb="xl">
+    <Accordion
+      chevronPosition="left"
+      chevronIconSize={20}
+      multiple
+      id={'participant-accordion'}
+    >
       {participants.map((participant) => (
-        <Stack key={participant.id}>
-          <Box>
-            <Group justify="space-between">
-              <Title tt="capitalize" order={2} mb="xs">
-                {participant.name}
-                <sup>
-                  <BillParticipantEditName
-                    billId={billId}
-                    participantId={participant.id}
-                    name={participant.name}
-                    onNameChange={(name) =>
-                      handleOnNameChange(participant.id, name)
-                    }
-                  />
-                </sup>
-              </Title>
-              <ActionIcon
-                aria-label="toggle section"
-                size="xl"
-                variant="transparent"
-                title="Toggle claims items"
-                color={colorScheme === 'dark' ? 'white' : 'dark'}
-                onClick={() => handleOnToggleSection(participant.id)}
-              >
-                {openSection.has(participant.id) ? (
-                  <IconChevronUp />
-                ) : (
-                  <IconChevronDown />
-                )}
-              </ActionIcon>
-            </Group>
-            {renderParticipantOwes(participant)}
-          </Box>
-          <Divider />
-          <Collapse in={openSection.has(participant.id)} mb="md">
+        <Accordion.Item key={participant.id} value={participant.id.toString()}>
+          <Center>
+            <Accordion.Control>
+              <Box>
+                <Title size={'xl'} tt="capitalize" order={2} mb="xs">
+                  {participant.name}
+                </Title>
+                {renderParticipantOwes(participant)}
+              </Box>
+            </Accordion.Control>
+            <BillParticipantEdit
+              billId={billId}
+              participantId={participant.id}
+              name={participant.name}
+              onNameChange={(name) => handleOnNameChange(participant.id, name)}
+              onDelete={handleOnDeleteParticipant}
+            />
+          </Center>
+
+          <Accordion.Panel>
             <Text size="lg" mb="sm">
               Claim Items
             </Text>
@@ -164,9 +141,9 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
               ))}
             </ScrollArea>
             <Divider />
-          </Collapse>
-        </Stack>
+          </Accordion.Panel>
+        </Accordion.Item>
       ))}
-    </Stack>
+    </Accordion>
   );
 };
