@@ -11,7 +11,7 @@ interface BillParticipantOwesProps {
 export const BillParticipantOwes: React.FC<BillParticipantOwesProps> = memo(
   ({ owes, tip }) => {
     return (
-      <Text>
+      <Text truncate={'end'}>
         Owes{' '}
         <Text c="yellow" span fw={700}>
           {USCurrency.format(owes)}

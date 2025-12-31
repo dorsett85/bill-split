@@ -1,15 +1,5 @@
-.claimCheckbox {
+.item {
   transition: border-color 150ms ease;
-
-  &:hover {
-    @media (prefers-color-scheme: light) {
-      background-color: var(--mantine-color-gray-0);
-    }
-
-    @media (prefers-color-scheme: dark) {
-      background-color: var(--mantine-color-dark-6);
-    }
-  }
 }
 
 .claimed {

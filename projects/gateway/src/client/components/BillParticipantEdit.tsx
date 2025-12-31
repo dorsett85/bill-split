@@ -1,4 +1,11 @@
-import { ActionIcon, Button, Popover, Text, TextInput } from '@mantine/core';
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Popover,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { IconCheck, IconDots } from '@tabler/icons-react';
 import type React from 'react';
 import { type FormEvent, useState } from 'react';
@@ -63,7 +70,7 @@ export const BillParticipantEdit: React.FC<BillParticipantEditProps> = ({
 
   return (
     <Popover
-      id="edit-name-popover"
+      id={`edit-name-popover-${participantId}`}
       opened={open}
       onDismiss={() => setOpen(false)}
       position="top"
@@ -102,14 +109,15 @@ export const BillParticipantEdit: React.FC<BillParticipantEditProps> = ({
             Careful!
           </Text>
         </Text>
-        <Button
-          color="red"
-          size={'compact-md'}
-          style={{ maxWidth: 64 }}
-          onClick={() => handleOnDelete(participantId)}
-        >
-          Yes
-        </Button>
+        <Box>
+          <Button
+            color="red"
+            variant={'outline'}
+            onClick={() => handleOnDelete(participantId)}
+          >
+            Yes
+          </Button>
+        </Box>
       </Popover.Dropdown>
     </Popover>
   );

@@ -1,12 +1,4 @@
-import {
-  Accordion,
-  Box,
-  Center,
-  Divider,
-  ScrollArea,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Accordion, Box, Center, ScrollArea, Text, Title } from '@mantine/core';
 import type React from 'react';
 import {
   createParticipantLineItem,
@@ -19,8 +11,8 @@ import type {
   Participant,
 } from '../pages/bills/[id]/dto.ts';
 import { errorNotification } from '../utils/notifications.ts';
-import { BillParticipantCheckBoxCard } from './BillParticipantCheckBoxCard.tsx';
 import { BillParticipantEdit } from './BillParticipantEdit.tsx';
+import { BillParticipantItemCard } from './BillParticipantItemCard.tsx';
 import { BillParticipantOwes } from './BillParticipantOwes.tsx';
 
 interface BillParticipantSectionsProps {
@@ -101,6 +93,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
         chevron: { marginLeft: 4 },
         content: { paddingLeft: 0, paddingRight: 0 },
       }}
+      defaultValue={[participants[0].id.toString()]}
     >
       {participants.map((participant) => (
         <Accordion.Item key={participant.id} value={participant.id.toString()}>
@@ -126,9 +119,9 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
             <Text size="lg" mb="sm">
               Claim Items
             </Text>
-            <ScrollArea h={250}>
+            <ScrollArea h={250} c={'gray'}>
               {lineItems.map((lineItem) => (
-                <BillParticipantCheckBoxCard
+                <BillParticipantItemCard
                   key={lineItem.id}
                   claimed={lineItem.participantIds.includes(participant.id)}
                   othersClaimed={lineItem.participantIds.some(
@@ -139,10 +132,10 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                   }
                   name={lineItem.name}
                   price={lineItem.price}
+                  switchId={`item-card-switch-input-${participant.id}-${lineItem.id}`}
                 />
               ))}
             </ScrollArea>
-            <Divider />
           </Accordion.Panel>
         </Accordion.Item>
       ))}

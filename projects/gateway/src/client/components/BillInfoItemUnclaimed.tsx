@@ -1,9 +1,8 @@
-import { List, ListItem, Popover, Text } from '@mantine/core';
+import { Button, List, ListItem, Popover, Text } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
 import type React from 'react';
 import type { LineItems, Participant } from '../pages/bills/[id]/dto.ts';
 import { BillInfoItem } from './BillInfoItem.tsx';
-import styles from './BillInfoItemUnclaimed.module.css';
 
 interface BillInfoItemUnclaimedProps {
   participants: Participant[];
@@ -35,26 +34,21 @@ export const BillInfoItemUnclaimed: React.FC<BillInfoItemUnclaimedProps> = ({
     >
       <Popover id="unclaimed-items-popover">
         <Popover.Target>
-          <Text
-            className={styles.valueText}
-            fw={700}
-            size="lg"
+          <Button
+            size={'compact-xs'}
+            p={0}
             c={unclaimedItems.length ? 'yellow' : 'green'}
             title="See unclaimed items"
+            variant={'transparent'}
+            styles={{ label: { alignItems: 'start' } }}
           >
-            {unclaimedItems.length}
-            <sup>
-              <IconInfoCircle size={14} />
-            </sup>
-          </Text>
+            <Text fw={700} size="lg">
+              {unclaimedItems.length}
+            </Text>
+            <IconInfoCircle size={14} />
+          </Button>
         </Popover.Target>
-        <Popover.Dropdown
-          style={{
-            // unset the dropdown width in case the text inside is wider than the
-            // screen.
-            width: undefined,
-          }}
-        >
+        <Popover.Dropdown style={{ maxWidth: '90%' }}>
           {unclaimedItems.length ? (
             <List size="sm" type="ordered">
               {unclaimedItems.map((item) => (
