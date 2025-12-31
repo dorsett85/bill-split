@@ -6,7 +6,13 @@ const ImageStatus = z.literal(['parsing', 'ready', 'error']);
 const LineItem = IdRecord.extend({
   name: z.string(),
   price: z.number(),
-  participantIds: z.array(z.number()),
+  participantById: z.record(
+    z.string('Id of the participant'),
+    z.object({
+      pctOwes: z.number(),
+      name: z.string(),
+    }),
+  ),
 });
 
 const Participant = IdRecord.extend({
@@ -49,7 +55,7 @@ export const BillRecalculateResponse = createApiResponse(BillRecalculateData);
 
 export type BillData = z.infer<typeof BillData>;
 export type Participant = z.infer<typeof Participant>;
-export type LineItems = z.infer<typeof LineItem>[];
+export type LineItem = z.infer<typeof LineItem>;
 export type BillRecalculateData = z.infer<typeof BillRecalculateData>;
 export type BillResponse = z.infer<typeof BillResponse>;
 export type BillRecalculateResponse = z.infer<typeof BillRecalculateResponse>;

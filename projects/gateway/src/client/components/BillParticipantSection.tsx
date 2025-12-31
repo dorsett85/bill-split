@@ -7,7 +7,7 @@ import {
 import type {
   BillRecalculateData,
   BillRecalculateResponse,
-  LineItems,
+  LineItem,
   Participant,
 } from '../pages/bills/[id]/dto.ts';
 import { errorNotification } from '../utils/notifications.ts';
@@ -18,7 +18,7 @@ import { BillParticipantOwes } from './BillParticipantOwes.tsx';
 interface BillParticipantSectionsProps {
   billId: number;
   tip: number;
-  lineItems: LineItems;
+  lineItems: LineItem[];
   participants: Participant[];
   onChange: (recalculatedBill: BillRecalculateData) => void;
 }
@@ -84,61 +84,67 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
   };
 
   return (
-    <Accordion
-      chevronPosition="left"
-      chevronIconSize={20}
-      multiple
-      id={'participant-accordion'}
-      styles={{
-        chevron: { marginLeft: 4 },
-        content: { paddingLeft: 0, paddingRight: 0 },
-      }}
-      defaultValue={[participants[0].id.toString()]}
-    >
-      {participants.map((participant) => (
-        <Accordion.Item key={participant.id} value={participant.id.toString()}>
-          <Center>
-            <Accordion.Control>
-              <Box>
-                <Title size={'xl'} tt="capitalize" order={2} mb="xs">
-                  {participant.name}
-                </Title>
-                <BillParticipantOwes owes={participant.owes} tip={tip} />
-              </Box>
-            </Accordion.Control>
-            <BillParticipantEdit
-              billId={billId}
-              participantId={participant.id}
-              name={participant.name}
-              onNameChange={(name) => handleOnNameChange(participant.id, name)}
-              onDelete={handleOnDeleteParticipant}
-            />
-          </Center>
+    <>
+      <Accordion
+        chevronPosition="left"
+        chevronIconSize={20}
+        multiple
+        id={'participant-accordion'}
+        styles={{
+          chevron: { marginLeft: 4 },
+          content: { paddingLeft: 0, paddingRight: 0 },
+        }}
+        defaultValue={[participants[0].id.toString()]}
+      >
+        {participants.map((participant) => (
+          <Accordion.Item
+            key={participant.id}
+            value={participant.id.toString()}
+          >
+            <Center>
+              <Accordion.Control>
+                <Box>
+                  <Title size={'xl'} tt="capitalize" order={2} mb="xs">
+                    {participant.name}
+                  </Title>
+                  <BillParticipantOwes owes={participant.owes} tip={tip} />
+                </Box>
+              </Accordion.Control>
+              <BillParticipantEdit
+                billId={billId}
+                participantId={participant.id}
+                name={participant.name}
+                onNameChange={(name) =>
+                  handleOnNameChange(participant.id, name)
+                }
+                onDelete={handleOnDeleteParticipant}
+              />
+            </Center>
 
-          <Accordion.Panel>
-            <Text size="lg" mb="sm">
-              Claim Items
-            </Text>
-            <ScrollArea h={250} c={'gray'}>
-              {lineItems.map((lineItem) => (
-                <BillParticipantItemCard
-                  key={lineItem.id}
-                  claimed={lineItem.participantIds.includes(participant.id)}
-                  othersClaimed={lineItem.participantIds.some(
-                    (id) => id !== participant.id,
-                  )}
-                  onChange={(checked) =>
-                    handleOnItemClick(checked, lineItem.id, participant.id)
-                  }
-                  name={lineItem.name}
-                  price={lineItem.price}
-                  switchId={`item-card-switch-input-${participant.id}-${lineItem.id}`}
-                />
-              ))}
-            </ScrollArea>
-          </Accordion.Panel>
-        </Accordion.Item>
-      ))}
-    </Accordion>
+            <Accordion.Panel>
+              <Text size="lg" mb="sm">
+                Claim Items
+              </Text>
+              <ScrollArea h={250} c={'gray'}>
+                {lineItems.map((lineItem) => (
+                  <BillParticipantItemCard
+                    key={lineItem.id}
+                    participantId={participant.id}
+                    lineItemParticipantsById={lineItem.participantById}
+                    onChange={(checked) =>
+                      handleOnItemClick(checked, lineItem.id, participant.id)
+                    }
+                    onAdjustSharedItem={() => /** TODO implement */ undefined}
+                    name={lineItem.name}
+                    price={lineItem.price}
+                    switchId={`item-card-switch-input-${participant.id}-${lineItem.id}`}
+                  />
+                ))}
+              </ScrollArea>
+            </Accordion.Panel>
+          </Accordion.Item>
+        ))}
+      </Accordion>
+    </>
   );
 };

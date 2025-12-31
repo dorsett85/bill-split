@@ -1,13 +1,20 @@
 import { Card, Group, Stack, Switch, Text } from '@mantine/core';
-import { USCurrency } from '../utils/UsCurrency.ts';
+import { USCurrency, USPercent } from '../utils/UsCurrency.ts';
 import styles from './BillParticipantCheckBoxCard.module.css';
 
 interface BillParticipantCheckBoxCardProps {
-  /** Whether the participant has claimed the item */
-  claimed: boolean;
-  /** Whether other participants have claimed the item */
-  othersClaimed: boolean;
+  participantId: number;
+  lineItemParticipantsById: Record<
+    string,
+    {
+      pctOwes: number;
+    }
+  >;
   onChange: (checked: boolean) => void;
+  /**
+   * Handler when a user wants to adjust the split on a shared item.
+   */
+  onAdjustSharedItem: () => void;
   name: string;
   price: number;
   /** Passed to the id attribute of the switch checkbox component */
@@ -15,20 +22,22 @@ interface BillParticipantCheckBoxCardProps {
 }
 
 export const BillParticipantItemCard = ({
-  claimed,
-  othersClaimed,
+  participantId,
+  lineItemParticipantsById,
   onChange,
   name,
   price,
   switchId,
 }: BillParticipantCheckBoxCardProps) => {
-  const shared = claimed && othersClaimed;
+  const pctOwes: number | undefined =
+    lineItemParticipantsById[participantId]?.pctOwes;
+  const shared = !!pctOwes && Object.keys(lineItemParticipantsById).length > 1;
 
   const handleOnChange = () => {
-    onChange(!claimed);
+    onChange(!pctOwes);
   };
 
-  const cardClassName = `${styles.item}${shared ? ` ${styles.shared}` : claimed ? ` ${styles.claimed}` : ''}`;
+  const cardClassName = `${styles.item}${shared ? ` ${styles.shared}` : pctOwes ? ` ${styles.claimed}` : ''}`;
 
   return (
     <Card
@@ -38,33 +47,53 @@ export const BillParticipantItemCard = ({
       styles={{
         root: {
           borderColor: shared
-            ? 'var(--mantine-color-green-filled)'
-            : claimed
+            ? 'var(--mantine-color-orange-filled)'
+            : pctOwes
               ? 'var(--mantine-primary-color-filled)'
               : '',
         },
       }}
     >
-      <Group justify={'space-between'} wrap="nowrap">
-        <Stack gap={0}>
+      <Group justify={'space-between'} gap={'xs'} wrap="nowrap">
+        <Stack
+          gap={0}
+          flex={1}
+          styles={{
+            root: {
+              overflow: 'hidden',
+            },
+          }}
+        >
           <Text truncate={'end'} fw={700}>
             {name}
           </Text>
-          <Group gap={'sm'}>
+          <Group justify={'space-between'}>
             <Text>{USCurrency.format(price)}</Text>
+            {pctOwes ? (
+              <Group gap={4}>
+                <Text span size={'sm'}>
+                  Your share:
+                </Text>
+                <Text span size={'sm'} c={pctOwes === 100 ? 'blue' : 'orange'}>
+                  {USPercent.format(pctOwes / 100)}
+                </Text>
+              </Group>
+            ) : null}
           </Group>
         </Stack>
-        <Switch
-          id={switchId}
-          styles={{
-            trackLabel: { fontSize: 10 },
-          }}
-          onChange={handleOnChange}
-          onLabel={shared ? 'SHARED' : 'CLAIMED'}
-          color={shared ? 'green' : undefined}
-          checked={claimed}
-          size={'lg'}
-        />
+        <Group gap={'xs'} wrap="nowrap">
+          <Switch
+            id={switchId}
+            styles={{
+              trackLabel: { fontSize: 10 },
+            }}
+            onChange={handleOnChange}
+            onLabel={'CLAIMED'}
+            color={shared ? 'orange' : undefined}
+            checked={!!pctOwes}
+            size={'lg'}
+          />
+        </Group>
       </Group>
     </Card>
   );

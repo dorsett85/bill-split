@@ -1,12 +1,12 @@
 import { Button, List, ListItem, Popover, Text } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
 import type React from 'react';
-import type { LineItems, Participant } from '../pages/bills/[id]/dto.ts';
+import type { LineItem, Participant } from '../pages/bills/[id]/dto.ts';
 import { BillInfoItem } from './BillInfoItem.tsx';
 
 interface BillInfoItemUnclaimedProps {
   participants: Participant[];
-  lineItems: LineItems;
+  lineItems: LineItem[];
 }
 
 export const BillInfoItemUnclaimed: React.FC<BillInfoItemUnclaimedProps> = ({

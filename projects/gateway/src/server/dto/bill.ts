@@ -41,7 +41,13 @@ export const BillReadDetailedStorage = BillReadStorage.extend({
         id: z.number(),
         name: z.string(),
         price: z.number(),
-        participant_ids: z.array(z.number()),
+        participant_by_id: z.record(
+          z.string('Id of the participant'),
+          z.object({
+            name: z.string(),
+            pct_owes: z.number(),
+          }),
+        ),
       }),
     )
     .nullable()
@@ -110,7 +116,12 @@ export const toBillReadDetailed = (
     id: li.id,
     name: li.name,
     price: li.price,
-    participantIds: li.participant_ids,
+    participantById: Object.fromEntries(
+      Object.entries(li.participant_by_id).map(([id, participant]) => [
+        id,
+        { name: participant.name, pctOwes: participant.pct_owes },
+      ]),
+    ),
   })),
   participants: bill.participants.map((p) => ({
     id: p.id,

@@ -115,10 +115,14 @@ describe('BillDao', () => {
 
     // Verify line item associations
     const item1 = detailed?.lineItems.find((li) => li.id === li1);
-    assert.includeMembers(item1!.participantIds, [p1, p2]);
+    assert.deepStrictEqual(item1!.participantById, {
+      [p1]: { name: 'P1', pctOwes: 50 },
+      [p2]: { name: 'P2', pctOwes: 50 },
+    });
 
     const item2 = detailed?.lineItems.find((li) => li.id === li2);
-    assert.includeMembers(item2!.participantIds, [p2]);
-    assert.lengthOf(item2!.participantIds, 1);
+    assert.deepStrictEqual(item2!.participantById, {
+      [p2]: { name: 'P2', pctOwes: 100 },
+    });
   });
 });
