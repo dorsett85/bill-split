@@ -1,4 +1,13 @@
-import { Accordion, Box, Center, ScrollArea, Text, Title } from '@mantine/core';
+import {
+  Accordion,
+  ActionIcon,
+  Box,
+  Center,
+  ScrollArea,
+  Text,
+  Title,
+} from '@mantine/core';
+import { IconDots } from '@tabler/icons-react';
 import type React from 'react';
 import { useState } from 'react';
 import {
@@ -13,8 +22,8 @@ import type {
 } from '../pages/bills/[id]/dto.ts';
 import { errorNotification } from '../utils/notifications.ts';
 import { BillLineItemModalProps } from './BillItemModal.tsx';
-import { BillParticipantEdit } from './BillParticipantEdit.tsx';
 import { BillParticipantItemCard } from './BillParticipantItemCard.tsx';
+import { BillParticipantModal } from './BillParticipantModal.tsx';
 import { BillParticipantOwes } from './BillParticipantOwes.tsx';
 
 interface BillParticipantSectionsProps {
@@ -35,6 +44,9 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
   const [adjustSharedLineItem, setAdjustSharedLineItem] = useState<
     LineItem | undefined
   >(undefined);
+  const [editParticipant, setEditParticipant] = useState<
+    Participant | undefined
+  >();
 
   const handleOnNameChange = (participantId: number, name: string) => {
     const updatedParticipants = participants.map((participant) => {
@@ -94,7 +106,6 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
       <Accordion
         chevronPosition="left"
         chevronIconSize={20}
-        multiple
         id={'participant-accordion'}
         styles={{
           chevron: { marginLeft: 4 },
@@ -115,15 +126,16 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                   <BillParticipantOwes owes={participant.owes} tip={tip} />
                 </Box>
               </Accordion.Control>
-              <BillParticipantEdit
-                billId={billId}
-                participantId={participant.id}
-                name={participant.name}
-                onNameChange={(name) =>
-                  handleOnNameChange(participant.id, name)
-                }
-                onDelete={handleOnDeleteParticipant}
-              />
+              <ActionIcon
+                aria-label="Edit Participant"
+                title="Edit Participant"
+                size="lg"
+                variant="subtle"
+                color="gray"
+                onClick={() => setEditParticipant(participant)}
+              >
+                <IconDots />
+              </ActionIcon>
             </Center>
 
             <Accordion.Panel>
@@ -149,6 +161,19 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
           </Accordion.Item>
         ))}
       </Accordion>
+      <BillParticipantModal
+        billId={billId}
+        participant={editParticipant}
+        onClose={() => setEditParticipant(undefined)}
+        onNameChanged={(participantId, newName) => {
+          handleOnNameChange(participantId, newName);
+          setEditParticipant(undefined);
+        }}
+        onDeleted={(recalculatedData) => {
+          handleOnDeleteParticipant(recalculatedData);
+          setEditParticipant(undefined);
+        }}
+      />
       <BillLineItemModalProps
         billId={billId}
         lineItem={adjustSharedLineItem}

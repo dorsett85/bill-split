@@ -113,7 +113,10 @@ export const BillLineItemModalProps = ({
   return (
     <Modal
       opened={!!lineItem}
-      onClose={onClose}
+      onClose={() => {
+        setAdjustSharesError(undefined);
+        onClose();
+      }}
       title={lineItem?.name}
       centered
     >

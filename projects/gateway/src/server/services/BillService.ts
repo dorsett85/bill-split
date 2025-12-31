@@ -117,7 +117,7 @@ export class BillService {
         await this.participantDao.create(
           {
             // This will come out as "Participant A", "Participant B", etc.
-            name: `Participant ${String.fromCharCode(64 + i)}`,
+            name: `Payer "${String.fromCharCode(64 + i)}"`,
             billId: idRecord.id,
           },
           client,

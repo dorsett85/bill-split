@@ -16,6 +16,7 @@ TODO
       analysis.
    5. In the change pub/sub, add a property that indicates what the change was
       so the UI can present a notification.
+   6. Add test for new db methods (e.g., updateBySearch)
 2. UI
    1. Home page
    2. Bill page
