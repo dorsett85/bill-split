@@ -1,10 +1,11 @@
 import type { Pool, PoolClient } from 'pg';
 import type { CountRecord } from '../dto/count.ts';
 import type { IdRecord } from '../dto/id.ts';
-import type {
-  ParticipantLineItemCreate,
-  ParticipantLineItemRead,
-  ParticipantLineItemUpdate,
+import {
+  type ParticipantLineItemCreate,
+  type ParticipantLineItemRead,
+  type ParticipantLineItemUpdate,
+  toParticipantLineItemStorage,
 } from '../dto/participantLineItem.ts';
 import { BaseDao } from '../types/baseDao.ts';
 
@@ -40,6 +41,22 @@ export class ParticipantLineItemDao extends BaseDao<
   ): Promise<CountRecord> {
     // TODO
     throw new Error('Not implemented');
+  }
+
+  public async updateBySearch(
+    search: { participantId: number; lineItemId: number },
+    update: ParticipantLineItemUpdate,
+    client?: PoolClient,
+  ): Promise<CountRecord> {
+    const toUpdate = toParticipantLineItemStorage(update);
+    return this.updateRecordBySearch(
+      {
+        participant_id: search.participantId,
+        line_item_id: search.lineItemId,
+      },
+      toUpdate,
+      client,
+    );
   }
 
   public async search(

@@ -11,6 +11,7 @@ import {
   ParticipantCreateRequest,
   ParticipantUpdateRequest,
 } from '../dto/participant.ts';
+import { ParticipantLineItemUpdateRequest } from '../dto/participantLineItem.ts';
 import type { MiddlewareFunction } from '../types/serverRequest.ts';
 import { parseCookies } from '../utils/parseCookies.ts';
 import { parseJsonBody } from '../utils/parseJsonBody.ts';
@@ -266,8 +267,8 @@ export const patchBillParticipant: BillMiddlewareFunction = async (
 
   try {
     const countRecord = await participantService.updateBillParticipant(
-      parseParticipantIdResult.data,
       req.billId,
+      parseParticipantIdResult.data,
       parseUpdatesResult.data,
       req.sessionToken,
     );
@@ -338,6 +339,7 @@ export const postBillParticipantLineItem: BillMiddlewareFunction = async (
     return jsonServerErrorResponse(res);
   }
 };
+
 export const deleteBillParticipantLineItem: BillMiddlewareFunction = async (
   req,
   res,
@@ -358,6 +360,39 @@ export const deleteBillParticipantLineItem: BillMiddlewareFunction = async (
       parseLineItemIdResult.data,
       req.sessionToken,
     );
+
+    return detailedBill
+      ? jsonSuccessResponse(detailedBill, res)
+      : jsonForbiddenResponse(res);
+  } catch (e) {
+    logger.error(e);
+    return jsonServerErrorResponse(res);
+  }
+};
+
+export const putManyBillParticipantLineItems: BillMiddlewareFunction = async (
+  req,
+  res,
+) => {
+  const parseLineItemIdResult = intId.safeParse(req.params.lineItemId);
+  const parseUpdateResult = ParticipantLineItemUpdateRequest.safeParse(
+    await parseJsonBody(req),
+  );
+
+  if (!parseLineItemIdResult.success || !parseUpdateResult.success) {
+    return jsonBadRequestResponse(res);
+  }
+
+  const participantService = getParticipantService();
+
+  try {
+    const detailedBill =
+      await participantService.updateManyBillParticipantLineItems(
+        req.billId,
+        parseLineItemIdResult.data,
+        parseUpdateResult.data,
+        req.sessionToken,
+      );
 
     return detailedBill
       ? jsonSuccessResponse(detailedBill, res)

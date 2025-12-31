@@ -125,10 +125,46 @@ export abstract class BaseDao<C, R extends IdRecord, U> {
 
     const result = await (client ?? this.db).query(
       `
-      UPDATE ${this.tableName} set ${keys.join(',')}
-      WHERE id = $${paramCount++}
+        UPDATE ${this.tableName} set ${keys.join(',')}
+        WHERE id = $${paramCount++}
       `,
       [...values, id],
+    );
+
+    return { count: result.rowCount ?? 0 };
+  }
+
+  protected async updateRecordBySearch(
+    search: Record<string, StorageValue>,
+    data: StorageRecordWithUndefined,
+    client?: PoolClient,
+  ): Promise<CountRecord> {
+    const dbData = this.stripUndefined(data);
+
+    const keys: string[] = [];
+    const values: StorageValue[] = [];
+    const whereKeys: string[] = [];
+    const whereValues: StorageValue[] = [];
+    let paramCount = 1;
+    for (const [key, value] of Object.entries(dbData)) {
+      keys.push(`${key} = $${paramCount++}`);
+      values.push(value);
+    }
+    for (const [key, value] of Object.entries(search)) {
+      whereKeys.push(`${key} = $${paramCount++}`);
+      whereValues.push(value);
+    }
+
+    if (keys.length === 0) {
+      return { count: 0 };
+    }
+
+    const result = await (client ?? this.db).query(
+      `
+      UPDATE ${this.tableName} set ${keys.join(',')}
+      WHERE ${whereKeys.join(' AND ')}
+      `,
+      [...values, ...whereValues],
     );
 
     return { count: result.rowCount ?? 0 };

@@ -14,11 +14,11 @@ TODO
    4. On bill status polling, call the api on refetching errors and set the
       status to 'error'. In addition, provide a mechanism to retry the image
       analysis.
-   3. 
+   5. In the change pub/sub, add a property that indicates what the change was
+      so the UI can present a notification.
 2. UI
-   1. Handle api error responses (only checking for 'data' property right now)
-   2. Home page
-   3. Bill page
+   1. Home page
+   2. Bill page
       1. Show loading indicator when line item is claimed/unclaimed
 3. CI/CD
    1. Automated deployment

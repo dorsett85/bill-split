@@ -16,6 +16,7 @@ import {
   postBillCreateAccess,
   postBillParticipant,
   postBillParticipantLineItem,
+  putManyBillParticipantLineItems,
   subscribeBillRecalculate,
 } from './controllers/apiControllers.ts';
 import {
@@ -143,7 +144,6 @@ const startServer = async () => {
     withBillAuthMiddleware(deleteBillParticipant),
   );
 
-  // NEW participant/line-items intent url
   app.post(
     `${billApiPath}/:billId/participants/:participantId/line-items/:lineItemId`,
     withBillAuthMiddleware(postBillParticipantLineItem),
@@ -151,6 +151,11 @@ const startServer = async () => {
   app.delete(
     `${billApiPath}/:billId/participants/:participantId/line-items/:lineItemId`,
     withBillAuthMiddleware(deleteBillParticipantLineItem),
+  );
+
+  app.put(
+    `${billApiPath}/:billId/line-items/:lineItemId/participants`,
+    withBillAuthMiddleware(putManyBillParticipantLineItems),
   );
 
   app.listen(port, () => {

@@ -50,6 +50,15 @@ export const BillRecalculateData = BillData.pick({
   participants: true,
 });
 
+export const BillPutManyParticipantLineItemsRequest = z.object({
+  participants: z.array(
+    z.object({
+      id: z.number(),
+      pctOwes: z.number(),
+    }),
+  ),
+});
+
 export const BillResponse = createApiResponse(BillData);
 export const BillRecalculateResponse = createApiResponse(BillRecalculateData);
 
@@ -60,3 +69,6 @@ export type BillRecalculateData = z.infer<typeof BillRecalculateData>;
 export type BillResponse = z.infer<typeof BillResponse>;
 export type BillRecalculateResponse = z.infer<typeof BillRecalculateResponse>;
 export type ImageStatus = z.infer<typeof ImageStatus>;
+export type BillPutManyParticipantLineItemsRequest = z.infer<
+  typeof BillPutManyParticipantLineItemsRequest
+>;

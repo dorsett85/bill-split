@@ -1,5 +1,6 @@
 import { Accordion, Box, Center, ScrollArea, Text, Title } from '@mantine/core';
 import type React from 'react';
+import { useState } from 'react';
 import {
   createParticipantLineItem,
   deleteParticipantLineItem,
@@ -11,6 +12,7 @@ import type {
   Participant,
 } from '../pages/bills/[id]/dto.ts';
 import { errorNotification } from '../utils/notifications.ts';
+import { BillLineItemModalProps } from './BillItemModal.tsx';
 import { BillParticipantEdit } from './BillParticipantEdit.tsx';
 import { BillParticipantItemCard } from './BillParticipantItemCard.tsx';
 import { BillParticipantOwes } from './BillParticipantOwes.tsx';
@@ -30,6 +32,10 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
   participants,
   onChange,
 }) => {
+  const [adjustSharedLineItem, setAdjustSharedLineItem] = useState<
+    LineItem | undefined
+  >(undefined);
+
   const handleOnNameChange = (participantId: number, name: string) => {
     const updatedParticipants = participants.map((participant) => {
       return {
@@ -94,7 +100,6 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
           chevron: { marginLeft: 4 },
           content: { paddingLeft: 0, paddingRight: 0 },
         }}
-        defaultValue={[participants[0].id.toString()]}
       >
         {participants.map((participant) => (
           <Accordion.Item
@@ -129,12 +134,11 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                 {lineItems.map((lineItem) => (
                   <BillParticipantItemCard
                     key={lineItem.id}
-                    participantId={participant.id}
-                    lineItemParticipantsById={lineItem.participantById}
+                    pctOwes={lineItem.participantById[participant.id]?.pctOwes}
                     onChange={(checked) =>
                       handleOnItemClick(checked, lineItem.id, participant.id)
                     }
-                    onAdjustSharedItem={() => /** TODO implement */ undefined}
+                    onAdjustSharedItem={() => setAdjustSharedLineItem(lineItem)}
                     name={lineItem.name}
                     price={lineItem.price}
                     switchId={`item-card-switch-input-${participant.id}-${lineItem.id}`}
@@ -145,6 +149,15 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
           </Accordion.Item>
         ))}
       </Accordion>
+      <BillLineItemModalProps
+        billId={billId}
+        lineItem={adjustSharedLineItem}
+        onClose={() => setAdjustSharedLineItem(undefined)}
+        onAdjustedShares={(recalculatedBill) => {
+          onChange(recalculatedBill);
+          setAdjustSharedLineItem(undefined);
+        }}
+      />
     </>
   );
 };

@@ -20,7 +20,7 @@ export class App {
   public readonly server = http.createServer();
   private middlewares: {
     handles: MiddlewareFunction[];
-    method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+    method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
     route?: string;
   }[] = [];
   /**
@@ -54,6 +54,11 @@ export class App {
 
   public post(route: string, ...middlewares: MiddlewareFunction[]): App {
     this.middlewares.push({ handles: middlewares, route, method: 'POST' });
+    return this;
+  }
+
+  public put(route: string, ...middlewares: MiddlewareFunction[]): App {
+    this.middlewares.push({ handles: middlewares, route, method: 'PUT' });
     return this;
   }
 
@@ -119,7 +124,7 @@ export class App {
 
         try {
           // Loop through all the inner route handlers
-          const routeDispatch = (handlerIndex: number) => {
+          const routeDispatch = async (handlerIndex: number) => {
             const handler = middleware.handles[handlerIndex];
             if (!handler) {
               return next();

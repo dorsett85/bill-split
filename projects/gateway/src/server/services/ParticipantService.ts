@@ -9,6 +9,7 @@ import type {
   ParticipantCreateRequest,
   ParticipantUpdateRequest,
 } from '../dto/participant.ts';
+import type { ParticipantLineItemUpdateRequest } from '../dto/participantLineItem.ts';
 import type { KafkaProducerService } from './KafkaProducerService.ts';
 
 interface ParticipantServiceConstructor {
@@ -70,8 +71,8 @@ export class ParticipantService {
   }
 
   public async updateBillParticipant(
-    participantId: number,
     billId: number,
+    participantId: number,
     update: ParticipantUpdateRequest,
     sessionToken: string,
   ): Promise<CountRecord> {
@@ -165,6 +166,39 @@ export class ParticipantService {
         [lineItemId],
         client,
       );
+
+      return this.billDao.readDetailed(billId, client);
+    });
+
+    if (!detailed) {
+      return;
+    }
+
+    void this.publishRecalculatedBill(detailed, sessionToken);
+
+    return detailed;
+  }
+
+  public async updateManyBillParticipantLineItems(
+    billId: number,
+    lineItemId: number,
+    update: ParticipantLineItemUpdateRequest,
+    sessionToken: string,
+  ): Promise<BillReadDetailed | undefined> {
+    // New pct owns must equal 100!
+    const sum = update.participants.reduce((total, p) => total + p.pctOwes, 0);
+    if (sum < 100) {
+      return undefined;
+    }
+
+    const detailed = await this.participantLineItemDao.tx(async (client) => {
+      for (const p of update.participants) {
+        await this.participantLineItemDao.updateBySearch(
+          { participantId: p.id, lineItemId },
+          { pctOwes: p.pctOwes },
+          client,
+        );
+      }
 
       return this.billDao.readDetailed(billId, client);
     });

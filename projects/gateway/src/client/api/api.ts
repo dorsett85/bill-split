@@ -1,5 +1,6 @@
 import { AccessTokenApiResponse } from '../pages/admin/dto.ts';
 import {
+  type BillPutManyParticipantLineItemsRequest,
   BillRecalculateResponse,
   BillResponse,
 } from '../pages/bills/[id]/dto.ts';
@@ -144,6 +145,22 @@ export const deleteParticipantLineItem = async (
     {
       ...baseOptions,
       method: 'DELETE',
+    },
+  );
+  return BillRecalculateResponse.parse(await res.json());
+};
+
+export const putManyParticipantLineItems = async (
+  billId: number,
+  lineItemId: number,
+  update: BillPutManyParticipantLineItemsRequest,
+): Promise<BillRecalculateResponse> => {
+  const res = await fetch(
+    `/api/bills/${billId}/line-items/${lineItemId}/participants`,
+    {
+      ...baseOptions,
+      method: 'PUT',
+      body: JSON.stringify(update),
     },
   );
   return BillRecalculateResponse.parse(await res.json());
