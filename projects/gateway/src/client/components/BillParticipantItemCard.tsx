@@ -4,8 +4,8 @@ import { USCurrency, USPercent } from '../utils/UsCurrency.ts';
 import styles from './BillParticipantCheckBoxCard.module.css';
 
 interface BillParticipantCheckBoxCardProps {
-  /** If undefined, then the participant has not claimed this item yet */
-  pctOwes?: number;
+  participantId: number;
+  lineItemParticipantsById: Record<string, { pctOwes: number; name: string }>;
   onChange: (checked: boolean) => void;
   /**
    * Handler when a user wants to adjust the split on a shared item.
@@ -18,13 +18,21 @@ interface BillParticipantCheckBoxCardProps {
 }
 
 export const BillParticipantItemCard = ({
-  pctOwes,
+  participantId,
+  lineItemParticipantsById,
   onChange,
   onAdjustSharedItem,
   name,
   price,
   switchId,
 }: BillParticipantCheckBoxCardProps) => {
+  const pctOwes: number | undefined =
+    lineItemParticipantsById[participantId]?.pctOwes;
+
+  const othersClaimedNames = Object.entries(lineItemParticipantsById)
+    .filter(([id]) => +id !== participantId)
+    .map(([_, participant]) => participant.name);
+
   const handleOnChange = () => {
     onChange(!pctOwes);
   };
@@ -42,6 +50,9 @@ export const BillParticipantItemCard = ({
       : pctOwes < 100
         ? 'var(--mantine-color-orange-filled)'
         : 'var(--mantine-primary-color-filled)';
+
+  const switchOnLabel =
+    pctOwes !== undefined && pctOwes < 100 ? 'Shared' : 'Claimed';
 
   const switchColor =
     pctOwes !== undefined && pctOwes < 100 ? 'orange' : undefined;
@@ -66,7 +77,7 @@ export const BillParticipantItemCard = ({
           <Text truncate={'end'} fw={700}>
             {name}
           </Text>
-          <Group justify={'space-between'}>
+          <Group gap={'sm'} justify={'space-between'} wrap="nowrap">
             <Text>{USCurrency.format(price)}</Text>
             {pctOwes ? (
               <Button
@@ -91,6 +102,10 @@ export const BillParticipantItemCard = ({
                   {USPercent.format(pctOwes / 100)}
                 </Text>
               </Button>
+            ) : othersClaimedNames.length ? (
+              <Text mt={-4} span size={'sm'} truncate={'end'}>
+                Taken by: {othersClaimedNames.join(', ')}
+              </Text>
             ) : null}
           </Group>
         </Stack>
@@ -101,7 +116,7 @@ export const BillParticipantItemCard = ({
               trackLabel: { fontSize: 10 },
             }}
             onChange={handleOnChange}
-            onLabel={'CLAIMED'}
+            onLabel={switchOnLabel}
             color={switchColor}
             checked={!!pctOwes}
             size={'lg'}

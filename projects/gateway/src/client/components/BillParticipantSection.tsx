@@ -146,7 +146,8 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                 {lineItems.map((lineItem) => (
                   <BillParticipantItemCard
                     key={lineItem.id}
-                    pctOwes={lineItem.participantById[participant.id]?.pctOwes}
+                    participantId={participant.id}
+                    lineItemParticipantsById={lineItem.participantById}
                     onChange={(checked) =>
                       handleOnItemClick(checked, lineItem.id, participant.id)
                     }
