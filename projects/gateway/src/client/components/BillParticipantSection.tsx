@@ -1,12 +1,4 @@
-import {
-  Accordion,
-  ActionIcon,
-  Box,
-  Center,
-  ScrollArea,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Accordion, ActionIcon, Box, Center, Text, Title } from '@mantine/core';
 import { IconDots } from '@tabler/icons-react';
 import type React from 'react';
 import { useState } from 'react';
@@ -117,7 +109,16 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
             key={participant.id}
             value={participant.id.toString()}
           >
-            <Center>
+            <Center
+              styles={{
+                root: {
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 10,
+                  backgroundColor: 'var(--mantine-color-body)',
+                },
+              }}
+            >
               <Accordion.Control>
                 <Box>
                   <Title size={'xl'} tt="capitalize" order={2} mb="xs">
@@ -142,22 +143,20 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
               <Text size="lg" mb="sm">
                 Claim Items
               </Text>
-              <ScrollArea h={250} c={'gray'}>
-                {lineItems.map((lineItem) => (
-                  <BillParticipantItemCard
-                    key={lineItem.id}
-                    participantId={participant.id}
-                    lineItemParticipantsById={lineItem.participantById}
-                    onChange={(checked) =>
-                      handleOnItemClick(checked, lineItem.id, participant.id)
-                    }
-                    onAdjustSharedItem={() => setAdjustSharedLineItem(lineItem)}
-                    name={lineItem.name}
-                    price={lineItem.price}
-                    switchId={`item-card-switch-input-${participant.id}-${lineItem.id}`}
-                  />
-                ))}
-              </ScrollArea>
+              {lineItems.map((lineItem) => (
+                <BillParticipantItemCard
+                  key={lineItem.id}
+                  participantId={participant.id}
+                  lineItemParticipantsById={lineItem.participantById}
+                  onChange={(checked) =>
+                    handleOnItemClick(checked, lineItem.id, participant.id)
+                  }
+                  onAdjustSharedItem={() => setAdjustSharedLineItem(lineItem)}
+                  name={lineItem.name}
+                  price={lineItem.price}
+                  switchId={`item-card-switch-input-${participant.id}-${lineItem.id}`}
+                />
+              ))}
             </Accordion.Panel>
           </Accordion.Item>
         ))}
