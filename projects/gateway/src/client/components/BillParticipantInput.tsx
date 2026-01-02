@@ -95,7 +95,7 @@ export const BillParticipantInput: React.FC<BillParticipantInputProps> = ({
       leftSection={
         updatingParticipants ? <Loader size="sm" color="yellow" /> : undefined
       }
-      placeholder="Enter someone's name"
+      placeholder="Enter a party's name"
       mb="xl"
       size="md"
       value={participants.map((participant) => participant.name)}

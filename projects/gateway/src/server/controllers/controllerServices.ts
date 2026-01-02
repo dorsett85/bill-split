@@ -52,7 +52,6 @@ export const getBillService = () => {
   return new BillService({
     accessTokenDao: new AccessTokenDao(getDb()),
     billDao: new BillDao(getDb()),
-    participantDao: new ParticipantDao(getDb()),
     cryptoService: getCryptoService(),
     fileStorageService: new S3FileStorageService({
       bucketName: env.AWS_BILL_IMAGE_S3_BUCKET,

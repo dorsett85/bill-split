@@ -1,14 +1,5 @@
-import {
-  Button,
-  Center,
-  Container,
-  Group,
-  Loader,
-  NumberInput,
-  type NumberInputHandlers,
-  Title,
-} from '@mantine/core';
-import { IconCamera, IconFile, IconMinus, IconPlus } from '@tabler/icons-react';
+import { Button, Center, Container, Group, Loader, Title } from '@mantine/core';
+import { IconCamera, IconFile } from '@tabler/icons-react';
 import { useRef, useState } from 'react';
 import { createBill } from '../api/api.ts';
 import { VerifyAccessModal } from '../components/VerifyAccessModal.tsx';
@@ -18,7 +9,6 @@ import { BillCreateResponse } from './dto.ts';
 export const Home = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const numPayeesHandlerRef = useRef<NumberInputHandlers>(null);
   const [uploading, setUploading] = useState(false);
   const [openVerifyModal, setOpenVerifyModal] = useState(false);
 
@@ -82,8 +72,6 @@ export const Home = () => {
     }
   };
 
-  const NUMBER_OF_PAYEES_LABEL = 'number-of-payees-label';
-
   return (
     <Container mt={32}>
       <Title size={48} order={1} ta="center" mb="xl">
@@ -94,45 +82,6 @@ export const Home = () => {
       </Title>
 
       <form ref={formRef}>
-        <Title id={NUMBER_OF_PAYEES_LABEL} order={2} ta="center" mb="lg">
-          How many people are paying?
-        </Title>
-        <Group justify={'center'} style={{ flexWrap: 'nowrap' }} mb={'lg'}>
-          <Button
-            size={'lg'}
-            onClick={() => numPayeesHandlerRef.current?.decrement()}
-            variant="outline"
-          >
-            <IconMinus />
-          </Button>
-          <NumberInput
-            id={'number-of-payees-input'}
-            name={'numPayees'}
-            aria-labelledby={NUMBER_OF_PAYEES_LABEL}
-            readOnly
-            handlersRef={numPayeesHandlerRef}
-            defaultValue={4}
-            min={2}
-            max={26}
-            hideControls
-            styles={(theme) => ({
-              input: {
-                width: 50,
-                border: 'none',
-                backgroundColor: 'transparent',
-                textAlign: 'center',
-                fontSize: theme.fontSizes.xl,
-              },
-            })}
-          />
-          <Button
-            size={'lg'}
-            onClick={() => numPayeesHandlerRef.current?.increment()}
-            variant="outline"
-          >
-            <IconPlus />
-          </Button>
-        </Group>
         <Title order={2} ta="center" mb="lg">
           Upload or scan your receipt
         </Title>

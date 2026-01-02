@@ -20,6 +20,8 @@ TODO
 2. UI
    1. Home page
    2. Bill page
-      1. Show loading indicator when line item is claimed/unclaimed
+   3. Refetch the bill when the user returns to the screen (like turning their
+      phone back on).
+   4. Check participant name uniqueness on edit
 3. CI/CD
    1. Automated deployment
