@@ -20,6 +20,8 @@ TODO
 2. UI
    1. Home page
    2. Bill page
+      1. Add "item" view
+      2. Add QR link with (?new) query param
    3. Refetch the bill when the user returns to the screen (like turning their
       phone back on).
    4. Check participant name uniqueness on edit
