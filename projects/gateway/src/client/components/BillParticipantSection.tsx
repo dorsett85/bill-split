@@ -124,6 +124,7 @@ export const BillParticipantSection: React.FC<BillParticipantSectionsProps> = ({
                   <Title size={'xl'} tt="capitalize" order={2} mb="xs">
                     {participant.name}
                   </Title>
+
                   <BillParticipantOwes owes={participant.owes} tip={tip} />
                 </Box>
               </Accordion.Control>

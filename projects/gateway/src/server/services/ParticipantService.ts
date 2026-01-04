@@ -9,7 +9,10 @@ import type {
   ParticipantCreateRequest,
   ParticipantUpdateRequest,
 } from '../dto/participant.ts';
-import type { ParticipantLineItemUpdateRequest } from '../dto/participantLineItem.ts';
+import type {
+  ParticipantLineItemDeleteRequest,
+  ParticipantLineItemUpdateRequest,
+} from '../dto/participantLineItem.ts';
 import type { KafkaProducerService } from './KafkaProducerService.ts';
 
 interface ParticipantServiceConstructor {
@@ -199,6 +202,31 @@ export class ParticipantService {
           client,
         );
       }
+
+      return this.billDao.readDetailed(billId, client);
+    });
+
+    if (!detailed) {
+      return;
+    }
+
+    void this.publishRecalculatedBill(detailed, sessionToken);
+
+    return detailed;
+  }
+
+  public async deleteManyBillParticipantLineItems(
+    billId: number,
+    lineItemId: number,
+    deletes: ParticipantLineItemDeleteRequest,
+    sessionToken: string,
+  ): Promise<BillReadDetailed | undefined> {
+    const detailed = await this.participantLineItemDao.tx(async (client) => {
+      await this.participantLineItemDao.deleteByLineItemIdAndParticipantsIds(
+        lineItemId,
+        deletes.participants.map((p) => p.id),
+        client,
+      );
 
       return this.billDao.readDetailed(billId, client);
     });

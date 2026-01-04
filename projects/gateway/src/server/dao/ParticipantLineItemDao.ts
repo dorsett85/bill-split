@@ -183,4 +183,20 @@ export class ParticipantLineItemDao extends BaseDao<
 
     return { count: result.rowCount ?? 0 };
   }
+
+  public async deleteByLineItemIdAndParticipantsIds(
+    lineItemId: number,
+    participantIds: number[],
+    client?: PoolClient,
+  ): Promise<CountRecord> {
+    const result = await (client ?? this.db).query(
+      `
+      DELETE FROM ${this.tableName}
+      WHERE line_item_id = $1 AND participant_id = ANY($2)
+      `,
+      [lineItemId, participantIds],
+    );
+
+    return { count: result.rowCount ?? 0 };
+  }
 }

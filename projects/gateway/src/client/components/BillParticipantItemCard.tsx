@@ -3,7 +3,7 @@ import { IconEdit } from '@tabler/icons-react';
 import { USCurrency, USPercent } from '../utils/UsCurrency.ts';
 import styles from './BillParticipantCheckBoxCard.module.css';
 
-interface BillParticipantCheckBoxCardProps {
+interface BillParticipantItemCardProps {
   participantId: number;
   lineItemParticipantsById: Record<string, { pctOwes: number; name: string }>;
   onChange: (checked: boolean) => void;
@@ -25,7 +25,7 @@ export const BillParticipantItemCard = ({
   name,
   price,
   switchId,
-}: BillParticipantCheckBoxCardProps) => {
+}: BillParticipantItemCardProps) => {
   const pctOwes: number | undefined =
     lineItemParticipantsById[participantId]?.pctOwes;
 
@@ -109,19 +109,17 @@ export const BillParticipantItemCard = ({
             ) : null}
           </Group>
         </Stack>
-        <Group gap={'xs'} wrap="nowrap">
-          <Switch
-            id={switchId}
-            styles={{
-              trackLabel: { fontSize: 10 },
-            }}
-            onChange={handleOnChange}
-            onLabel={switchOnLabel}
-            color={switchColor}
-            checked={!!pctOwes}
-            size={'lg'}
-          />
-        </Group>
+        <Switch
+          id={switchId}
+          styles={{
+            trackLabel: { fontSize: 10 },
+          }}
+          onChange={handleOnChange}
+          onLabel={switchOnLabel}
+          color={switchColor}
+          checked={!!pctOwes}
+          size={'lg'}
+        />
       </Group>
     </Card>
   );

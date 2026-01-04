@@ -44,6 +44,7 @@ export const BasePage: React.FC<BasePageProps> = ({
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Blazing fast bill splitting" />
         <title>{title}</title>
         <link
           rel="apple-touch-icon"

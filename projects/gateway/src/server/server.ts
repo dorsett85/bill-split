@@ -6,6 +6,7 @@ import {
   deleteAccessToken,
   deleteBillParticipant,
   deleteBillParticipantLineItem,
+  deleteManyBillParticipantLineItems,
   getAccessTokens,
   getBill,
   patchAccessToken,
@@ -156,6 +157,10 @@ const startServer = async () => {
   app.put(
     `${billApiPath}/:billId/line-items/:lineItemId/participants`,
     withBillAuthMiddleware(putManyBillParticipantLineItems),
+  );
+  app.delete(
+    `${billApiPath}/:billId/line-items/:lineItemId/participants`,
+    withBillAuthMiddleware(deleteManyBillParticipantLineItems),
   );
 
   app.listen(port, () => {

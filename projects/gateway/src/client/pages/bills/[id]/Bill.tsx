@@ -13,9 +13,11 @@ import { fetchBill } from '../../../api/api.ts';
 import { BillInfoItem } from '../../../components/BillInfoItem.tsx';
 import { BillInfoItemUnclaimed } from '../../../components/BillInfoItemUnclaimed.tsx';
 import { BillItemValue } from '../../../components/BillItemValue.tsx';
+import { BillLineItemSection } from '../../../components/BillLineItemSection.tsx';
 import { BillParticipantInput } from '../../../components/BillParticipantInput.tsx';
 import { BillParticipantSection } from '../../../components/BillParticipantSection.tsx';
 import { BillStatusNotification } from '../../../components/BillStatusNotification.tsx';
+import { BillViewSelect } from '../../../components/BillViewSelect.tsx';
 import { TipInput } from '../../../components/TipInput.tsx';
 import { useBillSubscription } from '../../../hooks/useBillRecalculate.tsx';
 import { useTip } from '../../../hooks/useTip.ts';
@@ -174,13 +176,25 @@ export const Bill: React.FC<BillProps> = (props) => {
         onDeleteParticipant={handleOnRecalculateBill}
         participants={bill.participants}
       />
-      <BillParticipantSection
-        billId={bill.id}
-        tip={tip}
-        participants={bill.participants}
-        lineItems={bill.lineItems}
-        onChange={handleOnRecalculateBill}
-      />
+      <BillViewSelect
+        participantView={
+          <BillParticipantSection
+            billId={bill.id}
+            participants={bill.participants}
+            lineItems={bill.lineItems}
+            onChange={handleOnRecalculateBill}
+            tip={tip}
+          />
+        }
+        lineItemView={
+          <BillLineItemSection
+            billId={bill.id}
+            participants={bill.participants}
+            lineItems={bill.lineItems}
+            onChange={handleOnRecalculateBill}
+          />
+        }
+      ></BillViewSelect>
     </Container>
   );
 };

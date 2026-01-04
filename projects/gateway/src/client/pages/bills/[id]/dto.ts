@@ -59,6 +59,14 @@ export const BillPutManyParticipantLineItemsRequest = z.object({
   ),
 });
 
+export const BillDeleteManyParticipantLineItemsRequest = z.object({
+  participants: z.array(
+    z.object({
+      id: z.number(),
+    }),
+  ),
+});
+
 export const BillResponse = createApiResponse(BillData);
 export const BillRecalculateResponse = createApiResponse(BillRecalculateData);
 
@@ -71,4 +79,7 @@ export type BillRecalculateResponse = z.infer<typeof BillRecalculateResponse>;
 export type ImageStatus = z.infer<typeof ImageStatus>;
 export type BillPutManyParticipantLineItemsRequest = z.infer<
   typeof BillPutManyParticipantLineItemsRequest
+>;
+export type BillDeleteManyParticipantLineItemsRequest = z.infer<
+  typeof BillDeleteManyParticipantLineItemsRequest
 >;

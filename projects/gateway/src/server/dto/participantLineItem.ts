@@ -28,6 +28,14 @@ export const ParticipantLineItemUpdateRequest = z.object({
   ),
 });
 
+export const ParticipantLineItemDeleteRequest = z.object({
+  participants: z.array(
+    z.object({
+      id: z.number(),
+    }),
+  ),
+});
+
 export type ParticipantLineItemCreate = z.infer<
   typeof ParticipantLineItemCreate
 >;
@@ -45,6 +53,9 @@ export type ParticipantLineItemUpdate = z.infer<
 >;
 export type ParticipantLineItemUpdateRequest = z.infer<
   typeof ParticipantLineItemUpdateRequest
+>;
+export type ParticipantLineItemDeleteRequest = z.infer<
+  typeof ParticipantLineItemDeleteRequest
 >;
 
 export const toParticipantLineItemStorage = (

@@ -49,7 +49,7 @@ export const BillStatusNotification: React.FC<BillStatusNotificationProps> = ({
         };
       case 'ready':
         return {
-          children: <Box m="sm">Start by assigning bill items below</Box>,
+          children: <Box m="sm">Start by adding your name below</Box>,
           color: 'green',
           title: 'Your bill has been successfully analyzed!',
         };

@@ -11,7 +11,10 @@ import {
   ParticipantCreateRequest,
   ParticipantUpdateRequest,
 } from '../dto/participant.ts';
-import { ParticipantLineItemUpdateRequest } from '../dto/participantLineItem.ts';
+import {
+  ParticipantLineItemDeleteRequest,
+  ParticipantLineItemUpdateRequest,
+} from '../dto/participantLineItem.ts';
 import type { MiddlewareFunction } from '../types/serverRequest.ts';
 import { parseCookies } from '../utils/parseCookies.ts';
 import { parseJsonBody } from '../utils/parseJsonBody.ts';
@@ -402,3 +405,34 @@ export const putManyBillParticipantLineItems: BillMiddlewareFunction = async (
     return jsonServerErrorResponse(res);
   }
 };
+
+export const deleteManyBillParticipantLineItems: BillMiddlewareFunction =
+  async (req, res) => {
+    const parseLineItemIdResult = intId.safeParse(req.params.lineItemId);
+    const parseDeleteResult = ParticipantLineItemDeleteRequest.safeParse(
+      await parseJsonBody(req),
+    );
+
+    if (!parseLineItemIdResult.success || !parseDeleteResult.success) {
+      return jsonBadRequestResponse(res);
+    }
+
+    const participantService = getParticipantService();
+
+    try {
+      const detailedBill =
+        await participantService.deleteManyBillParticipantLineItems(
+          req.billId,
+          parseLineItemIdResult.data,
+          parseDeleteResult.data,
+          req.sessionToken,
+        );
+
+      return detailedBill
+        ? jsonSuccessResponse(detailedBill, res)
+        : jsonForbiddenResponse(res);
+    } catch (e) {
+      logger.error(e);
+      return jsonServerErrorResponse(res);
+    }
+  };
