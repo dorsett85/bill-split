@@ -19,7 +19,7 @@ export const ParticipantLineItemUpdate = z.object({
   pctOwes: z.number().optional(),
 });
 
-export const ParticipantLineItemUpdateRequest = z.object({
+export const ParticipantLineItemUpdateManyRequest = z.object({
   participants: z.array(
     z.object({
       id: z.number(),
@@ -28,7 +28,7 @@ export const ParticipantLineItemUpdateRequest = z.object({
   ),
 });
 
-export const ParticipantLineItemDeleteRequest = z.object({
+export const ParticipantLineItemDeleteManyRequest = z.object({
   participants: z.array(
     z.object({
       id: z.number(),
@@ -51,11 +51,11 @@ export type ParticipantLineItemRead = {
 export type ParticipantLineItemUpdate = z.infer<
   typeof ParticipantLineItemUpdate
 >;
-export type ParticipantLineItemUpdateRequest = z.infer<
-  typeof ParticipantLineItemUpdateRequest
+export type ParticipantLineItemUpdateManyRequest = z.infer<
+  typeof ParticipantLineItemUpdateManyRequest
 >;
-export type ParticipantLineItemDeleteRequest = z.infer<
-  typeof ParticipantLineItemDeleteRequest
+export type ParticipantLineItemDeleteManyRequest = z.infer<
+  typeof ParticipantLineItemDeleteManyRequest
 >;
 
 export const toParticipantLineItemStorage = (

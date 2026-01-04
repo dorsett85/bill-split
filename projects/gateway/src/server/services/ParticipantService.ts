@@ -10,8 +10,8 @@ import type {
   ParticipantUpdateRequest,
 } from '../dto/participant.ts';
 import type {
-  ParticipantLineItemDeleteRequest,
-  ParticipantLineItemUpdateRequest,
+  ParticipantLineItemDeleteManyRequest,
+  ParticipantLineItemUpdateManyRequest,
 } from '../dto/participantLineItem.ts';
 import type { KafkaProducerService } from './KafkaProducerService.ts';
 
@@ -182,26 +182,27 @@ export class ParticipantService {
     return detailed;
   }
 
-  public async updateManyBillParticipantLineItems(
+  public async upsertManyBillParticipantLineItems(
     billId: number,
     lineItemId: number,
-    update: ParticipantLineItemUpdateRequest,
+    upsert: ParticipantLineItemUpdateManyRequest,
     sessionToken: string,
   ): Promise<BillReadDetailed | undefined> {
     // New pct owns must equal 100!
-    const sum = update.participants.reduce((total, p) => total + p.pctOwes, 0);
-    if (sum < 100) {
+    const sum = upsert.participants.reduce((total, p) => total + p.pctOwes, 0);
+    if (Math.round(sum) < 100) {
       return undefined;
     }
 
     const detailed = await this.participantLineItemDao.tx(async (client) => {
-      for (const p of update.participants) {
-        await this.participantLineItemDao.updateBySearch(
-          { participantId: p.id, lineItemId },
-          { pctOwes: p.pctOwes },
-          client,
-        );
-      }
+      await this.participantLineItemDao.upsertMany(
+        upsert.participants.map((p) => ({
+          participantId: p.id,
+          lineItemId,
+          pctOwes: p.pctOwes,
+        })),
+        client,
+      );
 
       return this.billDao.readDetailed(billId, client);
     });
@@ -218,7 +219,7 @@ export class ParticipantService {
   public async deleteManyBillParticipantLineItems(
     billId: number,
     lineItemId: number,
-    deletes: ParticipantLineItemDeleteRequest,
+    deletes: ParticipantLineItemDeleteManyRequest,
     sessionToken: string,
   ): Promise<BillReadDetailed | undefined> {
     const detailed = await this.participantLineItemDao.tx(async (client) => {

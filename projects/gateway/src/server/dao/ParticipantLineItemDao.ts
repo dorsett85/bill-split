@@ -43,20 +43,40 @@ export class ParticipantLineItemDao extends BaseDao<
     throw new Error('Not implemented');
   }
 
-  public async updateBySearch(
-    search: { participantId: number; lineItemId: number },
-    update: ParticipantLineItemUpdate,
+  public async upsertMany(
+    upserts: ParticipantLineItemCreate[],
     client?: PoolClient,
   ): Promise<CountRecord> {
-    const toUpdate = toParticipantLineItemStorage(update);
-    return this.updateRecordBySearch(
-      {
-        participant_id: search.participantId,
-        line_item_id: search.lineItemId,
-      },
-      toUpdate,
-      client,
+    const toUpdate = upserts.map(toParticipantLineItemStorage);
+    const storageData = toUpdate.map(this.stripUndefined);
+
+    const keys: string[] = [];
+    const values: unknown[] = [];
+    const allParams: string[] = [];
+    let paramCount = 1;
+    storageData.forEach((data, i) => {
+      const params: string[] = [];
+      Object.entries(data).forEach(([key, value]) => {
+        if (i === 0) {
+          keys.push(key);
+        }
+        values.push(value);
+        params.push(`$${paramCount++}`);
+      });
+      allParams.push(`(${params.join(',')})`);
+    });
+
+    const res = await (client ?? this.db).query(
+      `
+      INSERT INTO ${this.tableName} (${keys.join(',')})
+      VALUES ${allParams.join(',')}
+      ON CONFLICT (participant_id, line_item_id)
+      DO UPDATE SET pct_owes = EXCLUDED.pct_owes
+      `,
+      values,
     );
+
+    return { count: res.rowCount ?? 0 };
   }
 
   public async search(

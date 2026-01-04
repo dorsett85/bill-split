@@ -12,8 +12,8 @@ import {
   ParticipantUpdateRequest,
 } from '../dto/participant.ts';
 import {
-  ParticipantLineItemDeleteRequest,
-  ParticipantLineItemUpdateRequest,
+  ParticipantLineItemDeleteManyRequest,
+  ParticipantLineItemUpdateManyRequest,
 } from '../dto/participantLineItem.ts';
 import type { MiddlewareFunction } from '../types/serverRequest.ts';
 import { parseCookies } from '../utils/parseCookies.ts';
@@ -373,43 +373,41 @@ export const deleteBillParticipantLineItem: BillMiddlewareFunction = async (
   }
 };
 
-export const putManyBillParticipantLineItems: BillMiddlewareFunction = async (
-  req,
-  res,
-) => {
-  const parseLineItemIdResult = intId.safeParse(req.params.lineItemId);
-  const parseUpdateResult = ParticipantLineItemUpdateRequest.safeParse(
-    await parseJsonBody(req),
-  );
+export const upsertManyBillParticipantLineItems: BillMiddlewareFunction =
+  async (req, res) => {
+    const parseLineItemIdResult = intId.safeParse(req.params.lineItemId);
+    const parseUpsertResult = ParticipantLineItemUpdateManyRequest.safeParse(
+      await parseJsonBody(req),
+    );
 
-  if (!parseLineItemIdResult.success || !parseUpdateResult.success) {
-    return jsonBadRequestResponse(res);
-  }
+    if (!parseLineItemIdResult.success || !parseUpsertResult.success) {
+      return jsonBadRequestResponse(res);
+    }
 
-  const participantService = getParticipantService();
+    const participantService = getParticipantService();
 
-  try {
-    const detailedBill =
-      await participantService.updateManyBillParticipantLineItems(
-        req.billId,
-        parseLineItemIdResult.data,
-        parseUpdateResult.data,
-        req.sessionToken,
-      );
+    try {
+      const detailedBill =
+        await participantService.upsertManyBillParticipantLineItems(
+          req.billId,
+          parseLineItemIdResult.data,
+          parseUpsertResult.data,
+          req.sessionToken,
+        );
 
-    return detailedBill
-      ? jsonSuccessResponse(detailedBill, res)
-      : jsonForbiddenResponse(res);
-  } catch (e) {
-    logger.error(e);
-    return jsonServerErrorResponse(res);
-  }
-};
+      return detailedBill
+        ? jsonSuccessResponse(detailedBill, res)
+        : jsonForbiddenResponse(res);
+    } catch (e) {
+      logger.error(e);
+      return jsonServerErrorResponse(res);
+    }
+  };
 
 export const deleteManyBillParticipantLineItems: BillMiddlewareFunction =
   async (req, res) => {
     const parseLineItemIdResult = intId.safeParse(req.params.lineItemId);
-    const parseDeleteResult = ParticipantLineItemDeleteRequest.safeParse(
+    const parseDeleteResult = ParticipantLineItemDeleteManyRequest.safeParse(
       await parseJsonBody(req),
     );
 

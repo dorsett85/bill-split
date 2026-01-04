@@ -5,6 +5,7 @@ import {
   createParticipantLineItem,
   deleteManyParticipantLineItems,
   deleteParticipantLineItem,
+  putManyParticipantLineItems,
 } from '../api/api.ts';
 import type {
   BillRecalculateData,
@@ -59,8 +60,28 @@ export const BillLineItemSection: React.FC<BillLineItemSectionProps> = ({
     }
   };
 
-  const handleOnAddAll = (_: LineItem) => {
-    // TODO
+  const handleOnAddAll = async (li: LineItem) => {
+    try {
+      const pctOwes = 100 / participants.length;
+      const json = await putManyParticipantLineItems(billId, li.id, {
+        participants: participants.map((p) => ({ id: p.id, pctOwes })),
+      });
+
+      if ('data' in json) {
+        onChange(json.data);
+      } else {
+        errorNotification({
+          title: 'Unable to add all participants',
+          message: json.error.message,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      errorNotification({
+        title: 'Unable to add all participants',
+        message: 'Please refresh the page and try again',
+      });
+    }
   };
 
   const handleOnItemClick = async (

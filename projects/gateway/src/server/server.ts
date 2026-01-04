@@ -17,8 +17,8 @@ import {
   postBillCreateAccess,
   postBillParticipant,
   postBillParticipantLineItem,
-  putManyBillParticipantLineItems,
   subscribeBillRecalculate,
+  upsertManyBillParticipantLineItems,
 } from './controllers/apiControllers.ts';
 import {
   getAdminPage,
@@ -156,7 +156,7 @@ const startServer = async () => {
 
   app.put(
     `${billApiPath}/:billId/line-items/:lineItemId/participants`,
-    withBillAuthMiddleware(putManyBillParticipantLineItems),
+    withBillAuthMiddleware(upsertManyBillParticipantLineItems),
   );
   app.delete(
     `${billApiPath}/:billId/line-items/:lineItemId/participants`,

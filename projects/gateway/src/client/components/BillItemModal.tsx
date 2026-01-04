@@ -2,6 +2,7 @@ import { Button, Group, Modal, NumberInput, Stack, Text } from '@mantine/core';
 import { type FormEvent, useEffect, useState } from 'react';
 import { putManyParticipantLineItems } from '../api/api.ts';
 import type { BillRecalculateData, LineItem } from '../pages/bills/[id]/dto.ts';
+import { successNotification } from '../utils/notifications.ts';
 import { USPercent } from '../utils/UsCurrency.ts';
 
 interface BillLineItemModalProps {
@@ -52,6 +53,8 @@ export const BillLineItemModalProps = ({
       0,
     );
 
+    console.log(sum);
+
     if (sum !== 100) {
       return setAdjustSharesError(
         `Must equal 100%. Current: ${USPercent.format(sum / 100)}`,
@@ -67,13 +70,16 @@ export const BillLineItemModalProps = ({
       });
       if ('data' in json) {
         onAdjustedShares(json.data);
-        // TODO Set a success notification
+        successNotification({
+          title: 'Success',
+          message: 'Shares were adjusted',
+        });
       } else {
         setAdjustSharesError(json.error.message);
       }
     } catch (e) {
       console.error(e);
-      setAdjustSharesError('Unable to update share');
+      setAdjustSharesError('Unable to update shares');
     }
   };
 
